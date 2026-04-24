@@ -179,7 +179,7 @@ function Slide3() {
       actions: [
         { name: "公开认可示范者", weeks: 2, type: "政治", desc: "公开表彰有实际成果的人，放大示范效应。" },
         { name: "宣布KPI与时限", weeks: 2, type: "压力", desc: "制造紧迫感，但会提升组织压力。" },
-        { name: "调整激励与奖惩", weeks: 4, type: "制度", desc: "后期终极武器，突破瓶颈，但大幅提升压力。" },
+        { name: "调整激励与奖惩", weeks: 3, type: "制度", desc: "后期终极武器，突破瓶颈，但大幅提升压力。" },
       ],
     },
     {
@@ -187,6 +187,14 @@ function Slide3() {
       color: "border-red-500/30 bg-red-500/5",
       actions: [
         { name: "强硬约谈阻力者", weeks: 1, type: "对抗", desc: "对核心阻力者施压。需先通过访谈发现其身份，否则用错对象会严重损害可信度。" },
+      ],
+    },
+    {
+      label: "🤝 关系探索",
+      color: "border-purple-500/30 bg-purple-500/5",
+      actions: [
+        { name: "间接打听", weeks: 1, type: "对话", desc: "通过第三方侧面了解目标的公开立场，覆盖其关系网络，但深度不及直接访谈。" },
+        { name: "休闲聚会", weeks: 1, type: "关系", desc: "饭局、喝酒、轻松活动——在非正式场合建立信任。频繁使用会让人觉得你只会搞关系，损害专业形象。" },
       ],
     },
   ];
@@ -200,7 +208,7 @@ function Slide3() {
         <span className="text-xs font-semibold tracking-widest text-primary uppercase">行动类型</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
-        12 种行动，<br />
+        14 种行动，<br />
         <span className="text-primary">按策略阶段选择。</span>
       </h2>
       <div className="space-y-3 overflow-y-auto max-h-[55vh] pr-1">

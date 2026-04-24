@@ -212,3 +212,10 @@
 - [x] 正式沟通网 spread: only status 0-1, multiplier ×0.6
 - [x] 信任网 spread: only status 2-3, multiplier ×1.2; hidden ties shown only after 2nd interview
 - [x] Re-upload engine, update URL, run tests, save checkpoint
+
+## Phase 32: Fix new actions visibility + balance pass
+- [x] Audit why 间接打听 and 休闲聚会 are missing from briefing page and action selection
+- [x] Fix action registration (check ACTIONS array, briefing render, action list render)
+- [x] Balance pass: review all action cost/effect ratios
+- [x] Buff 调整激励与奖惩 and pressure-type actions
+- [x] Re-upload engine, update URL, run tests, save checkpoint
