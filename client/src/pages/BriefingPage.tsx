@@ -110,6 +110,36 @@ function Slide2() {
           </div>
         </div>
       </div>
+
+      {/* Conversion stage diagram */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <p className="text-xs font-semibold text-primary mb-3 uppercase tracking-widest">人物转化路径</p>
+        <div className="flex items-center gap-1 flex-wrap justify-between">
+          {[
+            { label: "未动", glyph: "○", color: "text-muted-foreground", bg: "bg-muted/30 border-muted" },
+            { label: "意识觉醒", glyph: "◔", color: "text-yellow-400", bg: "bg-yellow-400/10 border-yellow-400/30" },
+            { label: "初步理解", glyph: "◑", color: "text-orange-400", bg: "bg-orange-400/10 border-orange-400/30" },
+            { label: "主动参与", glyph: "◕", color: "text-lime-400", bg: "bg-lime-400/10 border-lime-400/30" },
+            { label: "已转化", glyph: "●", color: "text-primary", bg: "bg-primary/15 border-primary/40" },
+          ].map((s, i, arr) => (
+            <>
+              <div
+                key={s.label}
+                className={`flex flex-col items-center gap-1 rounded-lg border px-2.5 py-2 min-w-[52px] ${s.bg}`}
+              >
+                <span className={`text-xl font-bold leading-none ${s.color}`}>{s.glyph}</span>
+                <span className={`text-[10px] font-semibold ${s.color}`}>{s.label}</span>
+              </div>
+              {i < arr.length - 1 && (
+                <span key={`arrow-${i}`} className="text-muted-foreground text-sm shrink-0">→</span>
+              )}
+            </>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+          每个人物都从「未动」开始。行动效果会推动人物逐步升阶；错误行动或过高压力也可能导致回退。得分取决于最终转化率与组织健康度。
+        </p>
+      </div>
     </div>
   );
 }

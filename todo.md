@@ -162,3 +162,8 @@
 ## Phase 21: Fix Slide 3 action types
 - [x] Replace invented action types with actual 12 actions from game engine (5 groups: 示范/对话沟通/赋能验证/认可压力/对抗纠偏)
 - [x] Save checkpoint
+
+## Phase 22: Add conversion stage diagram to Slide 2
+- [x] Verified: STATUS_LABELS = [未动, 意识觉醒, 初步理解, 主动参与, 已转化] with glyphs ○◔◑◕●
+- [x] Added color-coded stage diagram with arrows to Slide 2 in BriefingPage.tsx
+- [x] Save checkpoint
