@@ -198,3 +198,9 @@
 - [x] Audit 讲述成功案例 code mechanics vs description
 - [x] Rewrite both descriptions to match actual code
 - [x] Patch engine, re-upload, run tests, save checkpoint
+
+## Phase 29: Three engine UX changes
+- [x] Broadcast action detail panel: collapsed by default (remove show class from target-selector)
+- [x] Resistor character descriptions: soften/remove explicit 阻力角色 badge and resistor-identity language
+- [x] Interview split: 1st visit reveals action prefs only; 2nd visit reveals hidden ties (state.revealed[id] tracks visit count)
+- [x] Patch engine, re-upload, run tests, save checkpoint
