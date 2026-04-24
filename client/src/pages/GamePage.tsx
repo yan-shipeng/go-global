@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_82b13978.html";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_f047357b.html";
 
 interface GameResult {
   endingType: string;
@@ -21,9 +21,8 @@ interface GameResult {
   finalPressure: number;
   totalRounds: number;
   baseScore: number;
-  efficiencyScore: number;
+  conversionScore: number;
   healthScore: number;
-  bonusScore: number;
   totalScore: number;
   history: unknown[];
 }
@@ -240,10 +239,9 @@ export default function GamePage() {
                   <div className="text-sm text-muted-foreground">综合得分</div>
                 </div>
                 {[
-                  { label: "基础分", value: String(gameResult.baseScore), color: "text-foreground" },
-                  { label: "效率分", value: `+${gameResult.efficiencyScore.toFixed(1)}`, color: "text-primary" },
-                  { label: "健康度分", value: `${gameResult.healthScore >= 0 ? "+" : ""}${gameResult.healthScore.toFixed(1)}`, color: gameResult.healthScore >= 0 ? "text-green-400" : "text-destructive" },
-                  { label: "超额转化分", value: `+${gameResult.bonusScore}`, color: "text-yellow-400" },
+                  { label: "基础分", value: `+${gameResult.baseScore}`, color: "text-foreground" },
+                  { label: `转化分（${gameResult.convertedCount}人 × 5）`, value: `+${gameResult.conversionScore}`, color: "text-primary" },
+                  { label: "健康度分", value: `+${gameResult.healthScore}`, color: "text-green-400" },
                 ].map(({ label, value, color }) => (
                   <div key={label} className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{label}</span>

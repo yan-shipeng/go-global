@@ -53,3 +53,12 @@
 - [x] Updated intro slide, HUD sub-text, and state goal description to reflect new rule
 - [x] Re-upload patched game engine and update URL in GamePage.tsx
 - [x] Save checkpoint
+
+## Phase 8: Update Scoring Formula (max 100 pts)
+- [x] Update game engine postGameEnded: base=30, converted×5, max(0,cred-pressure), min(total,100)
+- [x] Remove efficiencyScore/bonusScore from game engine postMessage result
+- [x] Update homepage scoring algorithm display section
+- [x] Update GamePage end-game overlay score breakdown
+- [x] Remove bottom note "仅通关（≥50% 转化）的局次计入排行榜" from homepage
+- [x] Re-upload game engine and update URL in GamePage.tsx
+- [ ] Save checkpoint

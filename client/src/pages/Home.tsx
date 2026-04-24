@@ -64,7 +64,7 @@ export default function Home() {
               {
                 icon: Trophy,
                 title: "全球排行榜",
-                desc: "综合得分 = 效率 + 健康度 + 超额转化，剩余资源越多排名越高",
+                desc: "综合得分 = 基础分 + 转化分 + 健康度分，满分 100，转化越多排名越高",
                 href: "/leaderboard",
               },
               {
@@ -102,13 +102,11 @@ export default function Home() {
           <h2 className="text-xl font-bold mb-6 text-foreground">综合得分算法</h2>
           <div className="flex flex-wrap justify-center gap-3 items-center text-sm">
             {[
-              { label: "基础分", value: "50", color: "text-foreground" },
+              { label: "基础分", value: "30", color: "text-foreground" },
               { label: "+", value: "", color: "text-muted-foreground" },
-              { label: "效率分", value: "剩余资源 × 1.5", color: "text-primary" },
+              { label: "转化分", value: "转化数 × 5", color: "text-primary" },
               { label: "+", value: "", color: "text-muted-foreground" },
-              { label: "健康度分", value: "(可信度 − 压力) × 2", color: "text-green-400" },
-              { label: "+", value: "", color: "text-muted-foreground" },
-              { label: "超额转化分", value: "(转化数 − 6) × 3", color: "text-yellow-400" },
+              { label: "健康度分", value: "max(0, 可信度 − 压力)", color: "text-green-400" },
             ].map((item, i) => (
               item.value === "" ? (
                 <span key={i} className="text-muted-foreground text-lg font-light">+</span>
@@ -121,7 +119,7 @@ export default function Home() {
             ))}
           </div>
           <p className="text-xs text-muted-foreground mt-4">
-            * 仅通关（≥50% 转化）的局次计入排行榜
+            满分 100 分（12 人全转化 + 最佳健康度）· 所有完成游戏的局次均计入排行榜
           </p>
         </div>
       </section>
