@@ -1,7 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Trophy, History, GitCompare, Gamepad2, UserRound } from "lucide-react";
-import { usePlayerName } from "@/hooks/usePlayerName";
+import { Trophy, History, GitCompare, Gamepad2 } from "lucide-react";
 
 const navItems = [
   { href: "/game", label: "开始游戏", icon: Gamepad2 },
@@ -11,7 +10,6 @@ const navItems = [
 ];
 
 export default function NavBar() {
-  const { playerName } = usePlayerName();
   const [location] = useLocation();
 
   return (
@@ -39,21 +37,14 @@ export default function NavBar() {
           ))}
         </nav>
 
-        {/* Player name display */}
+        {/* CTA button */}
         <div className="flex items-center gap-2">
-          {playerName ? (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <UserRound className="w-3.5 h-3.5 text-primary" />
-              <span className="hidden sm:block max-w-[120px] truncate">{playerName}</span>
-            </div>
-          ) : (
-            <Link href="/game">
-              <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
-                <Gamepad2 className="w-3.5 h-3.5" />
-                开始游戏
-              </Button>
-            </Link>
-          )}
+          <Link href="/game">
+            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
+              <Gamepad2 className="w-3.5 h-3.5" />
+              开始游戏
+            </Button>
+          </Link>
         </div>
       </div>
 
