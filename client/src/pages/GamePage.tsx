@@ -3,12 +3,12 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, RotateCcw, CheckCircle2, XCircle, UserRound } from "lucide-react";
+import { Trophy, RotateCcw, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_53f29bc4.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_4e9f1f12.html?autoStart=1";
 
 interface GameResult {
   endingType: string;
@@ -112,11 +112,7 @@ export default function GamePage() {
             convertedCount: result.convertedCount,
             totalRounds: result.totalRounds,
           });
-          if (result.won) {
-            toast.success(`🎉 通关！综合得分 ${result.totalScore} 分`);
-          } else {
-            toast.error("任务失败，再接再厉！");
-          }
+          toast.success(`🎮 游戏结束！综合得分 ${result.totalScore} 分`);
         } catch {
           toast.error("保存游戏记录失败");
         }
@@ -184,17 +180,10 @@ export default function GamePage() {
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <Card className="w-full max-w-md mx-4 bg-card border-border shadow-2xl">
             <CardHeader className="text-center pb-2">
-              {gameResult.won ? (
-                <div className="flex flex-col items-center gap-2">
-                  <CheckCircle2 className="w-12 h-12 text-green-400" />
-                  <CardTitle className="text-2xl text-green-400">任务完成！</CardTitle>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2">
-                  <XCircle className="w-12 h-12 text-destructive" />
-                  <CardTitle className="text-2xl text-destructive">任务失败</CardTitle>
-                </div>
-              )}
+              <div className="flex flex-col items-center gap-2">
+                <Trophy className="w-12 h-12 text-primary" />
+                <CardTitle className="text-2xl text-foreground">游戏结束 · 复盘时刻</CardTitle>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-muted/30 rounded-lg p-4 space-y-3">

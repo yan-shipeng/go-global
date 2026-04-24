@@ -93,4 +93,13 @@
 - [x] Update homepage leaderboard feature card description
 - [x] Update GamePage end-game overlay to show conversionRatio × healthIndex × 100 breakdown
 - [x] Re-upload game engine (game-engine_53f29bc4.html) and update URLs in Home.tsx and GamePage.tsx
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## Phase 13: Remove Win/Fail Conditions — Score Only
+- [x] Game engine intro slide 1: removed ≥50% stat badge; now shows only 48 resources + 12 people
+- [x] Game engine intro slide 2: replaced win condition box with scoring algorithm box; eyebrow changed to "得分规则"
+- [x] Game engine end screen: both win-pass and fail titles changed to neutral "资源耗尽 · 复盘时刻"
+- [x] Game engine HUD: "目标 ≥ 50%" sub-text changed to "转化越多得分越高"
+- [x] GamePage end-game overlay: removed CheckCircle2/XCircle won/failed UI; shows neutral Trophy + "游戏结束 · 复盘时刻"
+- [x] Re-upload game engine (game-engine_4e9f1f12.html) and update URLs in Home.tsx and GamePage.tsx
+- [x] Save checkpoint

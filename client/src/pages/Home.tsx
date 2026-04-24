@@ -6,7 +6,7 @@ import { Link, useLocation } from "wouter";
 import { Trophy, GitCompare, History, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const BRIEFING_URL = "/manus-storage/game-engine_53f29bc4.html?mode=briefing";
+const BRIEFING_URL = "/manus-storage/game-engine_4e9f1f12.html?mode=briefing";
 
 type HomeStep = "landing" | "name-entry" | "briefing";
 
