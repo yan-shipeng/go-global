@@ -1,12 +1,11 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation } from "wouter";
 import { Trophy, GitCompare, History, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
-
-const BRIEFING_URL = "/manus-storage/game-engine_d26d155a.html?mode=briefing";
+import BriefingPage from "./BriefingPage";
 
 type HomeStep = "landing" | "name-entry" | "briefing";
 
@@ -15,26 +14,6 @@ export default function Home() {
   const [step, setStep] = useState<HomeStep>("landing");
   const [nameInput, setNameInput] = useState(playerName ?? "");
   const [, navigate] = useLocation();
-  const briefingIframeRef = useRef<HTMLIFrameElement>(null);
-
-  // Inject player name into the briefing iframe once it loads
-  const handleBriefingLoad = useCallback(() => {
-    const win = briefingIframeRef.current?.contentWindow;
-    if (!win || !playerName) return;
-    win.postMessage({ type: "SET_PLAYER", name: playerName }, "*");
-  }, [playerName]);
-
-  // Listen for messages from the briefing iframe
-  useEffect(() => {
-    if (step !== "briefing") return;
-    const handler = (e: MessageEvent) => {
-      if (!e.data) return;
-      if (e.data.type === "BRIEFING_ENTER_GAME") navigate("/game");
-      if (e.data.type === "BRIEFING_SKIP_REQUESTED") navigate("/game");
-    };
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [step, navigate]);
 
   // ── Step: Name Entry ──────────────────────────────────────────────────────
   const handleNameConfirm = (e: React.FormEvent) => {
@@ -58,43 +37,11 @@ export default function Home() {
   // ── Briefing screen ───────────────────────────────────────────────────────
   if (step === "briefing") {
     return (
-      <div className="flex flex-col h-[calc(100vh-56px)]">
-        {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50 shrink-0">
-          <div className="text-sm text-muted-foreground">
-            任务简报 · <span className="text-primary font-medium">{playerName}</span>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 text-muted-foreground"
-              onClick={handleSkipBriefing}
-            >
-              <SkipForward className="w-3.5 h-3.5" />
-              跳过说明，直接开始
-            </Button>
-            <Button
-              size="sm"
-              className="gap-1.5 bg-primary hover:bg-primary/90"
-              onClick={handleEnterGame}
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-              我已了解，进入模拟
-            </Button>
-          </div>
-        </div>
-
-        {/* Briefing iframe — shows the game engine's intro slides in read-only briefing mode */}
-        <iframe
-          ref={briefingIframeRef}
-          src={BRIEFING_URL}
-          className="flex-1 w-full border-none"
-          title="任务简报"
-          sandbox="allow-scripts allow-same-origin allow-forms"
-          onLoad={handleBriefingLoad}
-        />
-      </div>
+      <BriefingPage
+        playerName={playerName ?? ""}
+        onEnterGame={() => navigate("/game")}
+        onSkip={() => navigate("/game")}
+      />
     );
   }
 

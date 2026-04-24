@@ -146,3 +146,15 @@
 - [x] Fix: Home.tsx listens for BRIEFING_ENTER_GAME and BRIEFING_SKIP_REQUESTED to navigate to /game
 - [x] Re-upload game engine (game-engine_d26d155a.html) and update URLs
 - [x] Save checkpoint
+
+## Phase 20: Native React Briefing Page (replace iframe)
+- [x] Build BriefingPage.tsx: 5-slide step-by-step React component (no iframe)
+- [x] Slide 1: 任务背景 — 中国制造业集团完成欧洲并购，你是整合负责人
+- [x] Slide 2: 游戏规则 — 48资源、12人物、每回合选行动+目标
+- [x] Slide 3: 行动类型 — 访谈/说服/约谈/联盟/施压 各类行动说明
+- [x] Slide 4: 关键提示 — 阻力者身份需通过访谈发现；得分公式
+- [x] Slide 5: 出发 — 显示玩家姓名，"开始模拟"按钮
+- [x] Wire into Home.tsx: step="briefing" renders <BriefingPage> instead of iframe
+- [x] Remove BRIEFING_URL constant and briefingIframeRef from Home.tsx
+- [x] Remove BRIEFING_ENTER_GAME / BRIEFING_SKIP_REQUESTED message listeners
+- [x] Run tests (8/8 pass), save checkpoint
