@@ -103,3 +103,14 @@
 - [x] GamePage end-game overlay: removed CheckCircle2/XCircle won/failed UI; shows neutral Trophy + "游戏结束 · 复盘时刻"
 - [x] Re-upload game engine (game-engine_4e9f1f12.html) and update URLs in Home.tsx and GamePage.tsx
 - [x] Save checkpoint
+
+## Phase 14: Resistor Discovery Mechanic
+- [x] Found confront action at line 1552; resistanceTargets=['union','ops']; revealed state tracks interviews
+- [x] Removed explicit resistor identity hints from confront action description
+- [x] Added discovery gate: confrontLocked=true unless state.revealed[id] OR any ties/hidden_ties member is revealed
+- [x] Locked targets show as '🔒 未知人物' (greyed out, disabled) in target selector
+- [x] Re-upload game engine (game-engine_b6fefa57.html) and update URLs in Home.tsx and GamePage.tsx
+- [x] Save checkpoint
+- [x] Enforce confront discovery gate in runTurn() execution path (not just UI selector) — undiscovered targets are silently blocked even if submitted programmatically
+- [x] Re-upload game engine (game-engine_b510c832.html) and update URLs in Home.tsx and GamePage.tsx
+- [x] Save checkpoint
