@@ -204,3 +204,11 @@
 - [x] Resistor character descriptions: soften/remove explicit 阻力角色 badge and resistor-identity language
 - [x] Interview split: 1st visit reveals action prefs only; 2nd visit reveals hidden ties (state.revealed[id] tracks visit count)
 - [x] Patch engine, re-upload, run tests, save checkpoint
+
+## Phase 31: New actions + dual network layers
+- [x] Add 间接打听 action: 1 resource, targets 1 person, reveals prefs via ties, no hidden info
+- [x] Add 休闲聚会 action: 2 resources, targets 2-3 people, social bonding effect, overuse side-effect (credibility penalty)
+- [x] Redesign network: add 正式沟通网 / 信任网 toggle buttons
+- [x] 正式沟通网 spread: only status 0-1, multiplier ×0.6
+- [x] 信任网 spread: only status 2-3, multiplier ×1.2; hidden ties shown only after 2nd interview
+- [x] Re-upload engine, update URL, run tests, save checkpoint
