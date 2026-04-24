@@ -229,3 +229,10 @@
 - [x] Home.tsx: update "12 种行动" → "14 种行动"
 - [x] Engine: add indirectInquiryUsed set to state, gate 间接打听 on !used, show grayed-out in target list if already used on that person
 - [x] Re-upload engine, update URL, run tests, save checkpoint
+
+## Phase 35: Four engine/UI fixes
+- [x] Replace all 周 with 资源 in engine UI (action cards, briefing, tooltips, etc.) and BriefingPage.tsx
+- [x] Add neutral character bios for union, ops, engineer (立场复杂 characters)
+- [x] Rename 紧密关系 → 正式沟通关系 in key-info panel; remove 隐藏目标 from key-info panel
+- [x] 休闲聚会: change need to max 4, cost = targets selected (1 person=2, 2=3, 3=4, 4=5 resources), dynamic cost display
+- [x] Re-upload engine, update URL, run tests, save checkpoint

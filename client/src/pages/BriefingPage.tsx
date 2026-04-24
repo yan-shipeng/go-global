@@ -214,7 +214,7 @@ function Slide3() {
                 <div key={a.name} className="flex items-start gap-2">
                   <div className="flex items-center gap-1 shrink-0 mt-0.5">
                     <span className="font-semibold text-xs text-foreground">{a.name}</span>
-                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1">{a.type} · {a.weeks}周</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1">{a.type} · {a.weeks} 资源</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{a.desc}</p>
                 </div>
