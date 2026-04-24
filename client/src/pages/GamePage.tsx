@@ -3,13 +3,12 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Trophy, RotateCcw, CheckCircle2, XCircle, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_f047357b.html";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_95c30ccd.html";
 
 interface GameResult {
   endingType: string;
@@ -40,8 +39,7 @@ interface TurnData {
 }
 
 export default function GamePage() {
-  const { playerName, setPlayerName } = usePlayerName();
-  const [nameInput, setNameInput] = useState("");
+  const { playerName } = usePlayerName();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -51,15 +49,15 @@ export default function GamePage() {
   const saveTurnMutation = trpc.game.saveTurn.useMutation();
   const endSession = trpc.game.endSession.useMutation();
 
-  // Inject player name once iframe loads
+  // Inject player name once iframe loads and immediately skip the engine's own intro screen
   const handleIframeLoad = () => {
     if (!iframeRef.current || !playerName) return;
-    setTimeout(() => {
-      iframeRef.current?.contentWindow?.postMessage(
-        { type: "SET_PLAYER", name: playerName },
-        "*"
-      );
-    }, 600);
+    const win = iframeRef.current.contentWindow;
+    if (!win) return;
+    // Send SET_PLAYER first (fills the name field in the engine)
+    win.postMessage({ type: "SET_PLAYER", name: playerName }, "*");
+    // Then immediately skip the intro screen — no delay needed
+    win.postMessage({ type: "SKIP_INTRO" }, "*");
   };
 
   // Start a new game session
@@ -74,15 +72,6 @@ export default function GamePage() {
     } catch {
       toast.error("无法创建游戏会话，请重试");
     }
-  };
-
-  // Handle name submission
-  const handleNameSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = nameInput.trim();
-    if (!trimmed) return;
-    setPlayerName(trimmed);
-    handleStartGame(trimmed);
   };
 
   // Listen for postMessage from game engine
@@ -138,39 +127,14 @@ export default function GamePage() {
     return () => window.removeEventListener("message", handler);
   }, [sessionId]);
 
-  // ── Name entry screen (shown when no name is set yet) ──────────────────────
+  // If no name set, redirect back to home to enter name
   if (!playerName) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] gap-6 px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-5xl mb-4">🚀</div>
-          <h2 className="text-2xl font-bold mb-2">输入你的名字</h2>
-          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
-            名字将显示在排行榜上，无需注册账号，直接开始游戏。
-          </p>
-        </div>
-        <form onSubmit={handleNameSubmit} className="flex flex-col gap-3 w-full max-w-xs">
-          <div className="flex gap-2">
-            <Input
-              value={nameInput}
-              onChange={e => setNameInput(e.target.value)}
-              placeholder="例：张三 / Alice"
-              maxLength={32}
-              autoFocus
-              className="bg-card border-border"
-            />
-            <Button
-              type="submit"
-              className="bg-primary hover:bg-primary/90 shrink-0"
-              disabled={!nameInput.trim() || startSession.isPending}
-            >
-              {startSession.isPending ? "创建中..." : "开始"}
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground text-center">
-            名字保存在本地，下次访问自动沿用
-          </p>
-        </form>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] gap-4 px-4">
+        <p className="text-muted-foreground">请先在首页输入你的名字</p>
+        <Link href="/">
+          <Button className="bg-primary hover:bg-primary/90">返回首页</Button>
+        </Link>
       </div>
     );
   }

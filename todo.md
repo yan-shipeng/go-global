@@ -61,4 +61,13 @@
 - [x] Update GamePage end-game overlay score breakdown
 - [x] Remove bottom note "仅通关（≥50% 转化）的局次计入排行榜" from homepage
 - [x] Re-upload game engine and update URL in GamePage.tsx
+- [x] Save checkpoint
+
+## Phase 9: Homepage Redesign & Flash Fix
+- [x] Remove any login/auth UI from Home.tsx; show name-entry form for new visitors
+- [x] If name already in localStorage, show "你好，{name}" with edit button instead of form
+- [x] Add mission briefing interstitial page/modal (uses existing game engine intro iframe) with "跳过，直接开始" option
+- [x] GamePage: remove the separate name-entry screen (no longer needed — handled on homepage)
+- [x] Fix flash of old game engine name-entry screen: inject SET_PLAYER + SKIP_INTRO immediately on iframe load (0ms delay)
+- [x] Verify full flow: land → name → briefing (or skip) → game starts with no flash
 - [ ] Save checkpoint
