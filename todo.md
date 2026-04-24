@@ -180,3 +180,9 @@
 - [x] Fixed: guarded introEl.classList.add('active') with !autoStart; added belt-and-suspenders hide in autoStart block
 - [x] Re-uploaded engine (game-engine_7d8ec575.html), updated GamePage.tsx URL
 - [x] 0 TS errors, 8/8 tests pass, save checkpoint
+
+## Phase 25: Eliminate iframe flash on game start
+- [x] Add GAME_READY postMessage in game engine (sent after revealSimulationChrome)
+- [x] Add opaque overlay in GamePage.tsx that hides iframe until GAME_READY received
+- [x] Fade overlay out smoothly on GAME_READY
+- [x] Re-upload engine, update URLs, run tests, save checkpoint

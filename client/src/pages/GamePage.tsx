@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_7d8ec575.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_dc1e9291.html?autoStart=1";
 
 interface GameResult {
   endingType: string;
@@ -44,6 +44,8 @@ export default function GamePage() {
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
+  // Overlay: null = not started, false = visible/loading, true = game ready (fading out)
+  const [gameReady, setGameReady] = useState<boolean | null>(null);
 
   const startSession = trpc.game.startSession.useMutation();
   const saveTurnMutation = trpc.game.saveTurn.useMutation();
@@ -68,7 +70,10 @@ export default function GamePage() {
       const session = await startSession.mutateAsync({ playerName: activeName });
       setSessionId(session.sessionId);
       setGameResult(null);
+      setGameReady(false); // Reset overlay — hide iframe until GAME_READY
       setIframeKey(k => k + 1);
+      // Small delay to ensure overlay is fully opaque before iframe starts loading
+      await new Promise(r => setTimeout(r, 50));
     } catch {
       toast.error("无法创建游戏会话，请重试");
     }
@@ -78,6 +83,12 @@ export default function GamePage() {
   useEffect(() => {
     const handler = async (event: MessageEvent) => {
       if (!event.data?.type) return;
+
+      // Game engine signals it has fully rendered the main UI
+      if (event.data.type === "GAME_READY") {
+        setGameReady(true); // triggers CSS fade-out transition
+        return;
+      }
 
       if (event.data.type === "GAME_TURN" && sessionId !== null) {
         const turn = event.data.turn as TurnData;
@@ -248,15 +259,32 @@ export default function GamePage() {
 
       {/* Game iframe or start prompt */}
       {sessionId !== null ? (
-        <iframe
-          key={iframeKey}
-          ref={iframeRef}
-          src={GAME_ENGINE_URL}
-          className="flex-1 w-full border-none"
-          onLoad={handleIframeLoad}
-          title="中国企业出海变革模拟"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
-        />
+        <div className="flex-1 relative">
+          {/* Opaque loading overlay — hides the iframe until GAME_READY is received */}
+          {gameReady !== null && (
+            <div
+              className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 transition-opacity duration-500"
+              style={{
+                background: "var(--background)",
+                opacity: gameReady ? 0 : 1,
+                pointerEvents: gameReady ? "none" : "auto",
+              }}
+            >
+              {/* Spinner */}
+              <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">正在加载游戏…</p>
+            </div>
+          )}
+          <iframe
+            key={iframeKey}
+            ref={iframeRef}
+            src={GAME_ENGINE_URL}
+            className="w-full h-full border-none"
+            onLoad={handleIframeLoad}
+            title="中国企业出海变革模拟"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
+          />
+        </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
           <div className="text-center max-w-md">
