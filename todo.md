@@ -224,3 +224,8 @@
 - [x] BriefingPage: move 间接打听 into 对话与沟通, 休闲聚会 into 建立信任, remove 关系探索 group
 - [x] Engine ACTION_GROUPS: same merge, remove 关系探索 group
 - [x] Save checkpoint
+
+## Phase 34: Homepage copy + 间接打听 one-time restriction
+- [x] Home.tsx: update "12 种行动" → "14 种行动"
+- [x] Engine: add indirectInquiryUsed set to state, gate 间接打听 on !used, show grayed-out in target list if already used on that person
+- [x] Re-upload engine, update URL, run tests, save checkpoint

@@ -183,7 +183,7 @@ export default function Home() {
               {
                 icon: Gamepad2,
                 title: "沉浸式模拟",
-                desc: "12 位角色、13 种动作、隐藏关系网络，每局都是全新挑战",
+                desc: "12 位角色、14 种动作、隐藏关系网络，每局都是全新挑战",
                 href: "/game",
               },
               {
