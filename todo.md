@@ -219,3 +219,8 @@
 - [x] Balance pass: review all action cost/effect ratios
 - [x] Buff 调整激励与奖惩 and pressure-type actions
 - [x] Re-upload engine, update URL, run tests, save checkpoint
+
+## Phase 33: Merge new actions into existing groups
+- [x] BriefingPage: move 间接打听 into 对话与沟通, 休闲聚会 into 建立信任, remove 关系探索 group
+- [x] Engine ACTION_GROUPS: same merge, remove 关系探索 group
+- [x] Save checkpoint
