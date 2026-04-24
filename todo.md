@@ -78,3 +78,10 @@
 - [x] Game engine patched with URL param support (mode=briefing, autoStart=1) and re-uploaded
 - [x] autoStart block reads name from localStorage before skipIntroBtn click (fixes empty-name guard)
 - [x] Save checkpoint
+
+## Phase 11: Remove Name Input from Game Engine Intro Screen
+- [x] Confirmed: ranking uses playerName from game_sessions.playerName (set via startSession API from localStorage), not from game engine's learnerName
+- [x] Game engine bootstrap now always hides introNameBlock div (display:none) in all modes
+- [x] Bootstrap reads name from localStorage and pre-fills state.learnerName + learnerNameInput for in-game display
+- [x] skipIntroBtn and toIntroBtn handlers updated to use state.learnerName as fallback when input is hidden
+- [x] Save checkpoint
