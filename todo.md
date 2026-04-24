@@ -45,3 +45,11 @@
 - [x] Update HistoryPage to filter by playerName stored in localStorage
 - [x] Update tests to remove auth context from game procedures (8/8 passing)
 - [x] Save checkpoint
+
+## Phase 7: Remove Early-Win / Speed-Win Conditions
+- [x] Audit game engine for all endGame/checkEnd triggers
+- [x] Remove or disable any win condition that fires before resources reach 0
+- [x] Ensure game only ends when resources are exhausted (or fail condition: pressure > pressureCap)
+- [x] Updated intro slide, HUD sub-text, and state goal description to reflect new rule
+- [x] Re-upload patched game engine and update URL in GamePage.tsx
+- [x] Save checkpoint
