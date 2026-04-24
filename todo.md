@@ -114,3 +114,12 @@
 - [x] Enforce confront discovery gate in runTurn() execution path (not just UI selector) — undiscovered targets are silently blocked even if submitted programmatically
 - [x] Re-upload game engine (game-engine_b510c832.html) and update URLs in Home.tsx and GamePage.tsx
 - [x] Save checkpoint
+
+## Phase 15: Hide Resistor Identity Until Discovered
+- [x] Audit people info panel rendering in game engine — find where person name, role, description, stance are shown
+- [x] Identify which data fields reveal resistor identity (role label, description text, resistance stance, etc.)
+- [x] Mask resistor-identity fields for union/ops until state.revealed[id] is true (or connected person revealed)
+- [x] Show placeholder text ("⬜ 身份待查明" / masked desc) for masked fields; show normal info after discovery
+- [x] Re-upload game engine (game-engine_ea4b196e.html) and update URLs in Home.tsx and GamePage.tsx
+- [x] Save checkpoint
+
