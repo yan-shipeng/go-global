@@ -1,8 +1,7 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
-import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { Trophy, History, GitCompare, Gamepad2, LogOut, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, History, GitCompare, Gamepad2, UserRound } from "lucide-react";
+import { usePlayerName } from "@/hooks/usePlayerName";
 
 const navItems = [
   { href: "/game", label: "开始游戏", icon: Gamepad2 },
@@ -12,7 +11,7 @@ const navItems = [
 ];
 
 export default function NavBar() {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { playerName } = usePlayerName();
   const [location] = useLocation();
 
   return (
@@ -40,27 +39,20 @@ export default function NavBar() {
           ))}
         </nav>
 
-        {/* Auth */}
+        {/* Player name display */}
         <div className="flex items-center gap-2">
-          {isAuthenticated ? (
-            <>
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                {user?.name ?? "玩家"}
-              </span>
-              <Button variant="ghost" size="sm" onClick={() => logout()} className="gap-1.5">
-                <LogOut className="w-3.5 h-3.5" />
-                <span className="hidden sm:block">退出</span>
-              </Button>
-            </>
+          {playerName ? (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <UserRound className="w-3.5 h-3.5 text-primary" />
+              <span className="hidden sm:block max-w-[120px] truncate">{playerName}</span>
+            </div>
           ) : (
-            <Button
-              size="sm"
-              className="gap-1.5 bg-primary hover:bg-primary/90"
-              onClick={() => window.location.href = getLoginUrl()}
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              登录
-            </Button>
+            <Link href="/game">
+              <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
+                <Gamepad2 className="w-3.5 h-3.5" />
+                开始游戏
+              </Button>
+            </Link>
           )}
         </div>
       </div>

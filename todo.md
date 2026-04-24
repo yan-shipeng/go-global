@@ -31,3 +31,17 @@
 - [x] Vitest: leaderboard.list and stats tests
 - [x] Vitest: compare.sessions test
 - [x] Save checkpoint
+
+## Phase 6: Remove OAuth Login — Name-Entry Flow
+- [x] Convert game.startSession from protectedProcedure to publicProcedure, accept playerName in input
+- [x] Convert game.saveTurn from protectedProcedure to publicProcedure, use sessionId ownership via token/name (no userId check)
+- [x] Convert game.endSession from protectedProcedure to publicProcedure
+- [x] Convert history.mine to use playerName cookie/localStorage instead of userId
+- [x] Remove userId FK constraint from game_sessions (or make nullable)
+- [x] Replace Home.tsx login CTA with name-entry form (input + start button)
+- [x] Replace GamePage login gate with name-entry dialog before iframe loads
+- [x] Remove NavBar login/logout/avatar UI; show player name from localStorage only
+- [x] Update LeaderboardPage and ComparePage to work without auth context
+- [x] Update HistoryPage to filter by playerName stored in localStorage
+- [x] Update tests to remove auth context from game procedures (8/8 passing)
+- [x] Save checkpoint

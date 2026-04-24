@@ -4,30 +4,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, TrendingUp, ChevronDown, ChevronUp, GitCompare } from "lucide-react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { usePlayerName } from "@/hooks/usePlayerName";
+import type { GameSession } from "../../../drizzle/schema";
 
 export default function HistoryPage() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { playerName } = usePlayerName();
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  const { data: sessions, isLoading } = trpc.history.mine.useQuery(undefined, { enabled: isAuthenticated });
 
-  if (loading) return <div className="container py-8 text-center text-muted-foreground">加载中...</div>;
+  const { data: sessions, isLoading } = trpc.history.byPlayerName.useQuery(
+    { playerName: playerName || "" },
+    { enabled: !!playerName }
+  );
 
-  if (!isAuthenticated) {
+  if (!playerName) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <p className="text-muted-foreground">请先登录查看个人历史记录</p>
-        <Button onClick={() => { window.location.href = getLoginUrl(); }}>登录</Button>
+        <p className="text-muted-foreground">请先前往「开始游戏」页面输入名字，再查看历史记录</p>
+        <Link href="/game">
+          <Button className="bg-primary hover:bg-primary/90">去开始游戏</Button>
+        </Link>
       </div>
     );
   }
 
   const chartData = sessions
-    ?.filter(s => s.status === "win")
-    .map((s, i) => ({
+    ?.filter((s: GameSession) => s.status === "win")
+    .map((s: GameSession, i: number) => ({
       局次: `第${i + 1}局`,
       得分: Number(s.totalScore ?? 0),
       可信度: s.finalCredibility ?? 0,
@@ -41,7 +45,7 @@ export default function HistoryPage() {
           <History className="w-8 h-8 text-primary" />
           个人历史
         </h1>
-        <p className="text-muted-foreground mt-1">{user?.name} 的所有游戏记录</p>
+        <p className="text-muted-foreground mt-1">{playerName} 的所有游戏记录</p>
       </div>
 
       {/* Trend chart */}
@@ -90,7 +94,7 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {sessions.map((session, idx) => (
+              {sessions.map((session: GameSession, idx: number) => (
                 <div key={session.id}>
                   <div
                     className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-muted/10 transition-colors"
@@ -148,7 +152,7 @@ export default function HistoryPage() {
                           ))}
                         </div>
                       )}
-                      <Link href={`/compare/${session.id}/${sessions.find(s => s.id !== session.id)?.id ?? session.id}`}>
+                      <Link href={`/compare/${session.id}/${sessions.find((s: GameSession) => s.id !== session.id)?.id ?? session.id}`}>
                         <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                           <GitCompare className="w-3 h-3" />
                           与其他局对比

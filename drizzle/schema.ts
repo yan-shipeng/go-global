@@ -30,7 +30,7 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const gameSessions = mysqlTable("game_sessions", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+  userId: int("userId"),
   playerName: varchar("playerName", { length: 128 }),
   status: mysqlEnum("status", ["active", "win", "fail"]).default("active").notNull(),
 

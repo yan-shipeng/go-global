@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { LogIn, Trophy, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Trophy, RotateCcw, CheckCircle2, XCircle, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { usePlayerName } from "@/hooks/usePlayerName";
 
 const GAME_ENGINE_URL = "/manus-storage/game-engine_97acc408.html";
 
@@ -41,7 +41,8 @@ interface TurnData {
 }
 
 export default function GamePage() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { playerName, setPlayerName } = usePlayerName();
+  const [nameInput, setNameInput] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [sessionId, setSessionId] = useState<number | null>(null);
@@ -53,26 +54,36 @@ export default function GamePage() {
 
   // Inject player name once iframe loads
   const handleIframeLoad = () => {
-    if (!iframeRef.current || !user) return;
+    if (!iframeRef.current || !playerName) return;
     setTimeout(() => {
       iframeRef.current?.contentWindow?.postMessage(
-        { type: "SET_PLAYER", name: user.name || "玩家" },
+        { type: "SET_PLAYER", name: playerName },
         "*"
       );
     }, 600);
   };
 
   // Start a new game session
-  const handleStartGame = async () => {
-    if (!user) return;
+  const handleStartGame = async (name?: string) => {
+    const activeName = name ?? playerName;
+    if (!activeName) return;
     try {
-      const session = await startSession.mutateAsync({});
+      const session = await startSession.mutateAsync({ playerName: activeName });
       setSessionId(session.sessionId);
       setGameResult(null);
       setIframeKey(k => k + 1);
     } catch {
       toast.error("无法创建游戏会话，请重试");
     }
+  };
+
+  // Handle name submission
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    setPlayerName(trimmed);
+    handleStartGame(trimmed);
   };
 
   // Listen for postMessage from game engine
@@ -128,29 +139,39 @@ export default function GamePage() {
     return () => window.removeEventListener("message", handler);
   }, [sessionId]);
 
-  if (loading) {
+  // ── Name entry screen (shown when no name is set yet) ──────────────────────
+  if (!playerName) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-muted-foreground">加载中...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 px-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">需要登录</h2>
-          <p className="text-muted-foreground">请先登录以开始游戏并保存您的成绩</p>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-56px)] gap-6 px-4">
+        <div className="text-center max-w-sm">
+          <div className="text-5xl mb-4">🚀</div>
+          <h2 className="text-2xl font-bold mb-2">输入你的名字</h2>
+          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+            名字将显示在排行榜上，无需注册账号，直接开始游戏。
+          </p>
         </div>
-        <Button
-          size="lg"
-          className="gap-2 bg-primary hover:bg-primary/90"
-          onClick={() => { window.location.href = getLoginUrl(); }}
-        >
-          <LogIn className="w-4 h-4" />
-          登录后开始游戏
-        </Button>
+        <form onSubmit={handleNameSubmit} className="flex flex-col gap-3 w-full max-w-xs">
+          <div className="flex gap-2">
+            <Input
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              placeholder="例：张三 / Alice"
+              maxLength={32}
+              autoFocus
+              className="bg-card border-border"
+            />
+            <Button
+              type="submit"
+              className="bg-primary hover:bg-primary/90 shrink-0"
+              disabled={!nameInput.trim() || startSession.isPending}
+            >
+              {startSession.isPending ? "创建中..." : "开始"}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            名字保存在本地，下次访问自动沿用
+          </p>
+        </form>
       </div>
     );
   }
@@ -160,7 +181,10 @@ export default function GamePage() {
       {/* Game toolbar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 shrink-0">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">👤 {user?.name ?? "玩家"}</span>
+          <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <UserRound className="w-3.5 h-3.5 text-primary" />
+            {playerName}
+          </span>
           {sessionId !== null && (
             <Badge variant="outline" className="text-xs text-primary border-primary/30">
               游戏进行中
@@ -172,13 +196,13 @@ export default function GamePage() {
             <Button
               size="sm"
               className="gap-1.5 bg-primary hover:bg-primary/90"
-              onClick={handleStartGame}
+              onClick={() => handleStartGame()}
               disabled={startSession.isPending}
             >
               {startSession.isPending ? "创建中..." : "🚀 开始新游戏"}
             </Button>
           ) : (
-            <Button size="sm" variant="outline" className="gap-1.5" onClick={handleStartGame}>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleStartGame()}>
               <RotateCcw className="w-3.5 h-3.5" />
               重新开始
             </Button>
@@ -242,7 +266,7 @@ export default function GamePage() {
               </div>
 
               <div className="flex gap-2">
-                <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={handleStartGame}>
+                <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={() => handleStartGame()}>
                   <RotateCcw className="w-4 h-4 mr-1.5" />
                   再玩一局
                 </Button>
@@ -273,7 +297,7 @@ export default function GamePage() {
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
           <div className="text-center max-w-md">
             <div className="text-6xl mb-4">🚀</div>
-            <h2 className="text-2xl font-bold mb-2">准备出发</h2>
+            <h2 className="text-2xl font-bold mb-2">准备出发，{playerName}</h2>
             <p className="text-muted-foreground mb-6">
               点击「开始新游戏」创建一局新的游戏记录。<br />
               游戏结束后，成绩将自动保存到排行榜。
@@ -281,7 +305,7 @@ export default function GamePage() {
             <Button
               size="lg"
               className="gap-2 bg-primary hover:bg-primary/90"
-              onClick={handleStartGame}
+              onClick={() => handleStartGame()}
               disabled={startSession.isPending}
             >
               {startSession.isPending ? "创建中..." : "🚀 开始新游戏"}

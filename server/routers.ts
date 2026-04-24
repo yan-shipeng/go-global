@@ -2,12 +2,12 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, router } from "./_core/trpc";
 import {
   createGameSession,
   updateGameSession,
   getGameSession,
-  getUserSessions,
+  getSessionsByPlayerName,
   saveTurn,
   getSessionTurns,
   getLeaderboard,
@@ -36,12 +36,11 @@ function computeScore(params: {
 
 const gameRouter = router({
   /** Create a new game session and return its ID */
-  startSession: protectedProcedure
-    .input(z.object({ playerName: z.string().optional() }))
-    .mutation(async ({ ctx, input }) => {
+  startSession: publicProcedure
+    .input(z.object({ playerName: z.string().min(1).max(64) }))
+    .mutation(async ({ input }) => {
       const sessionId = await createGameSession({
-        userId: ctx.user.id,
-        playerName: input.playerName ?? ctx.user.name ?? "玩家",
+        playerName: input.playerName,
         status: "active",
         startedAt: new Date(),
       });
@@ -49,7 +48,7 @@ const gameRouter = router({
     }),
 
   /** Append one turn record to an existing session */
-  saveTurn: protectedProcedure
+  saveTurn: publicProcedure
     .input(z.object({
       sessionId: z.number(),
       round: z.number(),
@@ -68,10 +67,9 @@ const gameRouter = router({
       resourcesAfter: z.number(),
       outcome: z.string().optional(),
     }))
-    .mutation(async ({ ctx, input }) => {
-      // Verify session belongs to this user
+    .mutation(async ({ input }) => {
       const session = await getGameSession(input.sessionId);
-      if (!session || session.userId !== ctx.user.id) throw new Error("Session not found");
+      if (!session) throw new Error("Session not found");
       const turnId = await saveTurn({
         sessionId: input.sessionId,
         round: input.round,
@@ -89,7 +87,7 @@ const gameRouter = router({
     }),
 
   /** Finalize a session, compute score, write to leaderboard */
-  endSession: protectedProcedure
+  endSession: publicProcedure
     .input(z.object({
       sessionId: z.number(),
       status: z.enum(["win", "fail"]),
@@ -99,9 +97,9 @@ const gameRouter = router({
       convertedCount: z.number(),
       totalRounds: z.number(),
     }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       const session = await getGameSession(input.sessionId);
-      if (!session || session.userId !== ctx.user.id) throw new Error("Session not found");
+      if (!session) throw new Error("Session not found");
 
       const scores = computeScore({
         status: input.status,
@@ -125,7 +123,7 @@ const gameRouter = router({
       return { scores };
     }),
 
-  /** Get a single session with all turns (for comparison) */
+  /** Get a single session with all turns */
   getSession: publicProcedure
     .input(z.object({ sessionId: z.number() }))
     .query(async ({ input }) => {
@@ -150,16 +148,18 @@ const leaderboardRouter = router({
 });
 
 const historyRouter = router({
-  mine: protectedProcedure.query(async ({ ctx }) => {
-    const sessions = await getUserSessions(ctx.user.id);
-    return sessions;
-  }),
+  /** Return all sessions for a given player name (stored in localStorage on client) */
+  byPlayerName: publicProcedure
+    .input(z.object({ playerName: z.string().min(1) }))
+    .query(async ({ input }) => {
+      return getSessionsByPlayerName(input.playerName);
+    }),
 
-  sessionDetail: protectedProcedure
+  sessionDetail: publicProcedure
     .input(z.object({ sessionId: z.number() }))
-    .query(async ({ ctx, input }) => {
+    .query(async ({ input }) => {
       const session = await getGameSession(input.sessionId);
-      if (!session || session.userId !== ctx.user.id) throw new Error("Not found");
+      if (!session) throw new Error("Not found");
       const turns = await getSessionTurns(input.sessionId);
       return { session, turns };
     }),

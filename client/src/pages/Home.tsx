@@ -1,13 +1,9 @@
-import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { Trophy, GitCompare, History, Gamepad2, Users, Target, Zap } from "lucide-react";
+import { Trophy, GitCompare, History, Gamepad2, Zap } from "lucide-react";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
-
   return (
     <div className="min-h-[calc(100vh-56px)] flex flex-col">
       {/* Hero */}
@@ -37,22 +33,12 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            {isAuthenticated ? (
-              <Link href="/game">
-                <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
-                  <Gamepad2 className="w-4 h-4" />
-                  开始游戏
-                </Button>
-              </Link>
-            ) : (
-              <Button
-                size="lg"
-                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8"
-                onClick={() => window.location.href = getLoginUrl()}
-              >
-                登录后开始游戏
+            <Link href="/game">
+              <Button size="lg" className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8">
+                <Gamepad2 className="w-4 h-4" />
+                开始游戏
               </Button>
-            )}
+            </Link>
             <Link href="/leaderboard">
               <Button size="lg" variant="outline" className="gap-2 px-8">
                 <Trophy className="w-4 h-4" />

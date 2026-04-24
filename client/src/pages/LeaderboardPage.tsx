@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, TrendingUp, Users, Zap, GitCompare } from "lucide-react";
 import { Link } from "wouter";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { usePlayerName } from "@/hooks/usePlayerName";
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return <span className="text-2xl">🥇</span>;
@@ -15,7 +15,7 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 export default function LeaderboardPage() {
-  const { user } = useAuth();
+  const { playerName } = usePlayerName();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const { data: rows, isLoading } = trpc.leaderboard.list.useQuery({ limit: 50 });
   const { data: stats } = trpc.leaderboard.stats.useQuery();
@@ -101,7 +101,7 @@ export default function LeaderboardPage() {
                 <span className="text-right">压力</span>
               </div>
               {rows.map(row => {
-                const isMe = user?.id === row.userId;
+                const isMe = !!playerName && row.playerName === playerName;
                 const isSelected = selectedIds.includes(row.id);
                 return (
                   <div

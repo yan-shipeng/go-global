@@ -84,6 +84,14 @@ export async function getUserSessions(userId: number) {
     .orderBy(desc(gameSessions.startedAt));
 }
 
+export async function getSessionsByPlayerName(playerName: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return db.select().from(gameSessions)
+    .where(eq(gameSessions.playerName, playerName))
+    .orderBy(desc(gameSessions.startedAt));
+}
+
 // ─── Game Turns ───────────────────────────────────────────────────────────────
 
 export async function saveTurn(data: InsertGameTurn) {
