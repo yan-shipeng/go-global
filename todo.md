@@ -128,3 +128,9 @@
 - [x] Patch secretResistors / secretR / secretRM / secretSVG arrays to include 'engineer'
 - [x] Re-upload game engine (game-engine_4d2274c8.html) and update URLs in Home.tsx and GamePage.tsx
 - [x] Save checkpoint
+
+## Phase 17: Discovery event log + briefing hint
+- [x] Inject 🔓 discovery log entry in interview action run() when secret resistor first discovered
+- [x] Add discovery hint sentence to briefing slide 4 (策略与陷阱)
+- [x] Re-upload game engine (game-engine_85aff7d7.html) and update URLs
+- [x] Save checkpoint
