@@ -167,3 +167,10 @@
 - [x] Verified: STATUS_LABELS = [未动, 意识觉醒, 初步理解, 主动参与, 已转化] with glyphs ○◔◑◕●
 - [x] Added color-coded stage diagram with arrows to Slide 2 in BriefingPage.tsx
 - [x] Save checkpoint
+
+## Phase 23: Reorganize action selector + lower 发布组织邮件 threshold
+- [x] Audited: ACTION_GROUPS had 5 groups but wrong mapping; email reqCred was 5, early penalty was round<5
+- [x] Reorganized ACTION_GROUPS into 5 groups matching Slide 3: 建立信任/对话沟通/赋能验证/认可压力/对抗纠偏
+- [x] Lowered email reqCred: 5→2; relaxed early penalty: round<5→round<2
+- [x] Re-uploaded game engine (game-engine_4d91f561.html) and updated GamePage.tsx URL
+- [x] Save checkpoint
