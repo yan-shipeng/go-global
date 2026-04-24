@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_4ecd4145.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_53f29bc4.html?autoStart=1";
 
 interface GameResult {
   endingType: string;
@@ -197,21 +197,34 @@ export default function GamePage() {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+              <div className="bg-muted/30 rounded-lg p-4 space-y-3">
                 <div className="text-center mb-3">
                   <div className="text-4xl font-bold text-primary">{gameResult.totalScore}</div>
-                  <div className="text-sm text-muted-foreground">综合得分</div>
+                  <div className="text-sm text-muted-foreground">综合得分（满分 100）</div>
                 </div>
-                {[
-                  { label: "基础分", value: `+${gameResult.baseScore}`, color: "text-foreground" },
-                  { label: `转化分（${gameResult.convertedCount}人 × 5）`, value: `+${gameResult.conversionScore}`, color: "text-primary" },
-                  { label: "健康度分", value: `+${gameResult.healthScore}`, color: "text-green-400" },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">{label}</span>
-                    <span className={`font-mono font-semibold ${color}`}>{value}</span>
+                {/* Multiplicative formula breakdown */}
+                <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
+                  <div className="text-center px-3 py-1.5 rounded bg-primary/10 border border-primary/30">
+                    <div className="text-xs text-muted-foreground mb-0.5">转化率</div>
+                    <div className="font-mono font-semibold text-primary">
+                      {gameResult.convertedCount}/{gameResult.totalPeople}
+                      <span className="text-xs ml-1 opacity-70">= {Math.round(gameResult.convertedCount / gameResult.totalPeople * 100)}%</span>
+                    </div>
                   </div>
-                ))}
+                  <span className="text-muted-foreground font-light text-lg">×</span>
+                  <div className="text-center px-3 py-1.5 rounded bg-green-500/10 border border-green-500/30">
+                    <div className="text-xs text-muted-foreground mb-0.5">健康度指数</div>
+                    <div className="font-mono font-semibold text-green-400">
+                      {gameResult.healthScore}%
+                      <span className="text-xs ml-1 opacity-70">(可信{gameResult.finalCred}−压{gameResult.finalPressure})</span>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground font-light text-lg">×</span>
+                  <div className="text-center px-3 py-1.5 rounded bg-muted/30 border border-border">
+                    <div className="text-xs text-muted-foreground mb-0.5">满分</div>
+                    <div className="font-mono font-semibold">100</div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 text-center text-sm">

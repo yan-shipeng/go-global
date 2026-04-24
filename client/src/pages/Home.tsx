@@ -6,7 +6,7 @@ import { Link, useLocation } from "wouter";
 import { Trophy, GitCompare, History, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const BRIEFING_URL = "/manus-storage/game-engine_4ecd4145.html?mode=briefing";
+const BRIEFING_URL = "/manus-storage/game-engine_53f29bc4.html?mode=briefing";
 
 type HomeStep = "landing" | "name-entry" | "briefing";
 
@@ -220,7 +220,7 @@ export default function Home() {
               {
                 icon: Trophy,
                 title: "全球排行榜",
-                desc: "综合得分 = 基础分 + 转化分 + 健康度分，满分 100，转化越多排名越高",
+                desc: "综合得分 = 转化率 × 健康度指数 × 100，满分 100 分，两个维度相乘，缺一不可",
                 href: "/leaderboard",
               },
               {
@@ -256,26 +256,43 @@ export default function Home() {
       <section className="py-12 px-4 border-t border-border bg-card/30">
         <div className="container max-w-3xl mx-auto text-center">
           <h2 className="text-xl font-bold mb-6 text-foreground">综合得分算法</h2>
-          <div className="flex flex-wrap justify-center gap-3 items-center text-sm">
-            {[
-              { label: "基础分", value: "30", color: "text-foreground" },
-              { label: "+", value: "", color: "text-muted-foreground" },
-              { label: "转化分", value: "转化数 × 5", color: "text-primary" },
-              { label: "+", value: "", color: "text-muted-foreground" },
-              { label: "健康度分", value: "max(0, 可信度 − 压力)", color: "text-green-400" },
-            ].map((item, i) => (
-              item.value === "" ? (
-                <span key={i} className="text-muted-foreground text-lg font-light">+</span>
-              ) : (
-                <div key={i} className="px-3 py-2 rounded-lg bg-card border border-border">
-                  <div className="text-xs text-muted-foreground mb-0.5">{item.label}</div>
-                  <div className={`font-mono font-semibold ${item.color}`}>{item.value}</div>
-                </div>
-              )
-            ))}
+
+          {/* Formula display */}
+          <div className="flex flex-wrap justify-center gap-3 items-center text-sm mb-6">
+            <div className="px-4 py-3 rounded-lg bg-card border border-primary/40">
+              <div className="text-xs text-muted-foreground mb-1">转化率</div>
+              <div className="font-mono font-semibold text-primary">转化人数 ÷ 12</div>
+            </div>
+            <span className="text-muted-foreground text-2xl font-light">×</span>
+            <div className="px-4 py-3 rounded-lg bg-card border border-green-500/40">
+              <div className="text-xs text-muted-foreground mb-1">健康度指数</div>
+              <div className="font-mono font-semibold text-green-400">(max(0, 可信度−压力) + 10) ÷ 20</div>
+            </div>
+            <span className="text-muted-foreground text-2xl font-light">×</span>
+            <div className="px-4 py-3 rounded-lg bg-card border border-border">
+              <div className="text-xs text-muted-foreground mb-1">满分</div>
+              <div className="font-mono font-semibold text-foreground">100</div>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            满分 100 分（12 人全转化 + 最佳健康度）· 所有完成游戏的局次均计入排行榜
+
+          {/* Explanation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-xl mx-auto mb-4">
+            <div className="px-4 py-3 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="text-xs font-semibold text-primary mb-1">转化率（0–1）</div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                12 人全转化 = 1.0，6 人 = 0.5。转化越多，乘数越大。
+              </p>
+            </div>
+            <div className="px-4 py-3 rounded-lg bg-green-500/5 border border-green-500/20">
+              <div className="text-xs font-semibold text-green-400 mb-1">健康度指数（0–1）</div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                可信度 10、压力 0 时 = 1.0；两者相等时 = 0.5；压力远超可信度时趋近 0。
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            两个维度相乘：任何一项极差都会大幅拉低总分。满分 100 分（12 人全转化 × 最佳健康度）。
           </p>
         </div>
       </section>

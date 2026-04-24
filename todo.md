@@ -85,3 +85,12 @@
 - [x] Bootstrap reads name from localStorage and pre-fills state.learnerName + learnerNameInput for in-game display
 - [x] skipIntroBtn and toIntroBtn handlers updated to use state.learnerName as fallback when input is hidden
 - [x] Save checkpoint
+
+## Phase 12: New Scoring Formula (Multiplicative, Max 100)
+- [x] Update game engine postGameEnded: score = round((converted/12) × ((max(0,cred-pressure)+10)/20) × 100), min 1, max 100
+- [x] Update game engine win condition text in intro slide 2 to reflect new formula
+- [x] Update homepage scoring algorithm section (multiplicative formula with × display)
+- [x] Update homepage leaderboard feature card description
+- [x] Update GamePage end-game overlay to show conversionRatio × healthIndex × 100 breakdown
+- [x] Re-upload game engine (game-engine_53f29bc4.html) and update URLs in Home.tsx and GamePage.tsx
+- [ ] Save checkpoint
