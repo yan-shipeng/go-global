@@ -1,0 +1,33 @@
+# China Outbound Online - TODO
+
+## Phase 1: Database Schema
+- [x] Add game_sessions table (id, userId, status, score breakdown, resources left, credibility, pressure, converted count, started/ended at)
+- [x] Add game_turns table (id, sessionId, round, actionId, targets, prediction, scoreDeltas JSON, credibility/pressure after)
+- [x] Generate and apply migration SQL
+
+## Phase 2: Backend API
+- [x] game.startSession - create new session, return sessionId
+- [x] game.saveTurn - append a turn record
+- [x] game.endSession - finalize session, compute composite score, write to leaderboard
+- [x] leaderboard.list - paginated leaderboard with rank, player name, score, stats
+- [x] compare.sessions - return two sessions' full turn-by-turn data
+- [x] history.mine - return current user's sessions with trend data
+
+## Phase 3: Frontend - Core
+- [x] Dark theme CSS variables matching game palette (#06111a, #0d8b96)
+- [x] App.tsx routes: /, /game, /leaderboard, /compare, /history
+- [x] TopNav with user avatar, login/logout, nav links
+- [x] Landing page (Home.tsx): hero + login CTA + feature cards
+- [x] Game page: embed v25 game engine, auto-inject OAuth username, send turn/end events to API
+
+## Phase 4: Frontend - Social Features
+- [x] Leaderboard page: ranked table with score breakdown chips, filter by date
+- [x] Game end overlay: score breakdown card + vs. leaderboard average + rank badge
+- [x] Decision comparison page: player selector + side-by-side turn table
+- [x] Personal history page: session list + recharts line chart for score/resources trend
+
+## Phase 5: Quality & Delivery
+- [x] Vitest: game.startSession and saveTurn tests (7/7 passing)
+- [x] Vitest: leaderboard.list and stats tests
+- [x] Vitest: compare.sessions test
+- [x] Save checkpoint

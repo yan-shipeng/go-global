@@ -1,5 +1,27 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1776991918914,
+      "tag": "0000_curly_centennial",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776992067895,
+      "tag": "0001_freezing_zzzax",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776992126448,
+      "tag": "0002_sparkling_exiles",
+      "breakpoints": true
+    }
+  ]
 }
