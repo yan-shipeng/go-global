@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_95c30ccd.html";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_54933156.html?autoStart=1";
 
 interface GameResult {
   endingType: string;

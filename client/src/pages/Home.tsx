@@ -6,7 +6,7 @@ import { Link, useLocation } from "wouter";
 import { Trophy, GitCompare, History, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_95c30ccd.html";
+const BRIEFING_URL = "/manus-storage/game-engine_54933156.html?mode=briefing";
 
 type HomeStep = "landing" | "name-entry" | "briefing";
 
@@ -65,22 +65,12 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Briefing iframe — shows the game engine's intro slides (read-only) */}
+        {/* Briefing iframe — shows the game engine's intro slides in read-only briefing mode */}
         <iframe
-          src={GAME_ENGINE_URL}
+          src={BRIEFING_URL}
           className="flex-1 w-full border-none"
           title="任务简报"
           sandbox="allow-scripts allow-same-origin allow-forms"
-          onLoad={(e) => {
-            // Inject name but do NOT skip intro — let player read the briefing slides
-            const iframe = e.currentTarget as HTMLIFrameElement;
-            setTimeout(() => {
-              iframe.contentWindow?.postMessage(
-                { type: "SET_PLAYER", name: playerName },
-                "*"
-              );
-            }, 400);
-          }}
         />
       </div>
     );

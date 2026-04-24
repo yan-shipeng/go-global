@@ -70,4 +70,11 @@
 - [x] GamePage: remove the separate name-entry screen (no longer needed — handled on homepage)
 - [x] Fix flash of old game engine name-entry screen: inject SET_PLAYER + SKIP_INTRO immediately on iframe load (0ms delay)
 - [x] Verify full flow: land → name → briefing (or skip) → game starts with no flash
-- [ ] Save checkpoint
+- [x] Save checkpoint
+
+## Phase 10: Fix Briefing & Flash Bugs
+- [x] Briefing iframe: now uses ?mode=briefing URL param — game engine sets window._briefingMode=true which suppresses SET_PLAYER auto-skip; no name injection needed
+- [x] Game iframe flash: now uses ?autoStart=1 URL param — game engine skips intro immediately in bootstrap before any paint
+- [x] Game engine patched with URL param support (mode=briefing, autoStart=1) and re-uploaded
+- [x] autoStart block reads name from localStorage before skipIntroBtn click (fixes empty-name guard)
+- [x] Save checkpoint
