@@ -186,3 +186,9 @@
 - [x] Add opaque overlay in GamePage.tsx that hides iframe until GAME_READY received
 - [x] Fade overlay out smoothly on GAME_READY
 - [x] Re-upload engine, update URLs, run tests, save checkpoint
+
+## Phase 26: Redesign 发布组织邮件 action (方案B)
+- [x] Add affectAllNonConverted() helper: applies diminishing multiplier by status (0→×0.40, 1→×0.70, 2→×0.50, 3→×0.25) to all status<4 people
+- [x] Replace affectNonAdopters calls in email action with affectAllNonConverted
+- [x] Update email desc to: 广播工具，覆盖所有未转化的人，但说服深度随阶段递减——越是深度观望者，邮件越难打动。第一回合无成果时发送会损失可信度。
+- [x] Re-upload engine, update URL, run tests, save checkpoint
