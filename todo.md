@@ -192,3 +192,9 @@
 - [x] Replace affectNonAdopters calls in email action with affectAllNonConverted
 - [x] Update email desc to: 广播工具，覆盖所有未转化的人，但说服深度随阶段递减——越是深度观望者，邮件越难打动。第一回合无成果时发送会损失可信度。
 - [x] Re-upload engine, update URL, run tests, save checkpoint
+
+## Phase 27: Audit and fix 发布阶段进展 + 讲述成功案例 descriptions
+- [x] Audit 发布阶段进展 code mechanics vs description
+- [x] Audit 讲述成功案例 code mechanics vs description
+- [x] Rewrite both descriptions to match actual code
+- [x] Patch engine, re-upload, run tests, save checkpoint
