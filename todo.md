@@ -174,3 +174,9 @@
 - [x] Lowered email reqCred: 5→2; relaxed early penalty: round<5→round<2
 - [x] Re-uploaded game engine (game-engine_4d91f561.html) and updated GamePage.tsx URL
 - [x] Save checkpoint
+
+## Phase 24: Remove flash of old intro screen in game engine
+- [x] Located: bootstrap() activated screen-intro before skipBtn.click(), causing 1-frame flash
+- [x] Fixed: guarded introEl.classList.add('active') with !autoStart; added belt-and-suspenders hide in autoStart block
+- [x] Re-uploaded engine (game-engine_7d8ec575.html), updated GamePage.tsx URL
+- [x] 0 TS errors, 8/8 tests pass, save checkpoint
