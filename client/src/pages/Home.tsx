@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,7 +6,7 @@ import { Link, useLocation } from "wouter";
 import { Trophy, GitCompare, History, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const BRIEFING_URL = "/manus-storage/game-engine_85aff7d7.html?mode=briefing";
+const BRIEFING_URL = "/manus-storage/game-engine_d26d155a.html?mode=briefing";
 
 type HomeStep = "landing" | "name-entry" | "briefing";
 
@@ -23,6 +23,18 @@ export default function Home() {
     if (!win || !playerName) return;
     win.postMessage({ type: "SET_PLAYER", name: playerName }, "*");
   }, [playerName]);
+
+  // Listen for messages from the briefing iframe
+  useEffect(() => {
+    if (step !== "briefing") return;
+    const handler = (e: MessageEvent) => {
+      if (!e.data) return;
+      if (e.data.type === "BRIEFING_ENTER_GAME") navigate("/game");
+      if (e.data.type === "BRIEFING_SKIP_REQUESTED") navigate("/game");
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [step, navigate]);
 
   // ── Step: Name Entry ──────────────────────────────────────────────────────
   const handleNameConfirm = (e: React.FormEvent) => {

@@ -139,3 +139,10 @@
 - [x] Diagnose: briefing iframe had no onLoad handler — never sent SET_PLAYER postMessage to engine
 - [x] Fix: added useRef + onLoad handler to briefing iframe in Home.tsx, sends SET_PLAYER with current playerName
 - [x] Save checkpoint
+
+## Phase 19: Fix briefing skip bug
+- [x] Diagnose: co-v17-learnerName in localStorage caused skipIntroBtn/startBtn to fire in briefing mode
+- [x] Fix: guard skipIntroBtn + startBtn with _briefingMode check; hide skipIntroWrap in briefing mode; post BRIEFING_ENTER_GAME/BRIEFING_SKIP_REQUESTED to parent
+- [x] Fix: Home.tsx listens for BRIEFING_ENTER_GAME and BRIEFING_SKIP_REQUESTED to navigate to /game
+- [x] Re-upload game engine (game-engine_d26d155a.html) and update URLs
+- [x] Save checkpoint
