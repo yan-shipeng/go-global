@@ -123,3 +123,8 @@
 - [x] Re-upload game engine (game-engine_ea4b196e.html) and update URLs in Home.tsx and GamePage.tsx
 - [x] Save checkpoint
 
+
+## Phase 16: Add engineer to secret resistors
+- [x] Patch secretResistors / secretR / secretRM / secretSVG arrays to include 'engineer'
+- [x] Re-upload game engine (game-engine_4d2274c8.html) and update URLs in Home.tsx and GamePage.tsx
+- [x] Save checkpoint
