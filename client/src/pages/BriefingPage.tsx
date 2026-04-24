@@ -115,74 +115,78 @@ function Slide2() {
 }
 
 function Slide3() {
-  const actions = [
+  // Actual actions from the game engine, grouped by category
+  const groups = [
     {
-      icon: <MessageSquare className="w-4 h-4" />,
-      name: "访谈",
-      cost: "低",
-      effect: "了解人物立场，发现隐藏信息",
-      tip: "是发现阻力者身份的关键手段",
+      label: "🌱 建立信任",
+      color: "border-primary/30 bg-primary/5",
+      actions: [
+        { name: "以身作则", weeks: 2, type: "示范", desc: "先用行动建立可信度，再推动别人。" },
+        { name: "争取总部公开背书", weeks: 2, type: "政治", desc: "通过公开支持提升你的正当性。" },
+      ],
     },
     {
-      icon: <Target className="w-4 h-4" />,
-      name: "说服",
-      cost: "中",
-      effect: "提升目标人物的接受意愿",
-      tip: "对中立或观望者效果最好",
+      label: "💬 对话与沟通",
+      color: "border-cyan-500/30 bg-cyan-500/5",
+      actions: [
+        { name: "私人访谈", weeks: 1, type: "对话", desc: "摸清顾虑，识别非正式关系。是发现阻力者身份的关键手段。" },
+        { name: "发布组织邮件", weeks: 1, type: "沟通", desc: "广覆盖但说服深度有限。" },
+        { name: "发布阶段进展", weeks: 2, type: "沟通", desc: "让观望者看到变革确实在推进。" },
+      ],
     },
     {
-      icon: <Users className="w-4 h-4" />,
-      name: "联盟",
-      cost: "中",
-      effect: "借助支持者影响其他人物",
-      tip: "利用社会网络扩大影响力",
+      label: "🎓 赋能与验证",
+      color: "border-green-500/30 bg-green-500/5",
+      actions: [
+        { name: "上手培训", weeks: 2, type: "赋能", desc: "帮助有意愿但缺乏方法的人掌握实际技能。" },
+        { name: "小范围试点", weeks: 3, type: "验证", desc: "把变革变成可见的实际成果，说服「眼见为实」的人。" },
+        { name: "讲述成功案例", weeks: 1, type: "叙事", desc: "用真实成功故事激励他人。必须有本土案例支撑。" },
+      ],
     },
     {
-      icon: <TrendingUp className="w-4 h-4" />,
-      name: "培训",
-      cost: "中高",
-      effect: "提升人物能力与信心",
-      tip: "对技术型人物尤为有效",
+      label: "🏆 认可与压力",
+      color: "border-amber-500/30 bg-amber-500/5",
+      actions: [
+        { name: "公开认可示范者", weeks: 2, type: "政治", desc: "公开表彰有实际成果的人，放大示范效应。" },
+        { name: "宣布KPI与时限", weeks: 2, type: "压力", desc: "制造紧迫感，但会提升组织压力。" },
+        { name: "调整激励与奖惩", weeks: 4, type: "制度", desc: "后期终极武器，突破瓶颈，但大幅提升压力。" },
+      ],
     },
     {
-      icon: <Lock className="w-4 h-4" />,
-      name: "约谈",
-      cost: "高",
-      effect: "直接施压阻力者",
-      tip: "需先通过访谈发现阻力者身份",
+      label: "⚡ 对抗纠偏",
+      color: "border-red-500/30 bg-red-500/5",
+      actions: [
+        { name: "强硬约谈阻力者", weeks: 1, type: "对抗", desc: "对核心阻力者施压。需先通过访谈发现其身份，否则用错对象会严重损害可信度。" },
+      ],
     },
   ];
 
   return (
-    <div className="flex flex-col gap-6 max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-2">
+    <div className="flex flex-col gap-4 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-1">
         <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
           <Target className="w-5 h-5 text-primary" />
         </div>
         <span className="text-xs font-semibold tracking-widest text-primary uppercase">行动类型</span>
       </div>
-      <h2 className="text-3xl sm:text-4xl font-bold leading-tight">
-        五种行动，<br />
-        <span className="text-primary">各有用武之地。</span>
+      <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
+        12 种行动，<br />
+        <span className="text-primary">按策略阶段选择。</span>
       </h2>
-      <div className="space-y-2">
-        {actions.map((a) => (
-          <div
-            key={a.name}
-            className="flex items-start gap-3 rounded-lg border border-border bg-card/50 px-4 py-3"
-          >
-            <div className="w-7 h-7 rounded-md bg-primary/15 flex items-center justify-center shrink-0 mt-0.5 text-primary">
-              {a.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm">{a.name}</span>
-                <span className="text-xs text-muted-foreground bg-muted/40 rounded px-1.5 py-0.5">
-                  消耗：{a.cost}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">{a.effect}</p>
-              <p className="text-xs text-primary/80 mt-0.5 italic">💡 {a.tip}</p>
+      <div className="space-y-3 overflow-y-auto max-h-[55vh] pr-1">
+        {groups.map((g) => (
+          <div key={g.label} className={`rounded-xl border p-3 ${g.color}`}>
+            <div className="text-xs font-semibold mb-2 text-foreground/80">{g.label}</div>
+            <div className="space-y-1.5">
+              {g.actions.map((a) => (
+                <div key={a.name} className="flex items-start gap-2">
+                  <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                    <span className="font-semibold text-xs text-foreground">{a.name}</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1">{a.type} · {a.weeks}周</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{a.desc}</p>
+                </div>
+              ))}
             </div>
           </div>
         ))}

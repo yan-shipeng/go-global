@@ -158,3 +158,7 @@
 - [x] Remove BRIEFING_URL constant and briefingIframeRef from Home.tsx
 - [x] Remove BRIEFING_ENTER_GAME / BRIEFING_SKIP_REQUESTED message listeners
 - [x] Run tests (8/8 pass), save checkpoint
+
+## Phase 21: Fix Slide 3 action types
+- [x] Replace invented action types with actual 12 actions from game engine (5 groups: 示范/对话沟通/赋能验证/认可压力/对抗纠偏)
+- [x] Save checkpoint
