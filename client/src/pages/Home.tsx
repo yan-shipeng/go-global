@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,14 @@ export default function Home() {
   const [step, setStep] = useState<HomeStep>("landing");
   const [nameInput, setNameInput] = useState(playerName ?? "");
   const [, navigate] = useLocation();
+  const briefingIframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Inject player name into the briefing iframe once it loads
+  const handleBriefingLoad = useCallback(() => {
+    const win = briefingIframeRef.current?.contentWindow;
+    if (!win || !playerName) return;
+    win.postMessage({ type: "SET_PLAYER", name: playerName }, "*");
+  }, [playerName]);
 
   // ── Step: Name Entry ──────────────────────────────────────────────────────
   const handleNameConfirm = (e: React.FormEvent) => {
@@ -67,10 +75,12 @@ export default function Home() {
 
         {/* Briefing iframe — shows the game engine's intro slides in read-only briefing mode */}
         <iframe
+          ref={briefingIframeRef}
           src={BRIEFING_URL}
           className="flex-1 w-full border-none"
           title="任务简报"
           sandbox="allow-scripts allow-same-origin allow-forms"
+          onLoad={handleBriefingLoad}
         />
       </div>
     );

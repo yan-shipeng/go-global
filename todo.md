@@ -134,3 +134,8 @@
 - [x] Add discovery hint sentence to briefing slide 4 (策略与陷阱)
 - [x] Re-upload game engine (game-engine_85aff7d7.html) and update URLs
 - [x] Save checkpoint
+
+## Phase 18: Fix briefing iframe name sync bug
+- [x] Diagnose: briefing iframe had no onLoad handler — never sent SET_PLAYER postMessage to engine
+- [x] Fix: added useRef + onLoad handler to briefing iframe in Home.tsx, sends SET_PLAYER with current playerName
+- [x] Save checkpoint
