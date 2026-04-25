@@ -244,17 +244,17 @@
 - [x] Re-upload engine, update URL, run tests, save checkpoint
 
 ## Phase 38: Balance optimization (9 changes)
-- [ ] exemplify: phase-sensitive effect (early<3: +12 broad; mid 3-7: +6 broad; late>7: +3 broad + cred+1)
-- [ ] email: add fatigue mechanism (3rd+ use: halved multipliers); remove round-1 zero-conversion penalty
-- [ ] success-story: add use-count decay (1-2: +10; 3-4: +5; 5+: +3)
-- [ ] incentive: 3-tier effect (status=0: broad+10; status=1-2: broad+18; status>=3: direct+18); reqCred 8->9
-- [ ] social-gathering: raise base effects (s0:+3, s1:+6, s2:+8, s3+:+5); softenNeighbors when converted present
-- [ ] remove team-building (非正式交流) from ACTIONS array
-- [ ] confront: success path forces status to 2; chilling effect on neighbors (-3); untracked penalty next decay
-- [ ] indirect-inquiry: cost 2 resources, allow 2 targets (need:2, maxNeed:2)
-- [ ] interview: cost 2 resources, only 1 target (need:1, maxNeed:1)
-- [ ] training: status>=2 gives +15, status<2 gives +10
-- [ ] update all affected desc strings
+- [x] exemplify: phase-sensitive effect (early<3: +12 broad; mid 3-7: +6 broad; late>7: +3 broad + cred+1)
+- [x] email: add fatigue mechanism (3rd+ use: halved multipliers); remove round-1 zero-conversion penalty
+- [x] success-story: add use-count decay (1-2: +10; 3-4: +5; 5+: +3)
+- [x] incentive: 3-tier effect (status=0: broad+10; status=1-2: broad+18; status>=3: direct+18); reqCred 8->9
+- [x] social-gathering: raise base effects (s0:+3, s1:+6, s2:+8, s3+:+5); softenNeighbors when converted present
+- [x] remove team-building (非正式交流) from ACTIONS array
+- [x] confront: success path forces status to 2; chilling effect on neighbors (-3); untracked penalty next decay
+- [x] indirect-inquiry: cost 2 resources, allow 2 targets (need:2, maxNeed:2)
+- [x] interview: cost 2 resources, only 1 target (need:1, maxNeed:1)
+- [x] training: status>=2 gives +15, status<2 gives +10
+- [x] update all affected desc strings
 
 ## Phase 41: Comprehensive Mobile UX Overhaul
 - [x] NavBar.tsx: mobile pill indicator, larger touch targets, active state
@@ -265,3 +265,12 @@
 - [x] BriefingPage.tsx: confirmed Babel parse error resolved (curly quotes removed in previous checkpoint)
 - [x] 8/8 tests passing
 - [x] Save checkpoint
+
+## Phase 42: PM Exclusion + CEO-PM Trust Mechanic + Trust Network Rebuild
+- [x] Exclude PM from all action target lists (every action's need/max selector should not show pm)
+- [x] CEO always trusts PM by default (ceo→pm trust link active from game start)
+- [x] CEO trust toward PM can be broken by: (a) major crisis event (pressure spike ≥ threshold), or (b) CFO influence (cfo status≥3 and ceo-cfo tie exists)
+- [x] If CEO trust in PM is broken, add a "修复信任" path (e.g., via 1-on-1 persuade or coalition action targeting ceo)
+- [x] Rebuild trust network (hiddenTies): every person has at least 1 trust link; network is sparse (≤2 links per person avg); no isolated nodes
+- [x] Re-upload patched engine, update URL in GamePage.tsx
+- [x] Run tests (8/8), save checkpoint
