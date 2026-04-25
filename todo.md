@@ -236,3 +236,9 @@
 - [x] Rename 紧密关系 → 正式沟通关系 in key-info panel; remove 隐藏目标 from key-info panel
 - [x] 休闲聚会: change need to max 4, cost = targets selected (1 person=2, 2=3, 3=4, 4=5 resources), dynamic cost display
 - [x] Re-upload engine, update URL, run tests, save checkpoint
+
+## Phase 36: Fix broadcast actions + redesign 休闲聚会
+- [x] Fix broadcast action (need:0) ready condition: selectedTargets.length>=1 blocks execution; fix to allow need:0 actions with 0 targets selected
+- [x] Fix resources check in problems array: uses a.weeks instead of dynCost (affects social-gathering display)
+- [x] 休闲聚会 redesign: need:1, max 6 targets, cost = targets+2 (3 for 1 person, up to 8 for 6 people), overuse threshold raised to 5th use
+- [x] Re-upload engine, update URL, run tests, save checkpoint
