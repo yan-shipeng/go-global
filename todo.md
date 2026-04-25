@@ -242,3 +242,16 @@
 - [x] Fix resources check in problems array: uses a.weeks instead of dynCost (affects social-gathering display)
 - [x] 休闲聚会 redesign: need:1, max 6 targets, cost = targets+2 (3 for 1 person, up to 8 for 6 people), overuse threshold raised to 5th use
 - [x] Re-upload engine, update URL, run tests, save checkpoint
+
+## Phase 38: Balance optimization (9 changes)
+- [ ] exemplify: phase-sensitive effect (early<3: +12 broad; mid 3-7: +6 broad; late>7: +3 broad + cred+1)
+- [ ] email: add fatigue mechanism (3rd+ use: halved multipliers); remove round-1 zero-conversion penalty
+- [ ] success-story: add use-count decay (1-2: +10; 3-4: +5; 5+: +3)
+- [ ] incentive: 3-tier effect (status=0: broad+10; status=1-2: broad+18; status>=3: direct+18); reqCred 8->9
+- [ ] social-gathering: raise base effects (s0:+3, s1:+6, s2:+8, s3+:+5); softenNeighbors when converted present
+- [ ] remove team-building (非正式交流) from ACTIONS array
+- [ ] confront: success path forces status to 2; chilling effect on neighbors (-3); untracked penalty next decay
+- [ ] indirect-inquiry: cost 2 resources, allow 2 targets (need:2, maxNeed:2)
+- [ ] interview: cost 2 resources, only 1 target (need:1, maxNeed:1)
+- [ ] training: status>=2 gives +15, status<2 gives +10
+- [ ] update all affected desc strings
