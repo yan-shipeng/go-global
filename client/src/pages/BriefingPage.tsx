@@ -170,7 +170,8 @@ function Slide3() {
       label: "🎓 赋能与验证",
       color: "border-green-500/30 bg-green-500/5",
       actions: [
-        { name: "上手培训", cost: "2 资源", type: "赋能", desc: "帮助目标掌握实际技能。对已有意愿者（status≥2）效果更显著（+15 vs +10）。需选 3 人参与。" },
+        { name: "外部培训", cost: "3 资源", type: "赋能", desc: "引入外部顾问或高校讲师进行专业培训。早期新鲜感强（+14），后期效果递减（+8）。需选 3 人参与。" },
+        { name: "内部培训", cost: "2 资源", type: "赋能", desc: "内部师傅带领培训，帮助员工掌握实际技能。早期员工尚未准备好，效果有限（+8）；后期对有意愿者效果显著（+15）。需选 3 人参与。" },
         { name: "小范围试点", cost: "3 资源", type: "验证", desc: "把变革变成可见的实际成果，说服「眼见为实」的人。需选 3 人参与。" },
         { name: "讲述成功案例", cost: "1 资源", type: "叙事", desc: "用真实案例激励目标。第3–4次降至半效，第5次起效果大幅递减。需选 2 人。" },
       ],
@@ -202,7 +203,7 @@ function Slide3() {
         <span className="text-xs font-semibold tracking-widest text-primary uppercase">行动类型</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
-        13 种行动，<br />
+        14 种行动，<br />
         <span className="text-primary">按策略阶段选择。</span>
       </h2>
       <div className="space-y-3 overflow-y-auto max-h-[55vh] pr-1">
