@@ -20,8 +20,8 @@ export default function HistoryPage() {
 
   if (!playerName) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <p className="text-muted-foreground">请先前往「开始游戏」页面输入名字，再查看历史记录</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4 text-center">
+        <p className="text-muted-foreground text-sm">请先前往「开始游戏」页面输入名字，再查看历史记录</p>
         <Link href="/game">
           <Button className="bg-primary hover:bg-primary/90">去开始游戏</Button>
         </Link>
@@ -39,35 +39,35 @@ export default function HistoryPage() {
     })) ?? [];
 
   return (
-    <div className="container py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3">
-          <History className="w-8 h-8 text-primary" />
+    <div className="container py-6 max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+          <History className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
           个人历史
         </h1>
-        <p className="text-muted-foreground mt-1">{playerName} 的所有游戏记录</p>
+        <p className="text-muted-foreground mt-1 text-sm">{playerName} 的所有游戏记录</p>
       </div>
 
       {/* Trend chart */}
       {chartData.length >= 2 && (
-        <Card className="bg-card border-border mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
+        <Card className="bg-card border-border mb-5">
+          <CardHeader className="pb-2 px-4">
+            <CardTitle className="text-sm sm:text-base flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
               得分趋势
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
+          <CardContent className="px-2 sm:px-4 pb-4">
+            <ResponsiveContainer width="100%" height={180}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="局次" tick={{ fill: "#5a8090", fontSize: 12 }} />
-                <YAxis tick={{ fill: "#5a8090", fontSize: 12 }} />
+                <XAxis dataKey="局次" tick={{ fill: "#5a8090", fontSize: 11 }} />
+                <YAxis tick={{ fill: "#5a8090", fontSize: 11 }} width={28} />
                 <Tooltip
-                  contentStyle={{ background: "#0d1e2a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8 }}
+                  contentStyle={{ background: "#0d1e2a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }}
                   labelStyle={{ color: "#d8eef4" }}
                 />
-                <Line type="monotone" dataKey="得分" stroke="#0d8b96" strokeWidth={2} dot={{ fill: "#0d8b96" }} />
+                <Line type="monotone" dataKey="得分" stroke="#0d8b96" strokeWidth={2} dot={{ fill: "#0d8b96", r: 3 }} />
                 <Line type="monotone" dataKey="可信度" stroke="#22c55e" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
                 <Line type="monotone" dataKey="压力" stroke="#ef4444" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
               </LineChart>
@@ -78,8 +78,8 @@ export default function HistoryPage() {
 
       {/* Sessions list */}
       <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">所有对局（{sessions?.length ?? 0} 局）</CardTitle>
+        <CardHeader className="pb-3 px-4">
+          <CardTitle className="text-sm sm:text-base">所有对局（{sessions?.length ?? 0} 局）</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
@@ -96,56 +96,68 @@ export default function HistoryPage() {
             <div className="divide-y divide-border">
               {sessions.map((session: GameSession, idx: number) => (
                 <div key={session.id}>
+                  {/* Row header */}
                   <div
-                    className="flex items-center gap-4 px-4 py-3 cursor-pointer hover:bg-muted/10 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/10 transition-colors"
                     onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
                   >
-                    <span className="text-sm text-muted-foreground font-mono w-8">#{sessions.length - idx}</span>
+                    <span className="text-xs text-muted-foreground font-mono w-7 shrink-0">#{sessions.length - idx}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">已完成</Badge>
                         <span className="text-xs text-muted-foreground">
                           {new Date(session.startedAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
+                      {/* Mobile sub-stats */}
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground sm:hidden">
+                        <span>转化 <span className="text-foreground">{session.convertedCount ?? 0}/12</span></span>
+                        <span>可信 <span className="text-green-400">{session.finalCredibility ?? 0}</span></span>
+                        <span>压力 <span className="text-destructive">{session.finalPressure ?? 0}</span></span>
+                      </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <div className="font-bold text-primary">{Number(session.totalScore ?? 0).toFixed(1)}</div>
                       <div className="text-xs text-muted-foreground">分</div>
                     </div>
-                    <div className="text-muted-foreground">
+                    <div className="text-muted-foreground shrink-0">
                       {expandedId === session.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </div>
                   </div>
 
+                  {/* Expanded detail */}
                   {expandedId === session.id && (
-                    <div className="px-4 pb-4 bg-muted/5">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                    <div className="px-4 pb-4 bg-muted/5 space-y-3">
+                      {/* Stats grid - 2 cols on mobile, 4 on desktop */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {[
                           { label: "转化人数", value: `${session.convertedCount ?? 0}/12` },
                           { label: "剩余资源", value: session.resourcesLeft ?? 0 },
                           { label: "最终可信度", value: session.finalCredibility ?? 0, color: "text-green-400" },
                           { label: "最终压力", value: session.finalPressure ?? 0, color: "text-destructive" },
                         ].map(({ label, value, color }) => (
-                          <div key={label} className="bg-muted/20 rounded p-2 text-center text-sm">
-                            <div className={`font-semibold ${color ?? ""}`}>{value}</div>
+                          <div key={label} className="bg-muted/20 rounded p-2 text-center">
+                            <div className={`font-semibold text-sm ${color ?? ""}`}>{value}</div>
                             <div className="text-xs text-muted-foreground">{label}</div>
                           </div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-4 gap-2 text-xs text-center mb-3">
-                          {[
-                            { label: "基础分", value: session.baseScore ?? 0 },
-                            { label: "效率分", value: `+${Number(session.efficiencyScore ?? 0).toFixed(1)}` },
-                            { label: "健康度分", value: `${Number(session.healthScore ?? 0) >= 0 ? "+" : ""}${Number(session.healthScore ?? 0).toFixed(1)}` },
-                            { label: "超额转化", value: `+${Number(session.overAchievementScore ?? 0).toFixed(1)}` },
-                          ].map(({ label, value }) => (
-                            <div key={label} className="bg-primary/10 rounded p-1.5">
-                              <div className="font-semibold text-primary">{value}</div>
-                              <div className="text-muted-foreground">{label}</div>
-                            </div>
-                          ))}
-                        </div>
+
+                      {/* Score breakdown - 2 cols on mobile, 4 on desktop */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-center">
+                        {[
+                          { label: "基础分", value: session.baseScore ?? 0 },
+                          { label: "效率分", value: `+${Number(session.efficiencyScore ?? 0).toFixed(1)}` },
+                          { label: "健康度分", value: `${Number(session.healthScore ?? 0) >= 0 ? "+" : ""}${Number(session.healthScore ?? 0).toFixed(1)}` },
+                          { label: "超额转化", value: `+${Number(session.overAchievementScore ?? 0).toFixed(1)}` },
+                        ].map(({ label, value }) => (
+                          <div key={label} className="bg-primary/10 rounded p-1.5">
+                            <div className="font-semibold text-primary">{value}</div>
+                            <div className="text-muted-foreground">{label}</div>
+                          </div>
+                        ))}
+                      </div>
+
                       <Link href={`/compare/${session.id}/${sessions.find((s: GameSession) => s.id !== session.id)?.id ?? session.id}`}>
                         <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                           <GitCompare className="w-3 h-3" />

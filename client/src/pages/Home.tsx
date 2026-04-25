@@ -94,7 +94,7 @@ export default function Home() {
   return (
     <div className="min-h-[calc(100vh-56px)] flex flex-col">
       {/* Hero */}
-      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 py-20 overflow-hidden">
+      <section className="relative flex-1 flex flex-col items-center justify-center text-center px-4 py-12 sm:py-20 overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl" />
         </div>
@@ -105,16 +105,16 @@ export default function Home() {
             EMBA 变革管理模拟 · 多人竞技版
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4 leading-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
             中国企业
             <span className="text-primary"> 出海变革</span>
             <br />
             模拟挑战
           </h1>
 
-          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-            你被派往海外，执行一场组织整合。<br />
-            在 48 个资源内，说服 12 位关键人物接受变革。<br />
+          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-8 leading-relaxed">
+            你被派往海外，执行一场组织整合。<br className="hidden sm:block" />
+            在 48 个资源内，说服 12 位关键人物接受变革。<br className="hidden sm:block" />
             与同学同台竞技，比较策略差异，洞察组织动态。
           </p>
 
@@ -175,10 +175,10 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="py-16 px-4 border-t border-border">
+      <section className="py-10 sm:py-16 px-4 border-t border-border">
         <div className="container max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-10 text-foreground">平台功能</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-10 text-foreground">平台功能</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {[
               {
                 icon: Gamepad2,
@@ -222,25 +222,25 @@ export default function Home() {
       </section>
 
       {/* Score formula */}
-      <section className="py-12 px-4 border-t border-border bg-card/30">
+      <section className="py-10 sm:py-12 px-4 border-t border-border bg-card/30">
         <div className="container max-w-3xl mx-auto text-center">
-          <h2 className="text-xl font-bold mb-6 text-foreground">综合得分算法</h2>
+          <h2 className="text-lg sm:text-xl font-bold mb-5 sm:mb-6 text-foreground">综合得分算法</h2>
 
-          {/* Formula display */}
-          <div className="flex flex-wrap justify-center gap-3 items-center text-sm mb-6">
-            <div className="px-4 py-3 rounded-lg bg-card border border-primary/40">
-              <div className="text-xs text-muted-foreground mb-1">转化率</div>
-              <div className="font-mono font-semibold text-primary">转化人数 ÷ 12</div>
+          {/* Formula display — vertical stack on mobile, horizontal on sm+ */}
+          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2 sm:gap-3 items-center text-sm mb-5 sm:mb-6">
+            <div className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-card border border-primary/40">
+              <div className="text-xs text-muted-foreground mb-0.5">转化率</div>
+              <div className="font-mono font-semibold text-primary text-sm">转化人数 ÷ 12</div>
             </div>
-            <span className="text-muted-foreground text-2xl font-light">×</span>
-            <div className="px-4 py-3 rounded-lg bg-card border border-green-500/40">
-              <div className="text-xs text-muted-foreground mb-1">健康度指数</div>
-              <div className="font-mono font-semibold text-green-400">(max(0, 可信度−压力) + 10) ÷ 20</div>
+            <span className="text-muted-foreground text-xl sm:text-2xl font-light">×</span>
+            <div className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-card border border-green-500/40">
+              <div className="text-xs text-muted-foreground mb-0.5">健康度指数</div>
+              <div className="font-mono font-semibold text-green-400 text-xs sm:text-sm">(max(0, 可信度−压力) + 10) ÷ 20</div>
             </div>
-            <span className="text-muted-foreground text-2xl font-light">×</span>
-            <div className="px-4 py-3 rounded-lg bg-card border border-border">
-              <div className="text-xs text-muted-foreground mb-1">满分</div>
-              <div className="font-mono font-semibold text-foreground">100</div>
+            <span className="text-muted-foreground text-xl sm:text-2xl font-light">×</span>
+            <div className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-card border border-border">
+              <div className="text-xs text-muted-foreground mb-0.5">满分</div>
+              <div className="font-mono font-semibold text-foreground text-sm">100</div>
             </div>
           </div>
 

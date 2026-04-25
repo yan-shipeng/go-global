@@ -27,21 +27,22 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="container py-8 max-w-4xl">
+    <div className="container py-6 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-start justify-between mb-6 gap-3">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Trophy className="w-8 h-8 text-yellow-400" />
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+            <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400 shrink-0" />
             排行榜
           </h1>
-          <p className="text-muted-foreground mt-1">所有玩家的综合得分排名</p>
+          <p className="text-muted-foreground mt-1 text-sm">所有玩家的综合得分排名</p>
         </div>
         {selectedIds.length === 2 && (
           <Link href={`/compare/${selectedIds[0]}/${selectedIds[1]}`}>
-            <Button className="gap-2 bg-primary hover:bg-primary/90">
-              <GitCompare className="w-4 h-4" />
-              对比选中的两局
+            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 shrink-0">
+              <GitCompare className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">对比选中的两局</span>
+              <span className="sm:hidden">对比</span>
             </Button>
           </Link>
         )}
@@ -49,7 +50,7 @@ export default function LeaderboardPage() {
 
       {/* Stats cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {[
             { icon: <Users className="w-4 h-4" />, label: "完成局数", value: stats.count },
             { icon: <Trophy className="w-4 h-4 text-green-400" />, label: "平均效率分", value: `+${stats.avgEfficiency.toFixed(1)}` },
@@ -57,11 +58,11 @@ export default function LeaderboardPage() {
             { icon: <Zap className="w-4 h-4 text-yellow-400" />, label: "平均健康度", value: stats.avgHealth.toFixed(1) },
           ].map(({ icon, label, value }) => (
             <Card key={label} className="bg-card border-border">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-muted/30">{icon}</div>
-                <div>
-                  <div className="text-lg font-bold">{value}</div>
-                  <div className="text-xs text-muted-foreground">{label}</div>
+              <CardContent className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-muted/30 shrink-0">{icon}</div>
+                <div className="min-w-0">
+                  <div className="text-base sm:text-lg font-bold leading-tight">{value}</div>
+                  <div className="text-xs text-muted-foreground truncate">{label}</div>
                 </div>
               </CardContent>
             </Card>
@@ -71,14 +72,14 @@ export default function LeaderboardPage() {
 
       {/* Tip for comparison */}
       {selectedIds.length < 2 && (
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-3">
           💡 点击任意两行可选中，然后进行决策对比（已选 {selectedIds.length}/2）
         </p>
       )}
 
       {/* Table */}
       <Card className="bg-card border-border">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 px-4">
           <CardTitle className="text-base">全部记录</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -90,8 +91,8 @@ export default function LeaderboardPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {/* Header */}
-              <div className="grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px] gap-2 px-4 py-2 text-xs text-muted-foreground font-medium">
+              {/* Desktop header row */}
+              <div className="hidden sm:grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px] gap-2 px-4 py-2 text-xs text-muted-foreground font-medium">
                 <span>排名</span>
                 <span>玩家</span>
                 <span className="text-right">得分</span>
@@ -107,24 +108,54 @@ export default function LeaderboardPage() {
                   <div
                     key={row.id}
                     onClick={() => toggleSelect(row.id)}
-                    className={`grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px] gap-2 px-4 py-3 cursor-pointer transition-colors text-sm
+                    className={`cursor-pointer transition-colors
                       ${isSelected ? "bg-primary/10 border-l-2 border-primary" : "hover:bg-muted/20"}
                       ${isMe ? "bg-yellow-400/5" : ""}
                     `}
                   >
-                    <div className="flex items-center">
-                      <RankBadge rank={row.rank} />
+                    {/* Desktop row */}
+                    <div className="hidden sm:grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px] gap-2 px-4 py-3 text-sm">
+                      <div className="flex items-center">
+                        <RankBadge rank={row.rank} />
+                      </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="truncate font-medium">{row.playerName ?? "匿名"}</span>
+                        {isMe && <Badge variant="outline" className="text-xs shrink-0 border-yellow-400/50 text-yellow-400">我</Badge>}
+                        <Badge className="text-xs shrink-0 bg-primary/20 text-primary border-primary/30">已完成</Badge>
+                      </div>
+                      <div className="text-right font-bold text-primary">{Number(row.totalScore).toFixed(1)}</div>
+                      <div className="text-right">{row.convertedCount ?? 0}/12</div>
+                      <div className="text-right">{row.resourcesLeft ?? 0}</div>
+                      <div className="text-right text-green-400">{row.finalCredibility ?? 0}</div>
+                      <div className="text-right text-destructive">{row.finalPressure ?? 0}</div>
                     </div>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="truncate font-medium">{row.playerName ?? "匿名"}</span>
-                      {isMe && <Badge variant="outline" className="text-xs shrink-0 border-yellow-400/50 text-yellow-400">我</Badge>}
-                      <Badge className="text-xs shrink-0 bg-primary/20 text-primary border-primary/30">已完成</Badge>
+
+                    {/* Mobile card row */}
+                    <div className="sm:hidden px-4 py-3 flex items-center gap-3">
+                      <div className="shrink-0 w-8 flex items-center justify-center">
+                        <RankBadge rank={row.rank} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-medium text-sm truncate">{row.playerName ?? "匿名"}</span>
+                          {isMe && <Badge variant="outline" className="text-xs border-yellow-400/50 text-yellow-400 shrink-0">我</Badge>}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                          <span>转化 <span className="text-foreground">{row.convertedCount ?? 0}/12</span></span>
+                          <span>可信 <span className="text-green-400">{row.finalCredibility ?? 0}</span></span>
+                          <span>压力 <span className="text-destructive">{row.finalPressure ?? 0}</span></span>
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="font-bold text-primary text-base">{Number(row.totalScore).toFixed(1)}</div>
+                        <div className="text-xs text-muted-foreground">分</div>
+                      </div>
+                      {isSelected && (
+                        <div className="shrink-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs font-bold">✓</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right font-bold text-primary">{Number(row.totalScore).toFixed(1)}</div>
-                    <div className="text-right">{row.convertedCount ?? 0}/12</div>
-                    <div className="text-right">{row.resourcesLeft ?? 0}</div>
-                    <div className="text-right text-green-400">{row.finalCredibility ?? 0}</div>
-                    <div className="text-right text-destructive">{row.finalPressure ?? 0}</div>
                   </div>
                 );
               })}

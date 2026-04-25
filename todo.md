@@ -255,3 +255,13 @@
 - [ ] interview: cost 2 resources, only 1 target (need:1, maxNeed:1)
 - [ ] training: status>=2 gives +15, status<2 gives +10
 - [ ] update all affected desc strings
+
+## Phase 41: Comprehensive Mobile UX Overhaul
+- [x] NavBar.tsx: mobile pill indicator, larger touch targets, active state
+- [x] LeaderboardPage.tsx: mobile card layout (hidden sm:grid desktop table, sm:hidden mobile card)
+- [x] HistoryPage.tsx: 2-col mobile grids, mobile sub-stats inline, trend chart responsive
+- [x] ComparePage.tsx: mobile stacked turn layout (per-round A/B side-by-side), 2-col mini stats
+- [x] Home.tsx: hero title text-3xl sm:text-4xl, score formula vertical stack on mobile, feature cards 2-col on mobile
+- [x] BriefingPage.tsx: confirmed Babel parse error resolved (curly quotes removed in previous checkpoint)
+- [x] 8/8 tests passing
+- [x] Save checkpoint

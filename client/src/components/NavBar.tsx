@@ -20,7 +20,7 @@ export default function NavBar() {
           <span className="text-muted-foreground text-xs hidden sm:block">· 多人模拟</span>
         </Link>
 
-        {/* Nav links */}
+        {/* Desktop nav links */}
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href}>
@@ -36,8 +36,8 @@ export default function NavBar() {
           ))}
         </nav>
 
-        {/* CTA button */}
-        <div className="flex items-center gap-2">
+        {/* Desktop CTA button */}
+        <div className="hidden md:flex items-center gap-2">
           <Link href="/game">
             <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
               <Gamepad2 className="w-3.5 h-3.5" />
@@ -47,22 +47,34 @@ export default function NavBar() {
         </div>
       </div>
 
-      {/* Mobile nav */}
-      <div className="flex md:hidden border-t border-border">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} className="flex-1">
-            <button
-              className={`w-full flex flex-col items-center gap-0.5 py-2 text-xs transition-colors ${
-                location === href
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
-            </button>
-          </Link>
-        ))}
+      {/* Mobile bottom tab bar */}
+      <div className="flex md:hidden border-t border-border bg-card/90">
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const active = location === href || (href === "/game" && location.startsWith("/game"));
+          return (
+            <Link key={href} href={href} className="flex-1">
+              <button
+                className={`w-full flex flex-col items-center gap-0.5 pt-2 pb-2.5 text-[11px] font-medium transition-colors relative ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                {/* Active top indicator */}
+                {active && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-b-full bg-primary" />
+                )}
+                {/* Icon with pill bg when active */}
+                <span
+                  className={`flex items-center justify-center w-8 h-6 rounded-full transition-colors ${
+                    active ? "bg-primary/15" : ""
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </span>
+                {label}
+              </button>
+            </Link>
+          );
+        })}
       </div>
     </header>
   );
