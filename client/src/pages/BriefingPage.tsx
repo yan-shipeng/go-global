@@ -162,7 +162,7 @@ function Slide3() {
       actions: [
         { name: "私人访谈", cost: "2 资源", type: "对话", desc: "深度一对一对话。第一次解锁偏好；第二次解锁隐藏关系网络。可同时访谈 1–2 人。" },
         { name: "间接打听", cost: "1 资源", type: "对话", desc: "通过非正式渠道侧面了解公开态度。范围广（1–4人）、成本低，但只能了解表面立场，无法解锁偏好或隐藏关系。" },
-        { name: "发布组织邮件", cost: "1 资源", type: "沟通", desc: "广播工具，一次覆盖所有未转化者。第3次起产生「邮件疲劳」，效果大幅下降。" },
+        { name: "发布组织邮件", cost: "1 资源", type: "沟通", desc: "广播工具，一次覆盖所有未转化者。第3次起产生邮件疲劳，效果大幅下降。" },
         { name: "发布阶段进展", cost: "2 资源", type: "沟通", desc: "让观望者看到变革正在推进。成果不足时发布会损害可信度。" },
       ],
     },
@@ -210,12 +210,12 @@ function Slide3() {
         {groups.map((g) => (
           <div key={g.label} className={`rounded-xl border p-3 ${g.color}`}>
             <div className="text-xs font-semibold mb-2 text-foreground/80">{g.label}</div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {g.actions.map((a) => (
-                <div key={a.name} className="flex items-start gap-2">
-                  <div className="flex items-center gap-1 shrink-0 mt-0.5">
+                <div key={a.name} className="flex flex-col gap-0.5">
+                  <div className="flex flex-wrap items-center gap-1">
                     <span className="font-semibold text-xs text-foreground">{a.name}</span>
-                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1">{a.type} · {a.cost}</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1 shrink-0">{a.type} · {a.cost}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{a.desc}</p>
                 </div>
