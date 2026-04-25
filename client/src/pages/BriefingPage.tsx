@@ -151,44 +151,44 @@ function Slide3() {
       label: "🌱 建立信任",
       color: "border-primary/30 bg-primary/5",
       actions: [
-        { name: "以身作则", weeks: 2, type: "示范", desc: "先用行动建立可信度，再推动别人。" },
-        { name: "争取总部公开背书", weeks: 2, type: "政治", desc: "通过公开支持提升你的正当性。" },
-        { name: "休闲聚会", weeks: 1, type: "关系", desc: "饭局、喝酒、轻松活动——在非正式场合建立信任。频繁使用会让人觉得你只会搞关系，损害专业形象。" },
+        { name: "以身作则", cost: "2 资源", type: "示范", desc: "先用行动建立可信度，再推动别人。早期信号最强，后期递减但维持可信度。" },
+        { name: "争取总部公开背书", cost: "2 资源", type: "政治", desc: "通过公开支持提升你的正当性。反复求背书会消耗政治资本。" },
+        { name: "休闲聚会", cost: "3–8 资源（动态）", type: "关系", desc: "饭局、喝酒——在非正式场合建立信任。可邀请 1–6 人，人越多消耗越多。已转化同事参与时口碑扩散。第5次起效果打折。" },
       ],
     },
     {
       label: "💬 对话与沟通",
       color: "border-cyan-500/30 bg-cyan-500/5",
       actions: [
-        { name: "私人访谈", weeks: 1, type: "对话", desc: "摸清顾虑，识别非正式关系。是发现阻力者身份的关键手段。" },
-        { name: "发布组织邮件", weeks: 1, type: "沟通", desc: "广覆盖但说服深度有限。" },
-        { name: "发布阶段进展", weeks: 2, type: "沟通", desc: "让观望者看到变革确实在推进。" },
-        { name: "间接打听", weeks: 1, type: "对话", desc: "通过第三方侧面了解目标的公开立场，覆盖其关系网络，但深度不及直接访谈。" },
+        { name: "私人访谈", cost: "2 资源", type: "对话", desc: "深度一对一对话。第一次解锁偏好；第二次解锁隐藏关系网络。可同时访谈 1–2 人。" },
+        { name: "间接打听", cost: "1 资源", type: "对话", desc: "通过非正式渠道侧面了解公开态度。范围广（1–4人）、成本低，但只能了解表面立场，无法解锁偏好或隐藏关系。" },
+        { name: "发布组织邮件", cost: "1 资源", type: "沟通", desc: "广播工具，一次覆盖所有未转化者。第3次起产生「邮件疲劳」，效果大幅下降。" },
+        { name: "发布阶段进展", cost: "2 资源", type: "沟通", desc: "让观望者看到变革正在推进。成果不足时发布会损害可信度。" },
       ],
     },
     {
       label: "🎓 赋能与验证",
       color: "border-green-500/30 bg-green-500/5",
       actions: [
-        { name: "上手培训", weeks: 2, type: "赋能", desc: "帮助有意愿但缺乏方法的人掌握实际技能。" },
-        { name: "小范围试点", weeks: 3, type: "验证", desc: "把变革变成可见的实际成果，说服「眼见为实」的人。" },
-        { name: "讲述成功案例", weeks: 1, type: "叙事", desc: "用真实成功故事激励他人。必须有本土案例支撑。" },
+        { name: "上手培训", cost: "2 资源", type: "赋能", desc: "帮助目标掌握实际技能。对已有意愿者（status≥2）效果更显著（+15 vs +10）。需选 3 人参与。" },
+        { name: "小范围试点", cost: "3 资源", type: "验证", desc: "把变革变成可见的实际成果，说服「眼见为实」的人。需选 3 人参与。" },
+        { name: "讲述成功案例", cost: "1 资源", type: "叙事", desc: "用真实案例激励目标。第3–4次降至半效，第5次起效果大幅递减。需选 2 人。" },
       ],
     },
     {
       label: "🏆 认可与压力",
       color: "border-amber-500/30 bg-amber-500/5",
       actions: [
-        { name: "公开认可示范者", weeks: 2, type: "政治", desc: "公开表彰有实际成果的人，放大示范效应。" },
-        { name: "宣布KPI与时限", weeks: 2, type: "压力", desc: "制造紧迫感，但会提升组织压力。" },
-        { name: "调整激励与奖惩", weeks: 3, type: "制度", desc: "后期终极武器，突破瓶颈，但大幅提升压力。" },
+        { name: "公开认可示范者", cost: "2 资源", type: "政治", desc: "公开表彰已参与者，放大示范效应。对尚未参与的人使用会引发全组织质疑。" },
+        { name: "宣布KPI与时限", cost: "2 资源", type: "压力", desc: "制造紧迫感，但会明显提升组织压力。信誉不足时使用会引发反弹。" },
+        { name: "调整激励与奖惩", cost: "3 资源", type: "制度", desc: "制度推力：对未动者信号有限（+10），对初步理解者最有效（+18），对参与者直接突破（+18）。需要极高政治资本（可信度≥9）。" },
       ],
     },
     {
       label: "⚡ 对抗纠偏",
       color: "border-red-500/30 bg-red-500/5",
       actions: [
-        { name: "强硬约谈阻力者", weeks: 1, type: "对抗", desc: "对核心阻力者施压。需先通过访谈发现其身份，否则用错对象会严重损害可信度。" },
+        { name: "强硬约谈阻力者", cost: "1 资源", type: "对抗", desc: "对核心阻力者施压，强制其被迫妥协，但关系邻居会产生寒蝉效应（-3）。用错对象会严重损害可信度。" },
       ],
     },
   ];
@@ -202,7 +202,7 @@ function Slide3() {
         <span className="text-xs font-semibold tracking-widest text-primary uppercase">行动类型</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
-        14 种行动，<br />
+        13 种行动，<br />
         <span className="text-primary">按策略阶段选择。</span>
       </h2>
       <div className="space-y-3 overflow-y-auto max-h-[55vh] pr-1">
@@ -214,7 +214,7 @@ function Slide3() {
                 <div key={a.name} className="flex items-start gap-2">
                   <div className="flex items-center gap-1 shrink-0 mt-0.5">
                     <span className="font-semibold text-xs text-foreground">{a.name}</span>
-                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1">{a.type} · {a.weeks} 资源</span>
+                    <span className="text-[10px] text-muted-foreground bg-muted/40 rounded px-1">{a.type} · {a.cost}</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-relaxed">{a.desc}</p>
                 </div>
