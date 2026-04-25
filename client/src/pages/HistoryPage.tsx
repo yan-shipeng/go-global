@@ -30,7 +30,7 @@ export default function HistoryPage() {
   }
 
   const chartData = sessions
-    ?.filter((s: GameSession) => s.status === "win")
+    ?.filter((s: GameSession) => s.status !== "active")
     .map((s: GameSession, i: number) => ({
       局次: `第${i + 1}局`,
       得分: Number(s.totalScore ?? 0),
@@ -54,7 +54,7 @@ export default function HistoryPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-primary" />
-              得分趋势（通关局次）
+              得分趋势
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -103,11 +103,7 @@ export default function HistoryPage() {
                     <span className="text-sm text-muted-foreground font-mono w-8">#{sessions.length - idx}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {session.status === "win" ? (
-                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">通关</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-destructive border-destructive/30 text-xs">失败</Badge>
-                        )}
+                        <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">已完成</Badge>
                         <span className="text-xs text-muted-foreground">
                           {new Date(session.startedAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
@@ -137,8 +133,7 @@ export default function HistoryPage() {
                           </div>
                         ))}
                       </div>
-                      {session.status === "win" && (
-                        <div className="grid grid-cols-4 gap-2 text-xs text-center mb-3">
+                      <div className="grid grid-cols-4 gap-2 text-xs text-center mb-3">
                           {[
                             { label: "基础分", value: session.baseScore ?? 0 },
                             { label: "效率分", value: `+${Number(session.efficiencyScore ?? 0).toFixed(1)}` },
@@ -151,7 +146,6 @@ export default function HistoryPage() {
                             </div>
                           ))}
                         </div>
-                      )}
                       <Link href={`/compare/${session.id}/${sessions.find((s: GameSession) => s.id !== session.id)?.id ?? session.id}`}>
                         <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                           <GitCompare className="w-3 h-3" />

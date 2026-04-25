@@ -66,11 +66,7 @@ export default function ComparePage() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-muted-foreground">{label}</span>
-                {session.status === "win" ? (
-                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30">通关</Badge>
-                ) : (
-                  <Badge variant="outline" className="text-destructive border-destructive/30">失败</Badge>
-                )}
+                <Badge className="bg-primary/20 text-primary border-primary/30">已完成</Badge>
               </div>
               <div className="font-bold text-lg">{session.playerName ?? "匿名"}</div>
               <div className="text-3xl font-bold text-primary mt-1">{Number(session.totalScore ?? 0).toFixed(1)}</div>

@@ -118,11 +118,7 @@ export default function LeaderboardPage() {
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="truncate font-medium">{row.playerName ?? "匿名"}</span>
                       {isMe && <Badge variant="outline" className="text-xs shrink-0 border-yellow-400/50 text-yellow-400">我</Badge>}
-                      {row.status === "win" ? (
-                        <Badge className="text-xs shrink-0 bg-green-500/20 text-green-400 border-green-500/30">通关</Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs shrink-0 text-destructive border-destructive/30">失败</Badge>
-                      )}
+                      <Badge className="text-xs shrink-0 bg-primary/20 text-primary border-primary/30">已完成</Badge>
                     </div>
                     <div className="text-right font-bold text-primary">{Number(row.totalScore).toFixed(1)}</div>
                     <div className="text-right">{row.convertedCount ?? 0}/12</div>
