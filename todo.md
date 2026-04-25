@@ -274,3 +274,9 @@
 - [x] Rebuild trust network (hiddenTies): every person has at least 1 trust link; network is sparse (≤2 links per person avg); no isolated nodes
 - [x] Re-upload patched engine, update URL in GamePage.tsx
 - [x] Run tests (8/8), save checkpoint
+
+## Phase 43: PM hidden_ties / Interview simplification / Social-gathering rebalance
+- [x] Remove PM from all hidden_ties (pm should have no hidden trust links with anyone)
+- [x] Interview: single visit unlocks all info (prefs + hidden ties); increase cooldown to 3; remove 2nd-visit logic
+- [x] Social-gathering: audit cost/effect vs other actions, rebalance if needed
+- [x] Upload engine, update URL, run tests, save checkpoint
