@@ -1,4 +1,4 @@
-import { eq, desc, asc, and } from "drizzle-orm";
+import { eq, desc, asc, and, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, gameSessions, gameTurns, InsertGameSession, InsertGameTurn } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -118,8 +118,9 @@ export async function getSessionTurns(sessionId: number) {
 export async function getLeaderboard(limit = 50) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
+  // Include all completed games (win + fail), exclude active sessions
   return db.select().from(gameSessions)
-    .where(eq(gameSessions.status, "win"))
+    .where(inArray(gameSessions.status, ["win", "fail"]))
     .orderBy(desc(gameSessions.totalScore))
     .limit(limit);
 }
@@ -127,7 +128,8 @@ export async function getLeaderboard(limit = 50) {
 export async function getLeaderboardStats() {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const rows = await db.select().from(gameSessions).where(eq(gameSessions.status, "win"));
+  // Stats include all completed games
+  const rows = await db.select().from(gameSessions).where(inArray(gameSessions.status, ["win", "fail"]));
   if (rows.length === 0) return { avgTotal: 0, avgEfficiency: 0, avgHealth: 0, avgOverAchievement: 0, count: 0 };
   const sum = rows.reduce((acc, r) => ({
     total: acc.total + (r.totalScore ?? 0),

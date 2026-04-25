@@ -51,7 +51,7 @@ export default function LeaderboardPage() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { icon: <Users className="w-4 h-4" />, label: "通关局数", value: stats.count },
+            { icon: <Users className="w-4 h-4" />, label: "完成局数", value: stats.count },
             { icon: <Trophy className="w-4 h-4 text-green-400" />, label: "平均效率分", value: `+${stats.avgEfficiency.toFixed(1)}` },
             { icon: <TrendingUp className="w-4 h-4 text-primary" />, label: "平均得分", value: stats.avgTotal.toFixed(1) },
             { icon: <Zap className="w-4 h-4 text-yellow-400" />, label: "平均健康度", value: stats.avgHealth.toFixed(1) },

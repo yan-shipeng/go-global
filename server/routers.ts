@@ -23,8 +23,10 @@ function computeScore(params: {
   convertedCount: number;
 }) {
   const { status, resourcesLeft, finalCredibility, finalPressure, convertedCount } = params;
-  if (status !== "win") return { baseScore: 0, efficiencyScore: 0, healthScore: 0, overAchievementScore: 0, totalScore: 0 };
-  const baseScore = 50;
+  // All completed games (win or fail) get a score based on their actual performance
+  // fail games get a lower base score (20 vs 50) to distinguish from wins
+  if (status === "active") return { baseScore: 0, efficiencyScore: 0, healthScore: 0, overAchievementScore: 0, totalScore: 0 };
+  const baseScore = status === "win" ? 50 : 20;
   const efficiencyScore = Math.round(resourcesLeft * 1.5 * 10) / 10;
   const healthScore = Math.round((finalCredibility - finalPressure) * 2 * 10) / 10;
   const overAchievementScore = Math.max(0, Math.round((convertedCount - 6) * 3 * 10) / 10);

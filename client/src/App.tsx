@@ -21,6 +21,7 @@ function Router() {
           <Route path="/game" component={GamePage} />
           <Route path="/leaderboard" component={LeaderboardPage} />
           <Route path="/compare/:idA/:idB" component={ComparePage} />
+          <Route path="/compare" component={LeaderboardPage} />
           <Route path="/history" component={HistoryPage} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />

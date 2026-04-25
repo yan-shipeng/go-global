@@ -1,11 +1,10 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Trophy, History, GitCompare, Gamepad2 } from "lucide-react";
+import { Trophy, History, Gamepad2 } from "lucide-react";
 
 const navItems = [
   { href: "/game", label: "开始游戏", icon: Gamepad2 },
   { href: "/leaderboard", label: "排行榜", icon: Trophy },
-  { href: "/compare", label: "决策对比", icon: GitCompare },
   { href: "/history", label: "我的记录", icon: History },
 ];
 
