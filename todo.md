@@ -361,3 +361,9 @@
 - [x] Engine: sales hidden_goal updated to specific narrative text about commission system threat
 - [x] Engine: ops positive event (status>=3 triggers 跨部门协调, pressure -1, one-time)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 57: Hidden ties mechanics — Proposal A + B1
+- [x] Engine (Proposal A): social-gathering checks hidden_ties in addition to formal ties; discovered hidden_ties give base+8 bonus; undiscovered hidden_ties auto-reveal at end of turn with log note
+- [x] Engine (Proposal B1): softenNeighbors log output explicitly names the hidden-tie path when diffusion travels via hidden_ties
+- [x] Update social-gathering desc to reflect new hidden_ties mechanic
+- [x] Upload engine, update URL, run tests, save checkpoint
