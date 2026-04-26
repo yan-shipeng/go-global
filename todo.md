@@ -292,3 +292,8 @@
 - [x] Difficulty rebalance: identify bottlenecks causing <50% conversion rate, propose and apply targeted fixes
 - [x] Interview cooldown: reduce from 3 to 2 rounds
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 46: Social-gathering rebalance / Remove confront
+- [x] Social-gathering: maxNeed 6→4, weeks 1→2 (cost 2 resources), cooldown stays 3, converted-attendee bonus stronger
+- [x] Remove confront (对抗纠偏) action from ACTIONS array
+- [x] Upload engine, update URL, run tests, save checkpoint
