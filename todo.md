@@ -302,3 +302,10 @@
 - [x] Rewrite all action desc fields in game engine (no specific numbers, qualitative only)
 - [x] Rewrite all action descs in BriefingPage.tsx to match
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 48: BriefingPage cleanup + cooldown countdown + info-tier note
+- [x] Remove "对抗纠偏" group from BriefingPage Slide3 action groups
+- [x] Update action count in Slide3 title from "14 种行动" to "13 种行动"
+- [x] Add info-tier comparison note below "对话与沟通" group in Slide3
+- [x] Engine: add cooldown countdown ("还需 N 轮") in action selection panel for cooled-down actions
+- [x] Upload engine, update URL, run tests, save checkpoint

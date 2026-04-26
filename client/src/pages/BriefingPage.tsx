@@ -165,6 +165,7 @@ function Slide3() {
         { name: "发布组织邮件", cost: "1 资源", type: "沟通", desc: "广播工具，一次覆盖所有未转化者，但说服深度随阶段递减。多次使用后收件人容易产生邮件疲劳，效果大幅下降。" },
         { name: "发布阶段进展", cost: "2 资源", type: "沟通", desc: "让观望者看到变革正在推进。成果越扎实，效果越好；成果不足时发布，实干派会反感，可信度也会受损。" },
       ],
+      note: "💡 信息层级：间接打听 → 公开态度 + 正式关系；私人访谈 → 动作偏好 + 隐藏关系",
     },
     {
       label: "🎓 赋能与验证",
@@ -185,13 +186,6 @@ function Slide3() {
         { name: "调整激励与奖惩", cost: "3 资源", type: "制度", desc: "通过制度改变推动全体。对尚未形成意愿的人，制度信号有限；对已有初步理解的人，制度推力最有效；对已参与者，可直接突破最后一跳。需要极高的政治资本才能推行，但代价是会明显提升组织压力。" },
       ],
     },
-    {
-      label: "⚡ 对抗纠偏",
-      color: "border-red-500/30 bg-red-500/5",
-      actions: [
-        { name: "强硬约谈阻力者", cost: "1 资源", type: "对抗", desc: "对核心阻力者施压，强制其被迫妥协，但关系邻居会产生寒蝉效应。用错对象会严重损害可信度。" },
-      ],
-    },
   ];
 
   return (
@@ -203,7 +197,7 @@ function Slide3() {
         <span className="text-xs font-semibold tracking-widest text-primary uppercase">行动类型</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
-        14 种行动，<br />
+        13 种行动，<br />
         <span className="text-primary">按策略阶段选择。</span>
       </h2>
       <div className="space-y-3 overflow-y-auto max-h-[55vh] pr-1">
@@ -221,6 +215,11 @@ function Slide3() {
                 </div>
               ))}
             </div>
+            {g.note && (
+              <div className="mt-2 px-2 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-[11px] text-cyan-400 leading-relaxed">
+                {g.note}
+              </div>
+            )}
           </div>
         ))}
       </div>
