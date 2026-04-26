@@ -412,3 +412,9 @@
 - [x] Engine: strip advice sentence from customer-complaint event log text ("建议尽快争取销售主管的支持")
 - [x] Engine: clear pm.hidden_ties (pm should have no hidden ties)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 66: Fix text implying only interviews unlock hidden ties
+- [x] Engine: update social-gathering desc to explicitly mention hidden-ties reveal
+- [x] Engine: update private-interview desc to clarify it is ONE of two ways to reveal hidden ties
+- [x] Frontend BriefingPage: fix the note "私人访谈一次即可解锁：动作偏好 + 隐藏关系网络" to include social-gathering
+- [x] Upload engine, update URL, run tests, save checkpoint

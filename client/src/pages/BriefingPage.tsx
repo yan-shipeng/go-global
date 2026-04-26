@@ -160,11 +160,11 @@ function Slide3() {
       label: "💬 对话与沟通",
       color: "border-cyan-500/30 bg-cyan-500/5",
       actions: [
-        { name: "私人访谈", cost: "2 资源", type: "对话", desc: "深度一对一对话，一次访谈即可全面解锁对方的动作偏好与隐藏关系网络。对同一人过度访谈会显得烦人，引发反感。每次只能访谈一人，有冷却期。" },
+        { name: "私人访谈", cost: "2 资源", type: "对话", desc: "深度一对一对话，一次访谈即可全面解锁对方的动作偏好与隐藏关系网络（休闲聚会也能部分揭露隐藏关系）。对同一人过度访谈会显得烦人，引发反感。每次只能访谈一人，有冷却期。" },
         { name: "发布组织邮件", cost: "1 资源", type: "沟通", desc: "广播工具，一次覆盖所有未转化者，但说服深度随阶段递减。多次使用后收件人容易产生邮件疲劳，效果大幅下降。" },
         { name: "发布阶段进展", cost: "2 资源", type: "沟通", desc: "让观望者看到变革正在推进。成果越扎实，效果越好；成果不足时发布，实干派会反感，可信度也会受损。" },
       ],
-      note: "💡 私人访谈一次即可解锁：动作偏好 + 隐藏关系网络",
+      note: "💡 解锁隐藏关系：私人访谈（完整解锁）或休闲聚会（意外揭露）",
     },
     {
       label: "🎓 赋能与验证",
@@ -248,7 +248,7 @@ function Slide4() {
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           部分人物表面上看起来中立，实则对变革持有隐藏的阻力立场。
-          你需要通过<strong className="text-foreground">访谈本人或其关联人物</strong>，才能发现其真实身份。
+          你需要通过<strong className="text-foreground">私人访谈或休闲聚会</strong>，才能发现其真实身份。
           在发现之前，你无法对其使用"约谈"行动。
         </p>
         <div className="flex items-center gap-2 text-xs text-amber-400/80 bg-amber-500/10 rounded-lg px-3 py-2">
@@ -293,7 +293,7 @@ function Slide5({ playerName }: { playerName: string }) {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg mt-2">
         {[
-          { emoji: "🔍", text: "先访谈，了解人物" },
+          { emoji: "🔍", text: "访谈或聚会，了解人物" },
           { emoji: "🤝", text: "建联盟，扩大影响" },
           { emoji: "🎯", text: "精准施策，高效转化" },
         ].map((tip) => (
