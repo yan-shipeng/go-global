@@ -316,3 +316,8 @@
 - [x] Update locked hint text to say single visit unlocks all
 - [x] Keep warning badge (>= 2) intentionally for repeat-visit warning
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 50: Indirect-inquiry used styling + ties differentiation in node detail
+- [x] Indirect-inquiry: stronger "already used" visual (deeper grayscale + strikethrough on name)
+- [x] Node detail panel: differentiate formal ties (🏢 cyan) vs hidden ties (🔗 amber)
+- [x] Upload engine, update URL, run tests, save checkpoint
