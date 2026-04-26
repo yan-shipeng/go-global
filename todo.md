@@ -388,3 +388,9 @@
 - [x] Rewrite social-gathering desc: accurate, qualitative, no numbers
 - [x] Audit and rewrite all other action desc fields that contain specific numeric values
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 63: Action result panel cleanup + social-gathering cost fix + trust network arrows
+- [x] Engine: rewrite email action interpretation text (动作解读) — remove "40%" and other specific numeric values, keep qualitative language
+- [x] Engine: fix social-gathering cost to fixed 3 resources (remove dynamic cost logic); update all cost displays from "3-8 资源（动态）" to "3 资源"
+- [x] Engine: trust network graph — draw directional arrows for one-way hidden_ties (A→B but not B→A)
+- [x] Upload engine, update URL, run tests, save checkpoint
