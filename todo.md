@@ -394,3 +394,14 @@
 - [x] Engine: fix social-gathering cost to fixed 3 resources (remove dynamic cost logic); update all cost displays from "3-8 资源（动态）" to "3 资源"
 - [x] Engine: trust network graph — draw directional arrows for one-way hidden_ties (A→B but not B→A)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 64: Trust network bidirectional arrows + legend
+- [x] Engine: mutual hidden ties draw two separate directed lines (A→B and B→A) instead of one undirected line, so both ends show arrowheads
+- [x] Engine: add legend row below trust network SVG — 实线=正式关系、虚线=隐藏关系、箭头=单向影响
+- [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 64: Trust network arrows/legend + node detail hidden-tie card
+- [x] Engine: mutual hidden ties draw two separate directed lines (A→B and B→A) with arrowheads on both ends
+- [x] Engine: add legend row below trust network SVG — 实线=正式关系、虚线=隐藏关系、箭头=单向影响
+- [x] Engine: node detail panel — show discovered hidden ties as amber card (relation target name + relation nature), separate from formal ties
+- [x] Upload engine, update URL, run tests, save checkpoint
