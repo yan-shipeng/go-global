@@ -338,3 +338,9 @@
 - [x] Compare with other 2-resource actions (exemplify, endorse, pilot, etc.)
 - [x] Increase base effects and/or converted-attendee bonus to make it worthwhile
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 53: Social-gathering cost/desc fix
+- [x] Confirm maxNeed=4, set resource cost to appropriate value (weeks param)
+- [x] Update engine desc to reflect new params and effects
+- [x] Update BriefingPage social-gathering description
+- [x] Upload engine, update URL, run tests, save checkpoint
