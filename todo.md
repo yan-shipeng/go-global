@@ -405,3 +405,10 @@
 - [x] Engine: add legend row below trust network SVG — 实线=正式关系、虚线=隐藏关系、箭头=单向影响
 - [x] Engine: node detail panel — show discovered hidden ties as amber card (relation target name + relation nature), separate from formal ties
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 65: Resistor badge + event text fixes
+- [x] Engine: hide "立场复杂" resistor badge until character is interviewed (same gate as hidden_goal reveal)
+- [x] Engine: remove "立场复杂" resistor badge after character is converted (status >= 4)
+- [x] Engine: strip advice sentence from customer-complaint event log text ("建议尽快争取销售主管的支持")
+- [x] Engine: clear pm.hidden_ties (pm should have no hidden ties)
+- [x] Upload engine, update URL, run tests, save checkpoint
