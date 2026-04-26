@@ -433,3 +433,9 @@
 - [x] Engine: private-meeting allows selecting up to 2 targets; per-person score gain reduced (split effect)
 - [x] Engine: update private-meeting desc and cost chip to reflect 2-target option
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 69: Site-wide interview text update (2-target)
+- [x] Frontend BriefingPage: update interview desc from "每次只能访谈一人" to reflect 1-2 targets
+- [x] Frontend BriefingPage: update interview note/tip text if it mentions single-target only
+- [x] Engine: verify engine desc already updated (Phase 68)
+- [x] Save checkpoint
