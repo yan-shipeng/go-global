@@ -418,3 +418,12 @@
 - [x] Engine: update private-interview desc to clarify it is ONE of two ways to reveal hidden ties
 - [x] Frontend BriefingPage: fix the note "私人访谈一次即可解锁：动作偏好 + 隐藏关系网络" to include social-gathering
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 67: Resources 48→50 + Random Events System
+- [x] Engine: change TOTAL_RESOURCES from 48 to 50; update role briefing/goal text
+- [x] Engine: implement 6-event random event system with ~30% per-turn trigger chance
+  - [x] Positive: 行业媒体报道 (cred+1, soften all), 自发口碑扩散 (converted neighbor +8), 季度数据利好 (pressure-1)
+  - [x] Negative: 内部传言扩散 (random non-converted -8, pressure+1), 生产线突发故障 (plant -10, pressure+2), 总部战略调整信号 (cred-1, untouched +5 decay)
+- [x] Engine: add state flags for random events (prevent repeat triggers per game)
+- [x] Frontend BriefingPage: update "48 个资源" to "50 个资源" in all text
+- [x] Upload engine, update URL, run tests, save checkpoint

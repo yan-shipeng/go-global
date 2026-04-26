@@ -44,7 +44,7 @@ function Slide1() {
         {[
           { icon: "🏭", label: "欧洲工厂", desc: "刚被收购，文化差异显著" },
           { icon: "🤝", label: "12 位关键人物", desc: "各有立场，各有算盘" },
-          { icon: "⏱️", label: "48 个资源单位", desc: "时间与精力的总预算" },
+          { icon: "⏱️", label: "50 个资源单位", desc: "时间与精力的总预算" },
         ].map((item) => (
           <div
             key={item.label}
@@ -106,7 +106,7 @@ function Slide2() {
           <span className="text-primary font-bold text-lg w-6 shrink-0">④</span>
           <div>
             <span className="font-semibold">资源耗尽，游戏结束</span>
-            <p className="text-sm text-muted-foreground mt-0.5">48 个资源用完后，系统自动结算得分。</p>
+            <p className="text-sm text-muted-foreground mt-0.5">50 个资源用完后，系统自动结算得分。</p>
           </div>
         </div>
       </div>
@@ -289,7 +289,7 @@ function Slide5({ playerName }: { playerName: string }) {
       </h2>
       <p className="text-muted-foreground text-base leading-relaxed max-w-md">
         你已了解任务背景与规则。接下来，进入模拟，
-        在 48 个资源内做出你的决策，看看你能让多少人真正接受变革。
+        在 50 个资源内做出你的决策，看看你能让多少人真正接受变革。
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg mt-2">
         {[
