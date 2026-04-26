@@ -355,3 +355,9 @@
 - [x] Engine: rebalance sales prefs (lower narrative bonus, higher institution penalty)
 - [x] Engine: add customer-pressure event (sales status<=1 triggers 大客户投诉, +pressure)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 56: Log warning style + sales hidden_goal + ops positive event
+- [x] Engine: log entry for 大客户投诉 rendered as red warning card (distinct from normal log)
+- [x] Engine: sales hidden_goal updated to specific narrative text about commission system threat
+- [x] Engine: ops positive event (status>=3 triggers 跨部门协调, pressure -1, one-time)
+- [x] Upload engine, update URL, run tests, save checkpoint
