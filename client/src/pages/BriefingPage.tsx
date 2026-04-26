@@ -161,11 +161,10 @@ function Slide3() {
       color: "border-cyan-500/30 bg-cyan-500/5",
       actions: [
         { name: "私人访谈", cost: "2 资源", type: "对话", desc: "深度一对一对话，一次访谈即可全面解锁对方的动作偏好与隐藏关系网络。对同一人过度访谈会显得烦人，引发反感。每次只能访谈一人，有冷却期。" },
-        { name: "间接打听", cost: "1 资源", type: "对话", desc: "通过非正式渠道侧面了解多人的公开态度，同时掌握其正式关系网络。范围广、成本低，但信息层次有限——无法解锁动作偏好或隐藏关系（需私人访谈）。每位目标每局只能打听一次。" },
         { name: "发布组织邮件", cost: "1 资源", type: "沟通", desc: "广播工具，一次覆盖所有未转化者，但说服深度随阶段递减。多次使用后收件人容易产生邮件疲劳，效果大幅下降。" },
         { name: "发布阶段进展", cost: "2 资源", type: "沟通", desc: "让观望者看到变革正在推进。成果越扎实，效果越好；成果不足时发布，实干派会反感，可信度也会受损。" },
       ],
-      note: "💡 信息层级：间接打听 → 公开态度 + 正式关系；私人访谈 → 动作偏好 + 隐藏关系",
+      note: "💡 私人访谈一次即可解锁：动作偏好 + 隐藏关系网络",
     },
     {
       label: "🎓 赋能与验证",
@@ -197,7 +196,7 @@ function Slide3() {
         <span className="text-xs font-semibold tracking-widest text-primary uppercase">行动类型</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
-        13 种行动，<br />
+        12 种行动，<br />
         <span className="text-primary">按策略阶段选择。</span>
       </h2>
       <div className="space-y-3 overflow-y-auto max-h-[55vh] pr-1">

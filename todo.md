@@ -321,3 +321,14 @@
 - [x] Indirect-inquiry: stronger "already used" visual (deeper grayscale + strikethrough on name)
 - [x] Node detail panel: differentiate formal ties (🏢 cyan) vs hidden ties (🔗 amber)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 51: Remove indirect-inquiry action completely
+- [x] Engine: remove action definition (id:'indirect-inquiry' block)
+- [x] Engine: remove indirectInquiryUsed state init and all references
+- [x] Engine: remove indirectTiesRevealed state init and all references
+- [x] Engine: remove indirectUsed / indirectMark / nameStyle rendering code in target selector
+- [x] Engine: remove ties-reveal logic in run() (the tiesMsg / indirectTiesRevealed code)
+- [x] BriefingPage: remove 间接打听 from action groups slide
+- [x] BriefingPage: update action count (13→12)
+- [x] BriefingPage: remove info-tier comparison note (references indirect-inquiry)
+- [x] Upload engine, update URL, run tests, save checkpoint
