@@ -375,3 +375,11 @@
 - [x] Engine: update region desc to hint at the CEO back-channel
 - [x] Engine: add state flags _opsCfoNegTriggered and _financeCfoNegTriggered to state init
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 60+61: region→ceo positive event + end-screen hidden-ties stats
+- [x] Engine (P60): region→ceo positive event — when region status becomes >=4 AND region→ceo hidden tie is unlocked, apply one-time 1.3x softening multiplier to ceo and log note
+- [x] Engine (P60): add state flag _regionCeoBoostTriggered to state init
+- [x] Engine (P61): compute hidden-ties utilization stats at game end (total pairs, discovered, activated, missed key paths)
+- [x] Engine (P61): include hiddenTiesStats in GAME_ENDED postMessage payload
+- [x] Frontend (P61): display hidden-ties utilization panel in game result overlay
+- [x] Upload engine, update URL, run tests, save checkpoint

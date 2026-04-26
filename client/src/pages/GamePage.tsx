@@ -8,7 +8,17 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_4dc142cf.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_62c3b480.html?autoStart=1";
+
+interface HiddenTiesStats {
+  total: number;
+  discoveredCount: number;
+  activatedCount: number;
+  missedCount: number;
+  discoveredPairs: string[];
+  activatedPairs: string[];
+  missedPairs: string[];
+}
 
 interface GameResult {
   endingType: string;
@@ -24,6 +34,7 @@ interface GameResult {
   healthScore: number;
   totalScore: number;
   history: unknown[];
+  hiddenTiesStats?: HiddenTiesStats;
 }
 
 interface TurnData {
@@ -240,6 +251,44 @@ export default function GamePage() {
                 ))}
               </div>
 
+              {/* Phase 61: Hidden-ties utilization panel */}
+              {gameResult.hiddenTiesStats && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 space-y-2">
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+                    <span>🔗</span>
+                    <span>信任网利用率</span>
+                    <span className="ml-auto text-xs font-normal text-muted-foreground">
+                      {gameResult.hiddenTiesStats.discoveredCount}/{gameResult.hiddenTiesStats.total} 条已发现
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
+                    <div className="rounded bg-amber-500/10 border border-amber-500/20 px-2 py-1.5">
+                      <div className="font-semibold text-amber-300">{gameResult.hiddenTiesStats.discoveredCount}</div>
+                      <div className="text-muted-foreground">已发现</div>
+                    </div>
+                    <div className="rounded bg-green-500/10 border border-green-500/20 px-2 py-1.5">
+                      <div className="font-semibold text-green-400">{gameResult.hiddenTiesStats.activatedCount}</div>
+                      <div className="text-muted-foreground">已激活</div>
+                    </div>
+                    <div className="rounded bg-red-500/10 border border-red-500/20 px-2 py-1.5">
+                      <div className="font-semibold text-red-400">{gameResult.hiddenTiesStats.missedCount}</div>
+                      <div className="text-muted-foreground">错失路径</div>
+                    </div>
+                  </div>
+                  {gameResult.hiddenTiesStats.activatedPairs.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      <span className="text-green-400 font-medium">已激活：</span>
+                      {gameResult.hiddenTiesStats.activatedPairs.join('、')}
+                    </div>
+                  )}
+                  {gameResult.hiddenTiesStats.missedPairs.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      <span className="text-red-400 font-medium">错失：</span>
+                      {gameResult.hiddenTiesStats.missedPairs.join('、')}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="flex gap-2">
                 <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={() => handleStartGame()}>
                   <RotateCcw className="w-4 h-4 mr-1.5" />
