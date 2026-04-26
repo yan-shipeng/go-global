@@ -297,3 +297,8 @@
 - [x] Social-gathering: maxNeed 6→4, weeks 1→2 (cost 2 resources), cooldown stays 3, converted-attendee bonus stronger
 - [x] Remove confront (对抗纠偏) action from ACTIONS array
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 47: Remove numbers from all action descriptions
+- [x] Rewrite all action desc fields in game engine (no specific numbers, qualitative only)
+- [x] Rewrite all action descs in BriefingPage.tsx to match
+- [x] Upload engine, update URL, run tests, save checkpoint
