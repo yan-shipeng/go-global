@@ -309,3 +309,10 @@
 - [x] Add info-tier comparison note below "对话与沟通" group in Slide3
 - [x] Engine: add cooldown countdown ("还需 N 轮") in action selection panel for cooled-down actions
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 49: Fix interview single-visit bug
+- [x] Change all interviewCount >= 2 checks to >= 1 (hiddenTiesSection, showHiddenGoal, rDiscovered, rDiscoveredM, trust network diffusion, network edge rendering)
+- [x] Remove "再次访谈后可解锁" hint text
+- [x] Update locked hint text to say single visit unlocks all
+- [x] Keep warning badge (>= 2) intentionally for repeat-visit warning
+- [x] Upload engine, update URL, run tests, save checkpoint
