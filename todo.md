@@ -367,3 +367,11 @@
 - [x] Engine (Proposal B1): softenNeighbors log output explicitly names the hidden-tie path when diffusion travels via hidden_ties
 - [x] Update social-gathering desc to reflect new hidden_ties mechanic
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 58: B3 negative events + region hidden_ties redesign
+- [x] Engine: ops→cfo negative event — if ops status<=1 at round>=5 AND cfo status>=3, trigger one-time budget-freeze warning (+1 pressure, cred-1, log note)
+- [x] Engine: finance→cfo negative event — if finance status<=1 at round>=4 AND cfo status>=2, trigger one-time adverse-report warning (cred-1, log note)
+- [x] Engine: region hidden_ties redesign — change region.hidden_ties from ['plant'] to ['ceo']
+- [x] Engine: update region desc to hint at the CEO back-channel
+- [x] Engine: add state flags _opsCfoNegTriggered and _financeCfoNegTriggered to state init
+- [x] Upload engine, update URL, run tests, save checkpoint
