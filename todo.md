@@ -332,3 +332,9 @@
 - [x] BriefingPage: update action count (13→12)
 - [x] BriefingPage: remove info-tier comparison note (references indirect-inquiry)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 52: Social-gathering rebalance (cost/effect ratio too low)
+- [x] Audit current social-gathering run() effects vs cost (2 resources, cooldown 3)
+- [x] Compare with other 2-resource actions (exemplify, endorse, pilot, etc.)
+- [x] Increase base effects and/or converted-attendee bonus to make it worthwhile
+- [x] Upload engine, update URL, run tests, save checkpoint
