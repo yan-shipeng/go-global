@@ -286,3 +286,9 @@
 - [x] Indirect-inquiry: unlock partial formal ties (ties array) on target; interview unlocks hidden_ties; clear info hierarchy
 - [x] CEO-PM trust broken: render CEO→PM edge as dashed red line when ceoPmTrustBroken=true in trust network graph
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 45: Network view fix / Difficulty rebalance / Interview cooldown
+- [x] Network view in decision panel: allow switching between all layers (social/trust/both), not just trust
+- [x] Difficulty rebalance: identify bottlenecks causing <50% conversion rate, propose and apply targeted fixes
+- [x] Interview cooldown: reduce from 3 to 2 rounds
+- [x] Upload engine, update URL, run tests, save checkpoint
