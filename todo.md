@@ -383,3 +383,8 @@
 - [x] Engine (P61): include hiddenTiesStats in GAME_ENDED postMessage payload
 - [x] Frontend (P61): display hidden-ties utilization panel in game result overlay
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 62: Remove numeric values from all action descriptions
+- [x] Rewrite social-gathering desc: accurate, qualitative, no numbers
+- [x] Audit and rewrite all other action desc fields that contain specific numeric values
+- [x] Upload engine, update URL, run tests, save checkpoint
