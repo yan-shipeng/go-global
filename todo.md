@@ -349,3 +349,9 @@
 - [x] sales (销售主管): change from normal to stubborn/resistant (stubborn:true, score lowered to ~8-12, convertThreshold raised)
 - [x] ops (运营主管): change from stubborn to normal (stubborn:false, score raised to ~20-25, convertThreshold normal)
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 55: Sales/ops desc update + sales prefs rebalance + customer-pressure event
+- [x] BriefingPage: sales desc add resistance hint; ops desc remove stability/resistance language
+- [x] Engine: rebalance sales prefs (lower narrative bonus, higher institution penalty)
+- [x] Engine: add customer-pressure event (sales status<=1 triggers 大客户投诉, +pressure)
+- [x] Upload engine, update URL, run tests, save checkpoint
