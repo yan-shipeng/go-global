@@ -427,3 +427,9 @@
 - [x] Engine: add state flags for random events (prevent repeat triggers per game)
 - [x] Frontend BriefingPage: update "48 个资源" to "50 个资源" in all text
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 68: Converted resistor no negative leverage + private-meeting 2 targets
+- [x] Engine: converted resistors (status>=4) skip negative leverage effect on neighbors
+- [x] Engine: private-meeting allows selecting up to 2 targets; per-person score gain reduced (split effect)
+- [x] Engine: update private-meeting desc and cost chip to reflect 2-target option
+- [x] Upload engine, update URL, run tests, save checkpoint
