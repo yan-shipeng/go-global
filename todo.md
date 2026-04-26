@@ -344,3 +344,8 @@
 - [x] Update engine desc to reflect new params and effects
 - [x] Update BriefingPage social-gathering description
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 54: Resistance adjustment
+- [x] sales (销售主管): change from normal to stubborn/resistant (stubborn:true, score lowered to ~8-12, convertThreshold raised)
+- [x] ops (运营主管): change from stubborn to normal (stubborn:false, score raised to ~20-25, convertThreshold normal)
+- [x] Upload engine, update URL, run tests, save checkpoint
