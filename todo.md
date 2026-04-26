@@ -280,3 +280,9 @@
 - [x] Interview: single visit unlocks all info (prefs + hidden ties); increase cooldown to 3; remove 2nd-visit logic
 - [x] Social-gathering: audit cost/effect vs other actions, rebalance if needed
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 44: Interview warning badge / Indirect-inquiry ties unlock / CEO-PM broken link visual
+- [x] Interview: show ⚠️ warning badge on target node when interviewCount >= 2 (2nd visit done, 3rd will trigger penalty)
+- [x] Indirect-inquiry: unlock partial formal ties (ties array) on target; interview unlocks hidden_ties; clear info hierarchy
+- [x] CEO-PM trust broken: render CEO→PM edge as dashed red line when ceoPmTrustBroken=true in trust network graph
+- [x] Upload engine, update URL, run tests, save checkpoint
