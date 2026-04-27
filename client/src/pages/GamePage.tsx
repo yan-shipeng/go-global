@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,6 +64,13 @@ export default function GamePage() {
   const saveTurnMutation = trpc.game.saveTurn.useMutation();
   const endSession = trpc.game.endSession.useMutation();
 
+  // Use refs to avoid stale closures in the message handler
+  const sessionIdRef = useRef<number | null>(null);
+  const endSessionRef = useRef(endSession.mutateAsync);
+  const saveTurnRef = useRef(saveTurnMutation.mutateAsync);
+  useEffect(() => { endSessionRef.current = endSession.mutateAsync; });
+  useEffect(() => { saveTurnRef.current = saveTurnMutation.mutateAsync; });
+
   // Inject player name once iframe loads and immediately skip the engine's own intro screen
   const handleIframeLoad = () => {
     if (!iframeRef.current || !playerName) return;
@@ -82,6 +89,7 @@ export default function GamePage() {
     try {
       const session = await startSession.mutateAsync({ playerName: activeName });
       setSessionId(session.sessionId);
+      sessionIdRef.current = session.sessionId;
       setGameResult(null);
       setGameReady(false); // Reset overlay — hide iframe until GAME_READY
       setIframeKey(k => k + 1);
@@ -93,61 +101,66 @@ export default function GamePage() {
   };
 
   // Listen for postMessage from game engine
+  // Use refs (sessionIdRef, endSessionRef, saveTurnRef) to avoid stale closures —
+  // the handler is registered once and always reads the latest values via refs.
+  const handleMessage = useCallback(async (event: MessageEvent) => {
+    if (!event.data?.type) return;
+
+    // Game engine signals it has fully rendered the main UI
+    if (event.data.type === "GAME_READY") {
+      setGameReady(true);
+      return;
+    }
+
+    const sid = sessionIdRef.current;
+
+    if (event.data.type === "GAME_TURN" && sid !== null) {
+      const turn = event.data.turn as TurnData;
+      try {
+        await saveTurnRef.current({
+          sessionId: sid,
+          round: turn.round,
+          actionId: turn.actionId,
+          actionLabel: turn.actionLabel,
+          targets: turn.targets,
+          prediction: turn.prediction,
+          credibilityAfter: turn.credAfter,
+          pressureAfter: turn.pressureAfter,
+          resourcesAfter: turn.weeksLeft,
+          outcome: turn.deltas.converted > 0 ? "success" : "partial",
+        });
+      } catch {
+        // Non-blocking
+      }
+    }
+
+    if (event.data.type === "GAME_ENDED" && sid !== null) {
+      const result = event.data.result as GameResult;
+      setGameResult(result);
+      try {
+        await endSessionRef.current({
+          sessionId: sid,
+          status: result.won ? "win" : "fail",
+          resourcesLeft: result.resourcesLeft,
+          finalCredibility: result.finalCred,
+          finalPressure: result.finalPressure,
+          convertedCount: result.convertedCount,
+          totalRounds: result.totalRounds,
+          aggressiveIndex: result.aggressiveIndex ?? 0,
+          conservativeIndex: result.conservativeIndex ?? 0,
+        });
+        toast.success(`🎮 游戏结束！综合得分 ${result.totalScore} 分，记录已保存`);
+      } catch (err) {
+        console.error("[endSession] failed:", err);
+        toast.error("保存游戏记录失败，请截图联系管理员");
+      }
+    }
+  }, []);
+
   useEffect(() => {
-    const handler = async (event: MessageEvent) => {
-      if (!event.data?.type) return;
-
-      // Game engine signals it has fully rendered the main UI
-      if (event.data.type === "GAME_READY") {
-        setGameReady(true); // triggers CSS fade-out transition
-        return;
-      }
-
-      if (event.data.type === "GAME_TURN" && sessionId !== null) {
-        const turn = event.data.turn as TurnData;
-        try {
-          await saveTurnMutation.mutateAsync({
-            sessionId,
-            round: turn.round,
-            actionId: turn.actionId,
-            actionLabel: turn.actionLabel,
-            targets: turn.targets,
-            prediction: turn.prediction,
-            credibilityAfter: turn.credAfter,
-            pressureAfter: turn.pressureAfter,
-            resourcesAfter: turn.weeksLeft,
-            outcome: turn.deltas.converted > 0 ? "success" : "partial",
-          });
-        } catch {
-          // Non-blocking
-        }
-      }
-
-      if (event.data.type === "GAME_ENDED" && sessionId !== null) {
-        const result = event.data.result as GameResult;
-        setGameResult(result);
-        try {
-          await endSession.mutateAsync({
-            sessionId,
-            status: result.won ? "win" : "fail",
-            resourcesLeft: result.resourcesLeft,
-            finalCredibility: result.finalCred,
-            finalPressure: result.finalPressure,
-            convertedCount: result.convertedCount,
-            totalRounds: result.totalRounds,
-            aggressiveIndex: result.aggressiveIndex ?? 0,
-            conservativeIndex: result.conservativeIndex ?? 0,
-          });
-          toast.success(`🎮 游戏结束！综合得分 ${result.totalScore} 分`);
-        } catch {
-          toast.error("保存游戏记录失败");
-        }
-      }
-    };
-
-    window.addEventListener("message", handler);
-    return () => window.removeEventListener("message", handler);
-  }, [sessionId]);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [handleMessage]);
 
   // If no name set, redirect back to home to enter name
   if (!playerName) {

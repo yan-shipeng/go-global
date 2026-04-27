@@ -464,3 +464,11 @@
 - [x] HistoryPage: add strategyBias label to each session card (reuse same logic as LeaderboardPage)
 - [x] BriefingPage slide 4: add strategy tip paragraph about 制度 vs 沟通 tradeoff + visibility
 - [x] Run tests, save checkpoint
+
+## Bug Fix: Session not saved after game ends
+- [x] Check network logs for endSession API call failure
+- [x] Check if GAME_ENDED message is received by GamePage
+- [x] Root cause: stale closure in useEffect — sessionId and mutateAsync refs were stale when GAME_ENDED fired
+- [x] Fix: use useRef for sessionId + mutateAsync, register handler once with useCallback
+- [x] Verified deployed API works correctly (startSession + endSession + leaderboard all OK)
+- [x] 8/8 tests pass
