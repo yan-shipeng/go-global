@@ -485,3 +485,9 @@
 - [x] FIX: endSession now accepts totalScore/baseScore/healthScore from engine; server uses them directly
 - [x] FIX: GamePage passes result.totalScore/baseScore/healthScore to endSession
 - [x] TSC OK, 8/8 tests pass
+
+## Bug Fix Phase 75
+- [x] Engine: fix sales missing from secretR/secretRM arrays — "立场复杂" badge now hidden until discovered
+- [x] Critical: root cause found — engine URL was never updated after Phase 70-72 patches; production used old engine without aggressiveIndex/GAME_ENDED fixes
+- [x] Fix: upload new engine, update GAME_ENGINE_URL to game-engine_1e4ccc5d.html
+- [x] 8/8 tests pass
