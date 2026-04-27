@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_fca4b127.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_51b31f2a.html?autoStart=1";
 
 interface HiddenTiesStats {
   total: number;
@@ -370,7 +370,7 @@ export default function GamePage() {
             className="w-full h-full border-none"
             onLoad={handleIframeLoad}
             title="中国企业出海变革模拟"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
+            sandbox="allow-scripts allow-forms allow-popups allow-downloads"
           />
         </div>
       ) : (

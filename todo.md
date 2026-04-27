@@ -499,3 +499,12 @@
 - [x] Engine uploaded as game-engine_fca4b127.html, GAME_ENGINE_URL updated in GamePage.tsx
 - [x] Self-test SELFTEST_PHASE76 confirmed in leaderboard (id=960005, totalScore=68, aggressiveIndex=2)
 - [x] 8/8 tests pass
+
+## CRITICAL Phase 77: Fix GAME_ENDED never firing for real users
+- [x] ROOT CAUSE: postGameEnded() was ONLY called when user clicked "📊 查看最终结算" button (goNextRound flow). If user didn't click the button (e.g., navigated away, or flow was different), GAME_ENDED was never sent.
+- [x] FIX: Added postGameEnded() call inside renderEndingScreen() — fires as soon as ending screen renders, regardless of button clicks
+- [x] FIX: Added _gameEndedPosted flag to state to prevent duplicate GAME_ENDED messages (goNextRound also calls postGameEnded)
+- [x] FIX: Removed allow-same-origin from iframe sandbox attribute (was unnecessary and potentially harmful for cross-origin CDN iframe)
+- [x] Engine uploaded as game-engine_51b31f2a.html, GAME_ENGINE_URL updated in GamePage.tsx
+- [x] Self-test SELFTEST_P77B confirmed in DB (id=990003, totalScore=81, aggressiveIndex=4)
+- [x] 8/8 tests pass
