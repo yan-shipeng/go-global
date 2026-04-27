@@ -519,3 +519,8 @@
 ## Phase 84: Add PostGameSummary to /game-test
 
 - [x] Add full PostGameSummary overlay (本局总览 / 排行榜 / 回合日志) to GameTestPage.tsx
+
+## Phase 85: Fix /game-test PostGameSummary empty (sessionId race condition)
+
+- [x] Fix: sessionId is null when PostGameSummary mounts → TurnLog and Leaderboard show empty
+- [x] Fix: onRestart calls handleStartGame which resets sessionId before PostGameSummary unmounts

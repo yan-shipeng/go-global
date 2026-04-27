@@ -418,34 +418,42 @@ function PostGameSummary({
 export default function GameTestPage() {
   const { playerName, setPlayerName } = usePlayerName();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [sessionId, setSessionIdState] = useState<number | null>(() => {
-    try { const s = localStorage.getItem(SESSION_ID_KEY); return s ? Number(s) : null; } catch { return null; }
-  });
+
+  // Always start with null — never restore from localStorage to avoid stale session bugs
+  const [sessionId, setSessionIdState] = useState<number | null>(null);
   const setSessionId = useCallback((id: number | null) => {
     setSessionIdState(id);
     try { id != null ? localStorage.setItem(SESSION_ID_KEY, String(id)) : localStorage.removeItem(SESSION_ID_KEY); } catch {}
   }, []);
 
+  // Freeze the sessionId at the moment GAME_ENDED fires so PostGameSummary always
+  // shows the correct session even if the parent sessionId state changes later.
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  const [frozenSessionId, setFrozenSessionId] = useState<number | null>(null);
+
   const [iframeKey, setIframeKey] = useState(0);
   const [gameReady, setGameReady] = useState(false);
   const [log, setLog] = useState<LogEntry[]>([]);
   const [cheatSent, setCheatSent] = useState(false);
 
-  const sessionIdRef = useRef<number | null>(sessionId);
+  const sessionIdRef = useRef<number | null>(null);
   const addLog = useCallback((msg: string, ok: boolean) => {
     const ts = new Date().toLocaleTimeString("zh-CN");
-    setLog(prev => [{ ts, msg, ok }, ...prev.slice(0, 19)]);
+    setLog(prev => [{ ts, msg, ok }, ...prev.slice(0, 29)]);
   }, []);
 
   const startSession = trpc.game.startSession.useMutation();
   const saveTurnMutation = trpc.game.saveTurn.useMutation();
   const endSession = trpc.game.endSession.useMutation();
+  const utils = trpc.useUtils();
+
+  // Use stable refs for async callbacks to avoid stale closures
   const endSessionRef = useRef(endSession.mutateAsync);
   const saveTurnRef = useRef(saveTurnMutation.mutateAsync);
+  const utilsRef = useRef(utils);
   useEffect(() => { endSessionRef.current = endSession.mutateAsync; });
   useEffect(() => { saveTurnRef.current = saveTurnMutation.mutateAsync; });
-  const utils = trpc.useUtils();
+  useEffect(() => { utilsRef.current = utils; });
 
   const testPlayerName = playerName || "测试玩家";
 
@@ -457,6 +465,7 @@ export default function GameTestPage() {
       setSessionId(newId);
       sessionIdRef.current = newId;
       setGameResult(null);
+      setFrozenSessionId(null);
       setGameReady(false);
       setCheatSent(false);
       setIframeKey(k => k + 1);
@@ -468,14 +477,14 @@ export default function GameTestPage() {
     }
   }, [testPlayerName, startSession, setSessionId, addLog]);
 
-  const handleIframeLoad = () => {
+  const handleIframeLoad = useCallback(() => {
     if (!iframeRef.current) return;
     const win = iframeRef.current.contentWindow;
     if (!win) return;
     win.postMessage({ type: "SET_PLAYER", name: testPlayerName }, "*");
     win.postMessage({ type: "SKIP_INTRO" }, "*");
     addLog("iframe loaded → SET_PLAYER + SKIP_INTRO sent", true);
-  };
+  }, [testPlayerName, addLog]);
 
   const sendCheatWin = () => {
     if (!iframeRef.current?.contentWindow) {
@@ -496,6 +505,7 @@ export default function GameTestPage() {
     addLog("💰 SET_RESOURCES=2 sent to engine", true);
   };
 
+  // Stable message handler — uses refs for all async dependencies
   const handleMessage = useCallback(async (event: MessageEvent) => {
     if (!event.data?.type) return;
     if (event.data.type === "GAME_READY") {
@@ -528,11 +538,15 @@ export default function GameTestPage() {
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
       addLog(`📨 GAME_ENDED received — score=${result.totalScore}, converted=${result.convertedCount}/${result.totalPeople}`, true);
+      // Freeze the sessionId at this exact moment so PostGameSummary always
+      // receives the correct session even after state updates
+      const currentSid = sessionIdRef.current;
+      setFrozenSessionId(currentSid);
       setGameResult(result);
-      if (sid !== null) {
+      if (currentSid !== null) {
         try {
           await endSessionRef.current({
-            sessionId: sid,
+            sessionId: currentSid,
             status: result.won ? "win" : "fail",
             resourcesLeft: Number(result.resourcesLeft) || 0,
             finalCredibility: Number(result.finalCred) || 0,
@@ -545,8 +559,9 @@ export default function GameTestPage() {
             aggressiveIndex: Number(result.aggressiveIndex) || 0,
             conservativeIndex: Number(result.conservativeIndex) || 0,
           });
-          await utils.game.getSession.invalidate({ sessionId: sid });
-          await utils.leaderboard.list.invalidate();
+          // Invalidate after endSession so TurnLog refetches with finalized data
+          await utilsRef.current.game.getSession.invalidate({ sessionId: currentSid });
+          await utilsRef.current.leaderboard.list.invalidate();
           addLog(`✅ endSession OK → score=${result.totalScore} saved to DB`, true);
           toast.success(`✅ 测试完成！得分 ${result.totalScore}，记录已保存`);
         } catch (err: unknown) {
@@ -558,7 +573,7 @@ export default function GameTestPage() {
         addLog("⚠️ GAME_ENDED but sessionId is null — not saved", false);
       }
     }
-  }, [addLog, utils]);
+  }, [addLog]); // Only depends on addLog (stable) — all other deps via refs
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
@@ -637,7 +652,7 @@ export default function GameTestPage() {
             )}
           </div>
 
-          {/* iframe */}
+          {/* iframe — always show placeholder until 'Start Game' is clicked */}
           {sessionId !== null ? (
             <div className="flex-1 rounded-xl border border-border overflow-hidden bg-card">
               <iframe
@@ -651,12 +666,22 @@ export default function GameTestPage() {
               />
             </div>
           ) : (
-            <div className="flex-1 rounded-xl border border-dashed border-border flex items-center justify-center text-muted-foreground text-sm">
-              点击"开始游戏"创建会话
+            <div className="flex-1 rounded-xl border border-dashed border-border flex flex-col items-center justify-center gap-3 text-muted-foreground text-sm">
+              <div className="text-3xl">🎮</div>
+              <div>点击「开始游戏」创建会话并加载引擎</div>
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary/90 gap-1.5 mt-1"
+                onClick={handleStartGame}
+                disabled={startSession.isPending}
+              >
+                {startSession.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                开始游戏
+              </Button>
             </div>
           )}
 
-          {/* PostGameSummary overlay — covers the entire left pane */}
+          {/* PostGameSummary overlay — uses frozenSessionId to avoid race conditions */}
           {gameResult && (
             <ErrorBoundary
               fallback={
@@ -673,12 +698,11 @@ export default function GameTestPage() {
             >
               <PostGameSummary
                 result={gameResult}
-                sessionId={sessionId}
+                sessionId={frozenSessionId}
                 playerName={testPlayerName}
                 onRestart={() => {
                   setGameResult(null);
-                  setSessionId(null);
-                  sessionIdRef.current = null;
+                  setFrozenSessionId(null);
                   handleStartGame();
                 }}
               />
