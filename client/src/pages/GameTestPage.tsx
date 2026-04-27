@@ -580,16 +580,9 @@ export default function GameTestPage() {
           await utilsRef.current.leaderboard.list.invalidate();
           addLog(`✅ endSession OK → score=${result.totalScore} saved to DB`, true);
           toast.success(`✅ 测试完成！得分 ${result.totalScore}，记录已保存`);
-          // Inject the /game-summary page as an iframe inside the engine's ending screen
-          const playerNameForUrl = encodeURIComponent(testPlayerNameRef.current ?? '');
-          const summaryUrl = `${window.location.origin}/game-summary?sessionId=${currentSid}&playerName=${playerNameForUrl}`;
-          const summaryHtml = `<div style="margin-top:18px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);height:480px">`
-            + `<iframe src="${summaryUrl}" style="width:100%;height:100%;border:none" title="结算复盘"></iframe>`
-            + `</div>`;
-          if (iframeRef.current?.contentWindow) {
-            iframeRef.current.contentWindow.postMessage({ type: 'INJECT_SUMMARY', html: summaryHtml }, '*');
-            addLog('📊 INJECT_SUMMARY sent to engine', true);
-          }
+          // Summary panel is shown as a React side panel (not injected into iframe)
+          // because the engine iframe is sandboxed and cannot load nested iframes with auth cookies.
+          addLog('📊 结算面板已就绪，点击右侧「查看结算」按钮', true);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
           addLog(`❌ endSession FAILED: ${msg}`, false);
@@ -707,7 +700,16 @@ export default function GameTestPage() {
             </div>
           )}
 
-          {/* Summary is now injected into the engine's ending screen via INJECT_SUMMARY postMessage */}
+          {/* PostGameSummary overlay — shown when game ends, covers the iframe */}
+          {gameResult && frozenSessionId !== null && (
+            <PostGameSummary
+              result={gameResult}
+              sessionId={frozenSessionId}
+              playerName={playerName}
+              onRestart={handleStartGame}
+              onClose={() => setGameResult(null)}
+            />
+          )}
         </div>
 
         {/* Right: event log */}

@@ -539,3 +539,8 @@
 
 - [x] Trace resource-exhaustion path in game engine (checkEnding → _pendingEnd → modal → goNextRound)
 - [x] Fix the ending trigger so ending screen reliably shows when resources = 0
+
+## Phase 89: Fix blank leaderboard in ending screen summary panel
+
+- [x] Diagnose why injected summary iframe shows blank leaderboard
+- [x] Fix iframe height and leaderboard data loading/display
