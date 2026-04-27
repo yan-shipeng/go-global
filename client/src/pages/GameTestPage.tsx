@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_6c9b6e49.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_5aaaa9b6.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {
@@ -470,6 +470,8 @@ export default function GameTestPage() {
   useEffect(() => { utilsRef.current = utils; });
 
   const testPlayerName = playerName || "测试玩家";
+  const testPlayerNameRef = useRef(testPlayerName);
+  useEffect(() => { testPlayerNameRef.current = testPlayerName; });
 
   const handleStartGame = useCallback(async () => {
     try {
@@ -578,6 +580,16 @@ export default function GameTestPage() {
           await utilsRef.current.leaderboard.list.invalidate();
           addLog(`✅ endSession OK → score=${result.totalScore} saved to DB`, true);
           toast.success(`✅ 测试完成！得分 ${result.totalScore}，记录已保存`);
+          // Inject the /game-summary page as an iframe inside the engine's ending screen
+          const playerNameForUrl = encodeURIComponent(testPlayerNameRef.current ?? '');
+          const summaryUrl = `${window.location.origin}/game-summary?sessionId=${currentSid}&playerName=${playerNameForUrl}`;
+          const summaryHtml = `<div style="margin-top:18px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);height:480px">`
+            + `<iframe src="${summaryUrl}" style="width:100%;height:100%;border:none" title="结算复盘"></iframe>`
+            + `</div>`;
+          if (iframeRef.current?.contentWindow) {
+            iframeRef.current.contentWindow.postMessage({ type: 'INJECT_SUMMARY', html: summaryHtml }, '*');
+            addLog('📊 INJECT_SUMMARY sent to engine', true);
+          }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
           addLog(`❌ endSession FAILED: ${msg}`, false);
@@ -695,34 +707,7 @@ export default function GameTestPage() {
             </div>
           )}
 
-          {/* PostGameSummary overlay — uses frozenSessionId to avoid race conditions */}
-          {gameResult && (
-            <ErrorBoundary
-              fallback={
-                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background px-4">
-                  <Trophy className="w-12 h-12 text-primary" />
-                  <div className="text-xl font-bold text-foreground">游戏结束！</div>
-                  <div className="text-4xl font-bold text-primary">{Number(gameResult.totalScore) || 0} 分</div>
-                  <Button className="mt-4 bg-primary hover:bg-primary/90" onClick={handleStartGame}>
-                    <RotateCcw className="w-4 h-4 mr-1.5" />
-                    再测一局
-                  </Button>
-                </div>
-              }
-            >
-              <PostGameSummary
-                result={gameResult}
-                sessionId={frozenSessionId}
-                playerName={testPlayerName}
-                onClose={() => setGameResult(null)}
-              onRestart={() => {
-                  setGameResult(null);
-                  setFrozenSessionId(null);
-                  handleStartGame();
-                }}
-              />
-            </ErrorBoundary>
-          )}
+          {/* Summary is now injected into the engine's ending screen via INJECT_SUMMARY postMessage */}
         </div>
 
         {/* Right: event log */}

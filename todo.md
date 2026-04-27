@@ -528,3 +528,9 @@
 ## Phase 86: Add close button to /game-test PostGameSummary
 
 - [x] Add "关闭结算" (X) button to PostGameSummary overlay so user can dismiss it and return to the engine's ending screen
+
+## Phase 87: Integrate PostGameSummary into game engine ending screen
+
+- [x] Inspect engine ending screen HTML structure (tabs, layout)
+- [x] Modify game engine: add React summary panel slot inside ending screen
+- [x] Update GameTestPage.tsx: inject summary HTML into engine via postMessage instead of overlay
