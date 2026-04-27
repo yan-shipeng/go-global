@@ -544,3 +544,16 @@
 
 - [x] Diagnose why injected summary iframe shows blank leaderboard
 - [x] Fix iframe height and leaderboard data loading/display
+
+## Phase 90: Plan A — unified full-screen result page
+
+- [ ] Extend GAME_ENDED payload with ending narrative (title, story, teachPoints, realWorld, endingType)
+- [ ] Build GameResultPage component: full-screen, replaces iframe, shows narrative + 本局总览 + 排行榜 + 回合日志
+- [ ] Apply to both GameTestPage.tsx and GamePage.tsx
+
+## Phase 90: Plan A — unified full-screen result page
+
+- [x] Extend GAME_ENDED payload with narrative (title, story, teach, realWorld, cls)
+- [x] Build FullResultPage component (replaces iframe after game ends)
+- [x] Upload new engine game-engine_ca0c5ad1.html with narrative support
+- [x] Update GameTestPage.tsx to use new engine and FullResultPage

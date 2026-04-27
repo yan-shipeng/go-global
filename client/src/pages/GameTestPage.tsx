@@ -4,24 +4,24 @@
  *
  * Features:
  *  - "⚡ 一键全转化" button: sends CHEAT_WIN to the engine iframe → all 12 people
- *    instantly converted → game ends → PostGameSummary shows.
+ *    instantly converted → game ends → full-screen result page shows.
  *  - "💰 资源→2" button: sends SET_RESOURCES=2 to the engine → fast game end.
  *  - "🔁 重置游戏" button: restarts the session (same as the normal restart flow).
  *  - Shows live DB status: whether startSession / endSession succeeded.
- *  - Full PostGameSummary overlay (本局总览 / 排行榜 / 回合日志) after game ends.
+ *  - Plan A: after game ends, React full-screen result page REPLACES the iframe.
+ *    One unified page: ending narrative + 本局总览 + 排行榜 + 回合日志.
  */
-
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, X } from "lucide-react";
+import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_3b14a1cb.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_ca0c5ad1.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {
@@ -32,6 +32,14 @@ interface HiddenTiesStats {
   discoveredPairs: string[];
   activatedPairs: string[];
   missedPairs: string[];
+}
+
+interface EndingNarrative {
+  cls: string;
+  title: string;
+  story: string;
+  teach: string;
+  realWorld: string;
 }
 
 interface GameResult {
@@ -51,6 +59,7 @@ interface GameResult {
   hiddenTiesStats?: HiddenTiesStats;
   aggressiveIndex?: number;
   conservativeIndex?: number;
+  narrative?: EndingNarrative | null;
 }
 
 interface TurnData {
@@ -120,7 +129,7 @@ function TurnLog({ sessionId }: { sessionId: number | null }) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">无会话记录</div>;
   }
   if (isLoading) {
-    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">加载回合日志…</div>;
+    return <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" />加载中…</div>;
   }
   const turns = data?.turns ?? [];
   if (turns.length === 0) {
@@ -187,7 +196,6 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
       return () => clearTimeout(t);
     }
   }, [listData, currentSessionId]);
-
   if (rows.length === 0) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无排行榜数据</div>;
   }
@@ -232,19 +240,17 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
   );
 }
 
-// ─── Post-game summary overlay ────────────────────────────────────────────────
-function PostGameSummary({
+// ─── Full-screen Result Page (Plan A) ─────────────────────────────────────────
+function FullResultPage({
   result,
   sessionId,
   playerName,
   onRestart,
-  onClose,
 }: {
   result: GameResult;
   sessionId: number | null;
   playerName: string;
   onRestart: () => void;
-  onClose: () => void;
 }) {
   const totalScore = Number(result.totalScore) || 0;
   const convertedCount = Number(result.convertedCount) || 0;
@@ -257,109 +263,139 @@ function PostGameSummary({
   const agg = Number(result.aggressiveIndex) || 0;
   const con = Number(result.conservativeIndex) || 0;
   const bias = strategyBias(agg, con);
+  const narrative = result.narrative;
+
+  // Determine color scheme from ending type
+  const isWin = result.won;
+  const accentClass = isWin ? "text-green-400" : "text-red-400";
+  const accentBorder = isWin ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5";
+
+  const stats = [
+    { label: "综合得分", value: `${totalScore}`, highlight: true },
+    { label: "已转化", value: `${convertedCount}/${totalPeople}` },
+    { label: "剩余资源", value: `${resourcesLeft}` },
+    { label: "总回合", value: `${totalRounds}` },
+    { label: "最终可信度", value: `${finalCred}` },
+    { label: "最终压力", value: `${finalPressure}` },
+    { label: "健康指数", value: `${healthScore}` },
+  ];
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-background" style={{ overflow: "hidden" }}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/60 shrink-0">
-        <div className="flex items-center gap-3">
-          <Trophy className="w-5 h-5 text-primary shrink-0" />
-          <div>
-            <div className="text-sm font-semibold text-foreground">游戏结束 · 复盘时刻</div>
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* ── Top header bar ── */}
+      <div className={`shrink-0 px-6 py-4 border-b border-border flex items-center gap-4 ${isWin ? "bg-green-500/5" : "bg-red-500/5"}`}>
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Trophy className={`w-6 h-6 shrink-0 ${accentClass}`} />
+          <div className="min-w-0">
+            <div className={`text-lg font-bold ${accentClass} leading-tight`}>
+              {narrative?.title ?? (isWin ? "游戏结束 · 变革成功" : "游戏结束 · 复盘时刻")}
+            </div>
             <div className="text-xs text-muted-foreground">{playerName} · 测试模式</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-right mr-1">
-            <div className="text-2xl font-bold text-primary leading-none">{totalScore}</div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right">
+            <div className="text-3xl font-bold text-primary leading-none">{totalScore}</div>
             <div className="text-xs text-muted-foreground">综合得分</div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
-              <RotateCcw className="w-3.5 h-3.5" />
-              再测一局
+          <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
+            <RotateCcw className="w-3.5 h-3.5" />
+            再测一局
+          </Button>
+          <Link href="/history">
+            <Button size="sm" variant="outline" className="gap-1 bg-card">
+              我的记录 <ChevronRight className="w-3.5 h-3.5" />
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1 bg-card hover:bg-muted"
-              onClick={onClose}
-              title="关闭结算，返回游戏画面"
-            >
-              <X className="w-3.5 h-3.5" />
-              关闭结算
-            </Button>
-          </div>
+          </Link>
         </div>
       </div>
-      {/* Tabs */}
-      <div className="flex flex-col flex-1 min-h-0">
-        <Tabs defaultValue="overview" className="flex flex-col flex-1 min-h-0 gap-0">
-          <div className="px-4 pt-3 pb-1 shrink-0 border-b border-border/50">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="overview" className="flex-1 sm:flex-none">📊 本局总览</TabsTrigger>
-              <TabsTrigger value="leaderboard" className="flex-1 sm:flex-none">🏆 排行榜</TabsTrigger>
-              <TabsTrigger value="turns" className="flex-1 sm:flex-none">📋 回合日志</TabsTrigger>
-            </TabsList>
-          </div>
-          {/* ── Overview tab ── */}
-          <TabsContent value="overview" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 space-y-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
-              {/* Score breakdown */}
-              <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
-                <div className="text-center">
-                  <div className="text-5xl font-bold text-primary">{totalScore}</div>
-                  <div className="text-sm text-muted-foreground mt-1">综合得分（满分 100）</div>
-                  {(agg + con) > 0 && (
-                    <div className={`inline-block mt-2 px-3 py-0.5 rounded-full border text-xs font-medium ${bias.color}`}>
-                      {bias.label}
-                    </div>
-                  )}
+
+      {/* ── Main content: tabs ── */}
+      <Tabs defaultValue="narrative" className="flex flex-col flex-1 min-h-0">
+        <TabsList className="shrink-0 mx-6 mt-4 mb-0 w-auto self-start gap-1 bg-muted/40">
+          <TabsTrigger value="narrative" className="gap-1.5 text-xs">
+            <BookOpen className="w-3.5 h-3.5" />
+            结局复盘
+          </TabsTrigger>
+          <TabsTrigger value="overview" className="gap-1.5 text-xs">
+            <Trophy className="w-3.5 h-3.5" />
+            本局总览
+          </TabsTrigger>
+          <TabsTrigger value="leaderboard" className="gap-1.5 text-xs">
+            <Users className="w-3.5 h-3.5" />
+            排行榜
+          </TabsTrigger>
+          <TabsTrigger value="turns" className="gap-1.5 text-xs">
+            <List className="w-3.5 h-3.5" />
+            回合日志
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ── 结局复盘 tab ── */}
+        <TabsContent value="narrative" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          {narrative ? (
+            <div className="max-w-2xl space-y-5">
+              {/* Story */}
+              <div className={`rounded-xl border p-5 ${accentBorder}`}>
+                <div className={`text-xs font-semibold uppercase tracking-wider mb-2 ${accentClass}`}>结局故事</div>
+                <p className="text-sm text-foreground leading-relaxed">{narrative.story}</p>
+              </div>
+              {/* Teaching points */}
+              <div className="rounded-xl border border-border bg-card/40 p-5">
+                <div className="text-xs font-semibold uppercase tracking-wider mb-3 text-primary">📚 教学要点</div>
+                <div className="space-y-2">
+                  {narrative.teach.split("\n").filter(Boolean).map((line, i) => (
+                    <p key={i} className="text-sm text-foreground leading-relaxed">{line}</p>
+                  ))}
                 </div>
-                {/* Multiplicative formula */}
-                <div className="flex items-center justify-center gap-2 text-sm flex-wrap pt-1">
-                  <div className="text-center px-3 py-1.5 rounded bg-primary/10 border border-primary/30">
-                    <div className="text-xs text-muted-foreground mb-0.5">转化率</div>
-                    <div className="font-mono font-semibold text-primary">
-                      {convertedCount}/{totalPeople}
-                      <span className="text-xs ml-1 opacity-70">
-                        = {totalPeople > 0 ? Math.round(convertedCount / totalPeople * 100) : 0}%
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-muted-foreground text-lg">×</span>
-                  <div className="text-center px-3 py-1.5 rounded bg-green-500/10 border border-green-500/30">
-                    <div className="text-xs text-muted-foreground mb-0.5">健康度指数</div>
-                    <div className="font-mono font-semibold text-green-400">
-                      {healthScore}%
-                      <span className="text-xs ml-1 opacity-70">
-                        (可信{finalCred}−压{finalPressure})
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-muted-foreground text-lg">×</span>
-                  <div className="text-center px-3 py-1.5 rounded bg-muted/30 border border-border">
-                    <div className="text-xs text-muted-foreground mb-0.5">满分</div>
-                    <div className="font-mono font-semibold text-foreground">100</div>
-                  </div>
+              </div>
+              {/* Real-world cases */}
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+                <div className="text-xs font-semibold uppercase tracking-wider mb-3 text-amber-400">🌍 真实案例参照</div>
+                <div className="space-y-2">
+                  {narrative.realWorld.split("\n").filter(Boolean).map((line, i) => (
+                    <p key={i} className="text-sm text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: line }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+              暂无结局叙事数据
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── 本局总览 tab ── */}
+        <TabsContent value="overview" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          <ErrorBoundary>
+            <div className="max-w-2xl space-y-5">
+              {/* Score formula */}
+              <div className="rounded-xl border border-border bg-card/40 p-4">
+                <div className="text-xs font-semibold text-muted-foreground mb-3">得分公式</div>
+                <div className="text-xs font-mono text-muted-foreground space-y-1">
+                  <div>转化率 = {convertedCount}/{totalPeople} = {Math.round(convertedCount/totalPeople*100)}%</div>
+                  <div>健康指数 = (max(0, {finalCred}−{finalPressure}) + 10) / 20 = {(healthScore/100).toFixed(2)}</div>
+                  <div className="text-primary font-semibold">综合得分 = {Math.round(convertedCount/totalPeople*100)}% × {(healthScore/100).toFixed(2)} × 100 = <span className="text-lg">{totalScore}</span></div>
                 </div>
               </div>
               {/* Stats grid */}
-              <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                {[
-                  { label: "转化人数", value: `${convertedCount}/${totalPeople}` },
-                  { label: "剩余资源", value: String(resourcesLeft) },
-                  { label: "共用回合", value: String(totalRounds) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="bg-muted/20 rounded-lg p-3 border border-border">
-                    <div className="font-semibold text-base text-foreground">{value}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {stats.map(({ label, value, highlight }) => (
+                  <div key={label} className={`rounded-lg border p-3 text-center ${highlight ? "border-primary/40 bg-primary/5" : "border-border bg-card/30"}`}>
+                    <div className={`font-bold text-lg leading-none mb-1 ${highlight ? "text-primary" : "text-foreground"}`}>{value}</div>
+                    <div className="text-xs text-muted-foreground">{label}</div>
                   </div>
                 ))}
+                {/* Strategy bias */}
+                <div className={`rounded-lg border p-3 text-center ${bias.color}`}>
+                  <div className="font-semibold text-sm leading-none mb-1">{bias.label}</div>
+                  <div className="text-xs text-muted-foreground">策略风格</div>
+                </div>
               </div>
               {/* Hidden ties */}
               {result.hiddenTiesStats && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
                   <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
                     <span>🔗</span>
                     <span>信任网利用率</span>
@@ -395,35 +431,28 @@ function PostGameSummary({
                   )}
                 </div>
               )}
-              {/* CTA buttons */}
-              <div className="flex gap-2 pt-1">
-                <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={onRestart}>
-                  <RotateCcw className="w-4 h-4 mr-1.5" />
-                  再测一局
-                </Button>
-                <Link href="/history" className="flex-1">
-                  <Button variant="outline" className="w-full gap-1.5 bg-card">
-                    我的记录
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
-              </div>
-            </ErrorBoundary>
-          </TabsContent>
-          {/* ── Leaderboard tab ── */}
-          <TabsContent value="leaderboard" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
+            </div>
+          </ErrorBoundary>
+        </TabsContent>
+
+        {/* ── Leaderboard tab ── */}
+        <TabsContent value="leaderboard" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          <ErrorBoundary>
+            <div className="max-w-2xl">
               <LeaderboardPanel playerName={playerName} currentSessionId={sessionId} />
-            </ErrorBoundary>
-          </TabsContent>
-          {/* ── Turn log tab ── */}
-          <TabsContent value="turns" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
+            </div>
+          </ErrorBoundary>
+        </TabsContent>
+
+        {/* ── Turn log tab ── */}
+        <TabsContent value="turns" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          <ErrorBoundary>
+            <div className="max-w-2xl">
               <TurnLog sessionId={sessionId} />
-            </ErrorBoundary>
-          </TabsContent>
-        </Tabs>
-      </div>
+            </div>
+          </ErrorBoundary>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -432,58 +461,54 @@ function PostGameSummary({
 export default function GameTestPage() {
   const { playerName, setPlayerName } = usePlayerName();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-
   // Always start with null — never restore from localStorage to avoid stale session bugs
   const [sessionId, setSessionIdState] = useState<number | null>(null);
   const setSessionId = useCallback((id: number | null) => {
     setSessionIdState(id);
     try { id != null ? localStorage.setItem(SESSION_ID_KEY, String(id)) : localStorage.removeItem(SESSION_ID_KEY); } catch {}
   }, []);
-
-  // Freeze the sessionId at the moment GAME_ENDED fires so PostGameSummary always
-  // shows the correct session even if the parent sessionId state changes later.
+  // Plan A: freeze sessionId + result at GAME_ENDED moment, then replace iframe with FullResultPage
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [frozenSessionId, setFrozenSessionId] = useState<number | null>(null);
-
   const [iframeKey, setIframeKey] = useState(0);
   const [gameReady, setGameReady] = useState(false);
-  const [log, setLog] = useState<LogEntry[]>([]);
   const [cheatSent, setCheatSent] = useState(false);
+  const [log, setLog] = useState<LogEntry[]>([]);
 
-  const sessionIdRef = useRef<number | null>(null);
   const addLog = useCallback((msg: string, ok: boolean) => {
-    const ts = new Date().toLocaleTimeString("zh-CN");
-    setLog(prev => [{ ts, msg, ok }, ...prev.slice(0, 29)]);
+    const ts = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+    setLog(prev => [...prev.slice(-99), { ts, msg, ok }]);
   }, []);
 
+  const testPlayerName = playerName || "测试玩家";
+
+  // tRPC mutations
   const startSession = trpc.game.startSession.useMutation();
-  const saveTurnMutation = trpc.game.saveTurn.useMutation();
   const endSession = trpc.game.endSession.useMutation();
+  const saveTurn = trpc.game.saveTurn.useMutation();
   const utils = trpc.useUtils();
 
-  // Use stable refs for async callbacks to avoid stale closures
+  // Stable refs for async handlers
+  const sessionIdRef = useRef<number | null>(null);
+  useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
   const endSessionRef = useRef(endSession.mutateAsync);
-  const saveTurnRef = useRef(saveTurnMutation.mutateAsync);
+  useEffect(() => { endSessionRef.current = endSession.mutateAsync; }, [endSession.mutateAsync]);
+  const saveTurnRef = useRef(saveTurn.mutateAsync);
+  useEffect(() => { saveTurnRef.current = saveTurn.mutateAsync; }, [saveTurn.mutateAsync]);
   const utilsRef = useRef(utils);
-  useEffect(() => { endSessionRef.current = endSession.mutateAsync; });
-  useEffect(() => { saveTurnRef.current = saveTurnMutation.mutateAsync; });
-  useEffect(() => { utilsRef.current = utils; });
-
-  const testPlayerName = playerName || "测试玩家";
-  const testPlayerNameRef = useRef(testPlayerName);
-  useEffect(() => { testPlayerNameRef.current = testPlayerName; });
+  useEffect(() => { utilsRef.current = utils; }, [utils]);
 
   const handleStartGame = useCallback(async () => {
+    // Reset result state for new game
+    setGameResult(null);
+    setFrozenSessionId(null);
+    setGameReady(false);
+    setCheatSent(false);
+    setLog([]);
     try {
-      addLog("调用 startSession…", true);
-      const session = await startSession.mutateAsync({ playerName: testPlayerName });
-      const newId = session.sessionId;
+      const res = await startSession.mutateAsync({ playerName: testPlayerName });
+      const newId = res.sessionId;
       setSessionId(newId);
-      sessionIdRef.current = newId;
-      setGameResult(null);
-      setFrozenSessionId(null);
-      setGameReady(false);
-      setCheatSent(false);
       setIframeKey(k => k + 1);
       addLog(`✅ startSession OK → sessionId=${newId}`, true);
     } catch (err: unknown) {
@@ -554,11 +579,10 @@ export default function GameTestPage() {
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
       addLog(`📨 GAME_ENDED received — score=${result.totalScore}, converted=${result.convertedCount}/${result.totalPeople}`, true);
-      // Freeze the sessionId at this exact moment so PostGameSummary always
-      // receives the correct session even after state updates
+      // Freeze sessionId at this exact moment
       const currentSid = sessionIdRef.current;
       setFrozenSessionId(currentSid);
-      setGameResult(result);
+      // Set result AFTER endSession so data is in DB when FullResultPage queries
       if (currentSid !== null) {
         try {
           await endSessionRef.current({
@@ -575,14 +599,10 @@ export default function GameTestPage() {
             aggressiveIndex: Number(result.aggressiveIndex) || 0,
             conservativeIndex: Number(result.conservativeIndex) || 0,
           });
-          // Invalidate after endSession so TurnLog refetches with finalized data
           await utilsRef.current.game.getSession.invalidate({ sessionId: currentSid });
           await utilsRef.current.leaderboard.list.invalidate();
           addLog(`✅ endSession OK → score=${result.totalScore} saved to DB`, true);
-          toast.success(`✅ 测试完成！得分 ${result.totalScore}，记录已保存`);
-          // Summary panel is shown as a React side panel (not injected into iframe)
-          // because the engine iframe is sandboxed and cannot load nested iframes with auth cookies.
-          addLog('📊 结算面板已就绪，点击右侧「查看结算」按钮', true);
+          toast.success(`✅ 测试完成！得分 ${result.totalScore}`);
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
           addLog(`❌ endSession FAILED: ${msg}`, false);
@@ -591,101 +611,104 @@ export default function GameTestPage() {
       } else {
         addLog("⚠️ GAME_ENDED but sessionId is null — not saved", false);
       }
+      // Show full-screen result page (Plan A) — replaces iframe
+      setGameResult(result);
     }
-  }, [addLog]); // Only depends on addLog (stable) — all other deps via refs
+  }, [addLog]);
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
 
+  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
-        <div className="text-lg font-bold text-primary">🧪 隐藏测试页</div>
-        <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30 bg-amber-500/10">
-          仅供内部测试
-        </Badge>
-        <div className="ml-auto text-xs text-muted-foreground">
-          /game-test — 不在导航中显示
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-background">
+      {/* ── Left: game area (iframe OR full-screen result) ── */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+        {/* Control bar — always visible */}
+        <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-border bg-card/60 flex-wrap">
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors mr-1">← 返回首页</Link>
+          <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">🧪 测试模式</Badge>
+          <div className="flex-1" />
+          <input
+            className="h-7 text-xs rounded border border-border bg-background px-2 w-28 text-foreground placeholder:text-muted-foreground"
+            placeholder="测试玩家名"
+            defaultValue={testPlayerName}
+            onBlur={e => { if (e.target.value) setPlayerName(e.target.value); }}
+          />
+          <Button
+            size="sm"
+            className="bg-primary hover:bg-primary/90 gap-1.5"
+            onClick={handleStartGame}
+            disabled={startSession.isPending}
+          >
+            {startSession.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+            {sessionId ? "重置游戏" : "开始游戏"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+            onClick={sendCheatWin}
+            disabled={!gameReady || cheatSent || gameResult != null}
+          >
+            <Zap className="w-3.5 h-3.5" />
+            ⚡ 一键全转化
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+            onClick={sendSetResources}
+            disabled={!gameReady || gameResult != null}
+          >
+            💰 资源→2
+          </Button>
         </div>
-      </div>
 
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left: game iframe */}
-        <div className="flex flex-col flex-1 min-w-0 p-4 gap-3 relative">
-          {/* Controls */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <input
-              className="flex-1 min-w-[140px] px-3 py-1.5 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground"
-              placeholder="测试玩家名"
-              defaultValue={testPlayerName}
-              onBlur={e => { if (e.target.value) setPlayerName(e.target.value); }}
+        {/* Status bar */}
+        <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-border bg-background/50 flex-wrap text-xs">
+          <span className="text-muted-foreground">会话：</span>
+          {sessionId != null
+            ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">#{sessionId}</Badge>
+            : <Badge variant="outline" className="text-muted-foreground">未创建</Badge>}
+          <span className="text-muted-foreground ml-2">引擎：</span>
+          {gameResult != null
+            ? <Badge variant="outline" className="text-primary border-primary/30 bg-primary/10">结算中</Badge>
+            : gameReady
+            ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">就绪</Badge>
+            : <Badge variant="outline" className="text-muted-foreground">等待中</Badge>}
+          {gameResult && (
+            <Badge variant="outline" className="text-primary border-primary/30 bg-primary/10">
+              <Trophy className="w-3 h-3 mr-1" />
+              {gameResult.totalScore} 分
+            </Badge>
+          )}
+        </div>
+
+        {/* Main area: iframe OR full-screen result */}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {/* Plan A: show FullResultPage when game ends, otherwise show iframe */}
+          {gameResult != null ? (
+            <FullResultPage
+              result={gameResult}
+              sessionId={frozenSessionId}
+              playerName={playerName}
+              onRestart={handleStartGame}
             />
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 gap-1.5"
-              onClick={handleStartGame}
-              disabled={startSession.isPending}
-            >
-              {startSession.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-              {sessionId ? "重置游戏" : "开始游戏"}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
-              onClick={sendCheatWin}
-              disabled={!gameReady || cheatSent}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              ⚡ 一键全转化
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5 border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
-              onClick={sendSetResources}
-              disabled={!gameReady}
-            >
-              💰 资源→2
-            </Button>
-          </div>
-
-          {/* Status badges */}
-          <div className="flex items-center gap-2 flex-wrap text-xs shrink-0">
-            <span className="text-muted-foreground">会话：</span>
-            {sessionId != null
-              ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">#{sessionId}</Badge>
-              : <Badge variant="outline" className="text-muted-foreground">未创建</Badge>}
-            <span className="text-muted-foreground ml-2">引擎：</span>
-            {gameReady
-              ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">就绪</Badge>
-              : <Badge variant="outline" className="text-muted-foreground">等待中</Badge>}
-            {gameResult && (
-              <Badge variant="outline" className="text-primary border-primary/30 bg-primary/10">
-                <Trophy className="w-3 h-3 mr-1" />
-                {gameResult.totalScore} 分
-              </Badge>
-            )}
-          </div>
-
-          {/* iframe — always show placeholder until 'Start Game' is clicked */}
-          {sessionId !== null ? (
-            <div className="flex-1 rounded-xl border border-border overflow-hidden bg-card">
-              <iframe
-                key={iframeKey}
-                ref={iframeRef}
-                src={GAME_ENGINE_URL}
-                className="w-full h-full"
-                onLoad={handleIframeLoad}
-                sandbox="allow-scripts allow-forms allow-popups allow-downloads"
-                title="game-engine-test"
-              />
-            </div>
+          ) : sessionId !== null ? (
+            <iframe
+              key={iframeKey}
+              ref={iframeRef}
+              src={GAME_ENGINE_URL}
+              className="w-full h-full"
+              onLoad={handleIframeLoad}
+              sandbox="allow-scripts allow-forms allow-popups allow-downloads"
+              title="game-engine-test"
+            />
           ) : (
-            <div className="flex-1 rounded-xl border border-dashed border-border flex flex-col items-center justify-center gap-3 text-muted-foreground text-sm">
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground text-sm">
               <div className="text-3xl">🎮</div>
               <div>点击「开始游戏」创建会话并加载引擎</div>
               <Button
@@ -699,36 +722,25 @@ export default function GameTestPage() {
               </Button>
             </div>
           )}
-
-          {/* PostGameSummary overlay — shown when game ends, covers the iframe */}
-          {gameResult && frozenSessionId !== null && (
-            <PostGameSummary
-              result={gameResult}
-              sessionId={frozenSessionId}
-              playerName={playerName}
-              onRestart={handleStartGame}
-              onClose={() => setGameResult(null)}
-            />
-          )}
         </div>
+      </div>
 
-        {/* Right: event log */}
-        <div className="w-80 shrink-0 flex flex-col border-l border-border p-4 gap-3 overflow-hidden">
-          <div className="text-sm font-semibold text-foreground shrink-0">📋 事件日志</div>
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
-            {log.length === 0 && (
-              <div className="text-muted-foreground text-sm py-4 text-center">等待事件…</div>
-            )}
-            {log.map((entry, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs font-mono rounded px-2 py-1 bg-card/50 border border-border">
-                {entry.ok
-                  ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
-                  : <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />}
-                <span className="text-muted-foreground shrink-0">{entry.ts}</span>
-                <span className={entry.ok ? "text-foreground" : "text-red-400"}>{entry.msg}</span>
-              </div>
-            ))}
-          </div>
+      {/* ── Right: event log ── */}
+      <div className="w-72 shrink-0 flex flex-col border-l border-border p-4 gap-3 overflow-hidden">
+        <div className="text-sm font-semibold text-foreground shrink-0">📋 事件日志</div>
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
+          {log.length === 0 && (
+            <div className="text-muted-foreground text-sm py-4 text-center">等待事件…</div>
+          )}
+          {log.map((entry, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs font-mono rounded px-2 py-1 bg-card/50 border border-border">
+              {entry.ok
+                ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
+                : <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />}
+              <span className="text-muted-foreground shrink-0">{entry.ts}</span>
+              <span className={entry.ok ? "text-foreground" : "text-red-400"}>{entry.msg}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
