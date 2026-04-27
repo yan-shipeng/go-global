@@ -16,7 +16,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight } from "lucide-react";
+import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, X } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
@@ -238,11 +238,13 @@ function PostGameSummary({
   sessionId,
   playerName,
   onRestart,
+  onClose,
 }: {
   result: GameResult;
   sessionId: number | null;
   playerName: string;
   onRestart: () => void;
+  onClose: () => void;
 }) {
   const totalScore = Number(result.totalScore) || 0;
   const convertedCount = Number(result.convertedCount) || 0;
@@ -272,10 +274,22 @@ function PostGameSummary({
             <div className="text-2xl font-bold text-primary leading-none">{totalScore}</div>
             <div className="text-xs text-muted-foreground">综合得分</div>
           </div>
-          <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
-            <RotateCcw className="w-3.5 h-3.5" />
-            再测一局
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
+              <RotateCcw className="w-3.5 h-3.5" />
+              再测一局
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1 bg-card hover:bg-muted"
+              onClick={onClose}
+              title="关闭结算，返回游戏画面"
+            >
+              <X className="w-3.5 h-3.5" />
+              关闭结算
+            </Button>
+          </div>
         </div>
       </div>
       {/* Tabs */}
@@ -700,7 +714,8 @@ export default function GameTestPage() {
                 result={gameResult}
                 sessionId={frozenSessionId}
                 playerName={testPlayerName}
-                onRestart={() => {
+                onClose={() => setGameResult(null)}
+              onRestart={() => {
                   setGameResult(null);
                   setFrozenSessionId(null);
                   handleStartGame();

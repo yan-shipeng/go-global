@@ -524,3 +524,7 @@
 
 - [x] Fix: sessionId is null when PostGameSummary mounts → TurnLog and Leaderboard show empty
 - [x] Fix: onRestart calls handleStartGame which resets sessionId before PostGameSummary unmounts
+
+## Phase 86: Add close button to /game-test PostGameSummary
+
+- [x] Add "关闭结算" (X) button to PostGameSummary overlay so user can dismiss it and return to the engine's ending screen
