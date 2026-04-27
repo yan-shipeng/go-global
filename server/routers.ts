@@ -12,7 +12,25 @@ import {
   getSessionTurns,
   getLeaderboard,
   getLeaderboardStats,
+  resetDb,
 } from "./db";
+
+/** Retry a DB operation once after resetting the pool on connection errors */
+async function withDbRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err: any) {
+    const isConnErr = err?.code === 'ECONNREFUSED' || err?.code === 'ECONNRESET' ||
+      err?.code === 'ETIMEDOUT' || err?.code === 'PROTOCOL_CONNECTION_LOST' ||
+      err?.message?.includes('connect') || err?.message?.includes('timeout');
+    if (isConnErr) {
+      console.warn('[DB] Connection error, resetting pool and retrying:', err.code || err.message);
+      resetDb();
+      return await fn();
+    }
+    throw err;
+  }
+}
 
 // ─── Score calculation helper ─────────────────────────────────────────────────
 function computeScore(params: {
@@ -40,11 +58,11 @@ const gameRouter = router({
   startSession: publicProcedure
     .input(z.object({ playerName: z.string().min(1).max(64) }))
     .mutation(async ({ input }) => {
-      const sessionId = await createGameSession({
+      const sessionId = await withDbRetry(() => createGameSession({
         playerName: input.playerName,
         status: "active",
         startedAt: new Date(),
-      });
+      }));
       return { sessionId };
     }),
 
@@ -69,9 +87,9 @@ const gameRouter = router({
       outcome: z.string().optional(),
     }))
     .mutation(async ({ input }) => {
-      const session = await getGameSession(input.sessionId);
+      const session = await withDbRetry(() => getGameSession(input.sessionId));
       if (!session) throw new Error("Session not found");
-      const turnId = await saveTurn({
+      const turnId = await withDbRetry(() => saveTurn({
         sessionId: input.sessionId,
         round: input.round,
         actionId: input.actionId,
@@ -83,7 +101,7 @@ const gameRouter = router({
         pressureAfter: input.pressureAfter,
         resourcesAfter: input.resourcesAfter,
         outcome: input.outcome,
-      });
+      }));
       return { turnId };
     }),
 
@@ -106,7 +124,7 @@ const gameRouter = router({
       conservativeIndex: z.number().optional().default(0),
     }))
     .mutation(async ({ input }) => {
-      const session = await getGameSession(input.sessionId);
+      const session = await withDbRetry(() => getGameSession(input.sessionId));
       if (!session) throw new Error("Session not found");
       // Use engine-provided scores if available; fall back to server computation
       const scores = (input.totalScore != null)
@@ -124,7 +142,7 @@ const gameRouter = router({
             finalPressure: input.finalPressure,
             convertedCount: input.convertedCount,
           });
-      await updateGameSession(input.sessionId, {
+      await withDbRetry(() => updateGameSession(input.sessionId, {
         status: input.status,
         resourcesLeft: input.resourcesLeft,
         finalCredibility: input.finalCredibility,
@@ -135,7 +153,7 @@ const gameRouter = router({
         conservativeIndex: input.conservativeIndex,
         ...scores,
         endedAt: new Date(),
-      });
+      }));
       return { scores };
     }),
 
@@ -143,9 +161,9 @@ const gameRouter = router({
   getSession: publicProcedure
     .input(z.object({ sessionId: z.number() }))
     .query(async ({ input }) => {
-      const session = await getGameSession(input.sessionId);
+      const session = await withDbRetry(() => getGameSession(input.sessionId));
       if (!session) throw new Error("Session not found");
-      const turns = await getSessionTurns(input.sessionId);
+      const turns = await withDbRetry(() => getSessionTurns(input.sessionId));
       return { session, turns };
     }),
 });
@@ -154,12 +172,12 @@ const leaderboardRouter = router({
   list: publicProcedure
     .input(z.object({ limit: z.number().optional().default(50) }))
     .query(async ({ input }) => {
-      const rows = await getLeaderboard(input.limit);
+      const rows = await withDbRetry(() => getLeaderboard(input.limit));
       return rows.map((r, i) => ({ ...r, rank: i + 1 }));
     }),
 
   stats: publicProcedure.query(async () => {
-    return getLeaderboardStats();
+    return withDbRetry(() => getLeaderboardStats());
   }),
 });
 

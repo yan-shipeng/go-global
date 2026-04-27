@@ -30,9 +30,10 @@ function buildPoolConfig(): mysql2.PoolOptions {
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
-    connectTimeout: 10000,
+    connectTimeout: 60000,
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000,
+    idleTimeout: 60000,
   };
   if (sslConfig) config.ssl = sslConfig;
   return config;
@@ -52,6 +53,15 @@ export async function getDb() {
     }
   }
   return _db;
+}
+
+/** Reset the pool so the next getDb() call creates a fresh one. */
+export function resetDb() {
+  if (_pool) {
+    try { _pool.end(() => {}); } catch {}
+  }
+  _db = null;
+  _pool = null;
 }
 
 // ─── Users ────────────────────────────────────────────────────────────────────
