@@ -515,3 +515,7 @@
 - [x] Upload updated engine as game-engine_6c9b6e49.html
 - [x] Update GAME_ENGINE_URL in GameTestPage.tsx and GamePage.tsx to game-engine_6c9b6e49.html
 - [x] TSC 0 errors, 8/8 tests pass
+
+## Phase 84: Add PostGameSummary to /game-test
+
+- [x] Add full PostGameSummary overlay (本局总览 / 排行榜 / 回合日志) to GameTestPage.tsx

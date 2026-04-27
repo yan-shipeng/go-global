@@ -5,8 +5,10 @@
  * Features:
  *  - "⚡ 一键全转化" button: sends CHEAT_WIN to the engine iframe → all 12 people
  *    instantly converted → game ends → PostGameSummary shows.
+ *  - "💰 资源→2" button: sends SET_RESOURCES=2 to the engine → fast game end.
  *  - "🔁 重置游戏" button: restarts the session (same as the normal restart flow).
  *  - Shows live DB status: whether startSession / endSession succeeded.
+ *  - Full PostGameSummary overlay (本局总览 / 排行榜 / 回合日志) after game ends.
  */
 
 import React, { useRef, useState, useCallback, useEffect } from "react";
@@ -14,12 +16,23 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
 const GAME_ENGINE_URL = "/manus-storage/game-engine_6c9b6e49.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
+
+interface HiddenTiesStats {
+  total: number;
+  discoveredCount: number;
+  activatedCount: number;
+  missedCount: number;
+  discoveredPairs: string[];
+  activatedPairs: string[];
+  missedPairs: string[];
+}
 
 interface GameResult {
   endingType: string;
@@ -35,6 +48,7 @@ interface GameResult {
   healthScore: number;
   totalScore: number;
   history: unknown[];
+  hiddenTiesStats?: HiddenTiesStats;
   aggressiveIndex?: number;
   conservativeIndex?: number;
 }
@@ -53,6 +67,354 @@ interface TurnData {
 
 type LogEntry = { ts: string; msg: string; ok: boolean };
 
+// ─── Strategy bias helper ────────────────────────────────────────────────────
+function strategyBias(agg: number, con: number) {
+  const total = agg + con;
+  if (total === 0) return { label: "-", color: "text-muted-foreground" };
+  const ratio = agg / total;
+  if (ratio >= 0.6) return { label: "⚡ 制度主导型", color: "text-amber-400 border-amber-500/40 bg-amber-500/10" };
+  if (ratio <= 0.35) return { label: "💬 沟通主导型", color: "text-primary border-primary/40 bg-primary/10" };
+  return { label: "⚖️ 均衡型", color: "text-green-400 border-green-500/40 bg-green-500/10" };
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  if (rank === 1) return <span className="text-xl">🥇</span>;
+  if (rank === 2) return <span className="text-xl">🥈</span>;
+  if (rank === 3) return <span className="text-xl">🥉</span>;
+  return <span className="text-muted-foreground font-mono text-sm w-8 text-center">#{rank}</span>;
+}
+
+// ─── Error Boundary ───────────────────────────────────────────────────────────
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback?: React.ReactNode },
+  { hasError: boolean; error: string }
+> {
+  constructor(props: { children: React.ReactNode; fallback?: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: "" };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error: error?.message ?? String(error) };
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback ?? (
+        <div className="flex flex-col items-center justify-center py-12 gap-3 text-center px-4">
+          <div className="text-4xl">⚠️</div>
+          <div className="text-sm text-muted-foreground">加载出错，请刷新页面重试</div>
+          <div className="text-xs text-red-400 font-mono max-w-xs break-all">{this.state.error}</div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── Turn Log component ───────────────────────────────────────────────────────
+function TurnLog({ sessionId }: { sessionId: number | null }) {
+  const { data, isLoading } = trpc.game.getSession.useQuery(
+    { sessionId: sessionId! },
+    { enabled: sessionId != null }
+  );
+  if (sessionId == null) {
+    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">无会话记录</div>;
+  }
+  if (isLoading) {
+    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">加载回合日志…</div>;
+  }
+  const turns = data?.turns ?? [];
+  if (turns.length === 0) {
+    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无回合记录</div>;
+  }
+  return (
+    <div className="space-y-2">
+      {turns.map((t, idx) => {
+        const prev = idx > 0 ? turns[idx - 1] : null;
+        const credDelta = prev != null ? (t.credibilityAfter ?? 0) - (prev.credibilityAfter ?? 0) : 0;
+        const pressDelta = prev != null ? (t.pressureAfter ?? 0) - (prev.pressureAfter ?? 0) : 0;
+        const targets = (t.targets as string[]) ?? [];
+        const outcome = t.outcome;
+        return (
+          <div key={t.id} className="rounded-lg border border-border bg-card/40 p-3 space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">R{t.round}</span>
+              <span className="text-sm font-medium flex-1 min-w-0 truncate">{t.actionLabel || t.actionId}</span>
+              <span className={`text-xs px-1.5 py-0.5 rounded border shrink-0 ${
+                outcome === "success"
+                  ? "text-green-400 border-green-500/30 bg-green-500/10"
+                  : "text-amber-400 border-amber-500/30 bg-amber-500/10"
+              }`}>
+                {outcome === "success" ? "✓ 转化" : "△ 部分"}
+              </span>
+            </div>
+            {targets.length > 0 && (
+              <div className="text-xs text-muted-foreground pl-14">
+                目标：{targets.join("、")}
+              </div>
+            )}
+            <div className="flex items-center gap-3 pl-14 text-xs">
+              <span className="text-muted-foreground">
+                可信度 <span className={credDelta > 0 ? "text-green-400" : credDelta < 0 ? "text-red-400" : "text-muted-foreground"}>
+                  {credDelta > 0 ? `+${credDelta}` : credDelta !== 0 ? String(credDelta) : "±0"}
+                </span>
+                {" "}→ {t.credibilityAfter ?? "-"}
+              </span>
+              <span className="text-muted-foreground">
+                压力 <span className={pressDelta < 0 ? "text-green-400" : pressDelta > 0 ? "text-red-400" : "text-muted-foreground"}>
+                  {pressDelta > 0 ? `+${pressDelta}` : pressDelta !== 0 ? String(pressDelta) : "±0"}
+                </span>
+                {" "}→ {t.pressureAfter ?? "-"}
+              </span>
+              <span className="text-muted-foreground">资源 → {t.resourcesAfter ?? "-"}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Leaderboard Panel ────────────────────────────────────────────────────────
+function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string; currentSessionId: number | null }) {
+  const { data: listData } = trpc.leaderboard.list.useQuery({ limit: 50 });
+  const rows = listData ?? [];
+  const currentRowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (currentRowRef.current && currentSessionId != null) {
+      const t = setTimeout(() => {
+        currentRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [listData, currentSessionId]);
+
+  if (rows.length === 0) {
+    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无排行榜数据</div>;
+  }
+  return (
+    <div className="space-y-1.5">
+      {rows.map((row, i) => {
+        const isMe = !!playerName && row.playerName === playerName;
+        const isCurrent = row.id === currentSessionId;
+        return (
+          <div
+            key={row.id}
+            ref={isCurrent ? currentRowRef : undefined}
+            className={`rounded-lg border p-2.5 ${
+              isCurrent
+                ? "border-primary/50 bg-primary/10"
+                : isMe
+                ? "border-border bg-muted/30"
+                : "border-border bg-card/30"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <RankBadge rank={i + 1} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate font-medium">{row.playerName ?? "匿名"}</span>
+                  {isCurrent && <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/50 text-primary shrink-0">本局</Badge>}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-bold text-primary">{row.totalScore?.toFixed(1) ?? "-"}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 mt-1.5 pl-8 text-xs text-muted-foreground flex-wrap">
+              <span>{row.convertedCount}/12 转化</span>
+              <span>可信 {row.finalCredibility ?? "-"}</span>
+              <span>压力 {row.finalPressure ?? "-"}</span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Post-game summary overlay ────────────────────────────────────────────────
+function PostGameSummary({
+  result,
+  sessionId,
+  playerName,
+  onRestart,
+}: {
+  result: GameResult;
+  sessionId: number | null;
+  playerName: string;
+  onRestart: () => void;
+}) {
+  const totalScore = Number(result.totalScore) || 0;
+  const convertedCount = Number(result.convertedCount) || 0;
+  const totalPeople = Number(result.totalPeople) || 12;
+  const resourcesLeft = Number(result.resourcesLeft) || 0;
+  const totalRounds = Number(result.totalRounds) || 0;
+  const finalCred = Number(result.finalCred) || 0;
+  const finalPressure = Number(result.finalPressure) || 0;
+  const healthScore = Number(result.healthScore) || 0;
+  const agg = Number(result.aggressiveIndex) || 0;
+  const con = Number(result.conservativeIndex) || 0;
+  const bias = strategyBias(agg, con);
+
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col bg-background" style={{ overflow: "hidden" }}>
+      {/* Header bar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/60 shrink-0">
+        <div className="flex items-center gap-3">
+          <Trophy className="w-5 h-5 text-primary shrink-0" />
+          <div>
+            <div className="text-sm font-semibold text-foreground">游戏结束 · 复盘时刻</div>
+            <div className="text-xs text-muted-foreground">{playerName} · 测试模式</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="text-right mr-1">
+            <div className="text-2xl font-bold text-primary leading-none">{totalScore}</div>
+            <div className="text-xs text-muted-foreground">综合得分</div>
+          </div>
+          <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
+            <RotateCcw className="w-3.5 h-3.5" />
+            再测一局
+          </Button>
+        </div>
+      </div>
+      {/* Tabs */}
+      <div className="flex flex-col flex-1 min-h-0">
+        <Tabs defaultValue="overview" className="flex flex-col flex-1 min-h-0 gap-0">
+          <div className="px-4 pt-3 pb-1 shrink-0 border-b border-border/50">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="overview" className="flex-1 sm:flex-none">📊 本局总览</TabsTrigger>
+              <TabsTrigger value="leaderboard" className="flex-1 sm:flex-none">🏆 排行榜</TabsTrigger>
+              <TabsTrigger value="turns" className="flex-1 sm:flex-none">📋 回合日志</TabsTrigger>
+            </TabsList>
+          </div>
+          {/* ── Overview tab ── */}
+          <TabsContent value="overview" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 space-y-4 data-[state=inactive]:hidden">
+            <ErrorBoundary>
+              {/* Score breakdown */}
+              <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
+                <div className="text-center">
+                  <div className="text-5xl font-bold text-primary">{totalScore}</div>
+                  <div className="text-sm text-muted-foreground mt-1">综合得分（满分 100）</div>
+                  {(agg + con) > 0 && (
+                    <div className={`inline-block mt-2 px-3 py-0.5 rounded-full border text-xs font-medium ${bias.color}`}>
+                      {bias.label}
+                    </div>
+                  )}
+                </div>
+                {/* Multiplicative formula */}
+                <div className="flex items-center justify-center gap-2 text-sm flex-wrap pt-1">
+                  <div className="text-center px-3 py-1.5 rounded bg-primary/10 border border-primary/30">
+                    <div className="text-xs text-muted-foreground mb-0.5">转化率</div>
+                    <div className="font-mono font-semibold text-primary">
+                      {convertedCount}/{totalPeople}
+                      <span className="text-xs ml-1 opacity-70">
+                        = {totalPeople > 0 ? Math.round(convertedCount / totalPeople * 100) : 0}%
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground text-lg">×</span>
+                  <div className="text-center px-3 py-1.5 rounded bg-green-500/10 border border-green-500/30">
+                    <div className="text-xs text-muted-foreground mb-0.5">健康度指数</div>
+                    <div className="font-mono font-semibold text-green-400">
+                      {healthScore}%
+                      <span className="text-xs ml-1 opacity-70">
+                        (可信{finalCred}−压{finalPressure})
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-muted-foreground text-lg">×</span>
+                  <div className="text-center px-3 py-1.5 rounded bg-muted/30 border border-border">
+                    <div className="text-xs text-muted-foreground mb-0.5">满分</div>
+                    <div className="font-mono font-semibold text-foreground">100</div>
+                  </div>
+                </div>
+              </div>
+              {/* Stats grid */}
+              <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                {[
+                  { label: "转化人数", value: `${convertedCount}/${totalPeople}` },
+                  { label: "剩余资源", value: String(resourcesLeft) },
+                  { label: "共用回合", value: String(totalRounds) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-muted/20 rounded-lg p-3 border border-border">
+                    <div className="font-semibold text-base text-foreground">{value}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+                  </div>
+                ))}
+              </div>
+              {/* Hidden ties */}
+              {result.hiddenTiesStats && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                  <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
+                    <span>🔗</span>
+                    <span>信任网利用率</span>
+                    <span className="ml-auto text-xs font-normal text-muted-foreground">
+                      {result.hiddenTiesStats.discoveredCount}/{result.hiddenTiesStats.total} 条已发现
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
+                    <div className="rounded bg-amber-500/10 border border-amber-500/20 px-2 py-1.5">
+                      <div className="font-semibold text-amber-300">{result.hiddenTiesStats.discoveredCount}</div>
+                      <div className="text-muted-foreground">已发现</div>
+                    </div>
+                    <div className="rounded bg-green-500/10 border border-green-500/20 px-2 py-1.5">
+                      <div className="font-semibold text-green-400">{result.hiddenTiesStats.activatedCount}</div>
+                      <div className="text-muted-foreground">已激活</div>
+                    </div>
+                    <div className="rounded bg-red-500/10 border border-red-500/20 px-2 py-1.5">
+                      <div className="font-semibold text-red-400">{result.hiddenTiesStats.missedCount}</div>
+                      <div className="text-muted-foreground">错失路径</div>
+                    </div>
+                  </div>
+                  {result.hiddenTiesStats.activatedPairs?.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      <span className="text-green-400 font-medium">已激活：</span>
+                      {result.hiddenTiesStats.activatedPairs.join("、")}
+                    </div>
+                  )}
+                  {result.hiddenTiesStats.missedPairs?.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      <span className="text-red-400 font-medium">错失：</span>
+                      {result.hiddenTiesStats.missedPairs.join("、")}
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* CTA buttons */}
+              <div className="flex gap-2 pt-1">
+                <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={onRestart}>
+                  <RotateCcw className="w-4 h-4 mr-1.5" />
+                  再测一局
+                </Button>
+                <Link href="/history" className="flex-1">
+                  <Button variant="outline" className="w-full gap-1.5 bg-card">
+                    我的记录
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Button>
+                </Link>
+              </div>
+            </ErrorBoundary>
+          </TabsContent>
+          {/* ── Leaderboard tab ── */}
+          <TabsContent value="leaderboard" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 data-[state=inactive]:hidden">
+            <ErrorBoundary>
+              <LeaderboardPanel playerName={playerName} currentSessionId={sessionId} />
+            </ErrorBoundary>
+          </TabsContent>
+          {/* ── Turn log tab ── */}
+          <TabsContent value="turns" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 data-[state=inactive]:hidden">
+            <ErrorBoundary>
+              <TurnLog sessionId={sessionId} />
+            </ErrorBoundary>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 export default function GameTestPage() {
   const { playerName, setPlayerName } = usePlayerName();
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -83,6 +445,7 @@ export default function GameTestPage() {
   const saveTurnRef = useRef(saveTurnMutation.mutateAsync);
   useEffect(() => { endSessionRef.current = endSession.mutateAsync; });
   useEffect(() => { saveTurnRef.current = saveTurnMutation.mutateAsync; });
+  const utils = trpc.useUtils();
 
   const testPlayerName = playerName || "测试玩家";
 
@@ -182,6 +545,8 @@ export default function GameTestPage() {
             aggressiveIndex: Number(result.aggressiveIndex) || 0,
             conservativeIndex: Number(result.conservativeIndex) || 0,
           });
+          await utils.game.getSession.invalidate({ sessionId: sid });
+          await utils.leaderboard.list.invalidate();
           addLog(`✅ endSession OK → score=${result.totalScore} saved to DB`, true);
           toast.success(`✅ 测试完成！得分 ${result.totalScore}，记录已保存`);
         } catch (err: unknown) {
@@ -193,7 +558,7 @@ export default function GameTestPage() {
         addLog("⚠️ GAME_ENDED but sessionId is null — not saved", false);
       }
     }
-  }, [addLog]);
+  }, [addLog, utils]);
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
@@ -201,9 +566,9 @@ export default function GameTestPage() {
   }, [handleMessage]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border shrink-0">
         <div className="text-lg font-bold text-primary">🧪 隐藏测试页</div>
         <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30 bg-amber-500/10">
           仅供内部测试
@@ -213,11 +578,11 @@ export default function GameTestPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[calc(100vh-120px)]">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Left: game iframe */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col flex-1 min-w-0 p-4 gap-3 relative">
           {/* Controls */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
             <input
               className="flex-1 min-w-[140px] px-3 py-1.5 rounded-lg border border-border bg-card text-sm text-foreground placeholder:text-muted-foreground"
               placeholder="测试玩家名"
@@ -255,7 +620,7 @@ export default function GameTestPage() {
           </div>
 
           {/* Status badges */}
-          <div className="flex items-center gap-2 flex-wrap text-xs">
+          <div className="flex items-center gap-2 flex-wrap text-xs shrink-0">
             <span className="text-muted-foreground">会话：</span>
             {sessionId != null
               ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">#{sessionId}</Badge>
@@ -290,70 +655,54 @@ export default function GameTestPage() {
               点击"开始游戏"创建会话
             </div>
           )}
-        </div>
 
-        {/* Right: test log + result */}
-        <div className="flex flex-col gap-3 overflow-hidden">
-          <Tabs defaultValue="log" className="flex flex-col flex-1 min-h-0">
-            <TabsList className="w-full shrink-0">
-              <TabsTrigger value="log" className="flex-1">📋 事件日志</TabsTrigger>
-              <TabsTrigger value="result" className="flex-1">🏆 结算结果</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="log" className="flex-1 min-h-0 overflow-y-auto mt-2">
-              <div className="space-y-1">
-                {log.length === 0 && (
-                  <div className="text-muted-foreground text-sm py-4 text-center">等待事件…</div>
-                )}
-                {log.map((entry, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs font-mono rounded px-2 py-1 bg-card/50 border border-border">
-                    {entry.ok
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
-                      : <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />}
-                    <span className="text-muted-foreground shrink-0">{entry.ts}</span>
-                    <span className={entry.ok ? "text-foreground" : "text-red-400"}>{entry.msg}</span>
-                  </div>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="result" className="flex-1 min-h-0 overflow-y-auto mt-2">
-              {!gameResult ? (
-                <div className="text-muted-foreground text-sm py-4 text-center">游戏结束后显示</div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
-                    <div className="text-4xl font-bold text-primary">{gameResult.totalScore}</div>
-                    <div className="text-sm text-muted-foreground mt-1">综合得分</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {[
-                      ["转化人数", `${gameResult.convertedCount}/${gameResult.totalPeople}`],
-                      ["结局类型", gameResult.endingType],
-                      ["最终可信度", gameResult.finalCred],
-                      ["最终压力", gameResult.finalPressure],
-                      ["回合数", gameResult.totalRounds],
-                      ["资源剩余", gameResult.resourcesLeft],
-                      ["转化得分", gameResult.conversionScore],
-                      ["健康得分", gameResult.healthScore],
-                    ].map(([k, v]) => (
-                      <div key={String(k)} className="rounded-lg border border-border bg-card/50 p-2">
-                        <div className="text-xs text-muted-foreground">{k}</div>
-                        <div className="font-medium">{String(v)}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <Button
-                    className="w-full bg-primary hover:bg-primary/90"
-                    onClick={handleStartGame}
-                  >
+          {/* PostGameSummary overlay — covers the entire left pane */}
+          {gameResult && (
+            <ErrorBoundary
+              fallback={
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background px-4">
+                  <Trophy className="w-12 h-12 text-primary" />
+                  <div className="text-xl font-bold text-foreground">游戏结束！</div>
+                  <div className="text-4xl font-bold text-primary">{Number(gameResult.totalScore) || 0} 分</div>
+                  <Button className="mt-4 bg-primary hover:bg-primary/90" onClick={handleStartGame}>
                     <RotateCcw className="w-4 h-4 mr-1.5" />
                     再测一局
                   </Button>
                 </div>
-              )}
-            </TabsContent>
-          </Tabs>
+              }
+            >
+              <PostGameSummary
+                result={gameResult}
+                sessionId={sessionId}
+                playerName={testPlayerName}
+                onRestart={() => {
+                  setGameResult(null);
+                  setSessionId(null);
+                  sessionIdRef.current = null;
+                  handleStartGame();
+                }}
+              />
+            </ErrorBoundary>
+          )}
+        </div>
+
+        {/* Right: event log */}
+        <div className="w-80 shrink-0 flex flex-col border-l border-border p-4 gap-3 overflow-hidden">
+          <div className="text-sm font-semibold text-foreground shrink-0">📋 事件日志</div>
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
+            {log.length === 0 && (
+              <div className="text-muted-foreground text-sm py-4 text-center">等待事件…</div>
+            )}
+            {log.map((entry, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs font-mono rounded px-2 py-1 bg-card/50 border border-border">
+                {entry.ok
+                  ? <CheckCircle2 className="w-3.5 h-3.5 text-green-400 shrink-0 mt-0.5" />
+                  : <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />}
+                <span className="text-muted-foreground shrink-0">{entry.ts}</span>
+                <span className={entry.ok ? "text-foreground" : "text-red-400"}>{entry.msg}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
