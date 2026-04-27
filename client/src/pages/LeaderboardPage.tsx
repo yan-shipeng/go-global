@@ -121,8 +121,12 @@ export default function LeaderboardPage() {
                     key={row.id}
                     onClick={() => toggleSelect(row.id)}
                     className={`cursor-pointer transition-colors
-                      ${isSelected ? "bg-primary/10 border-l-2 border-primary" : "hover:bg-muted/20"}
-                      ${isMe ? "bg-yellow-400/5" : ""}
+                      ${isMe
+                        ? "bg-yellow-400/10 border-l-4 border-yellow-400 hover:bg-yellow-400/15"
+                        : isSelected
+                          ? "bg-primary/10 border-l-2 border-primary"
+                          : "hover:bg-muted/20"
+                      }
                     `}
                   >
                     {/* Desktop row */}

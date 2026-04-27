@@ -472,3 +472,8 @@
 - [x] Fix: use useRef for sessionId + mutateAsync, register handler once with useCallback
 - [x] Verified deployed API works correctly (startSession + endSession + leaderboard all OK)
 - [x] 8/8 tests pass
+
+## Phase 74: Game-end UX + Leaderboard highlights
+- [x] GamePage end panel: "查看排名" button already existed; strategy bias tag added to score card
+- [x] LeaderboardPage: my row now highlighted with yellow-400/10 bg + left border-l-4
+- [x] 8/8 tests pass

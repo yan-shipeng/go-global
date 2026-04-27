@@ -229,6 +229,24 @@ export default function GamePage() {
                 <div className="text-center mb-3">
                   <div className="text-4xl font-bold text-primary">{gameResult.totalScore}</div>
                   <div className="text-sm text-muted-foreground">综合得分（满分 100）</div>
+                  {/* Strategy bias tag */}
+                  {(() => {
+                    const agg = gameResult.aggressiveIndex ?? 0;
+                    const con = gameResult.conservativeIndex ?? 0;
+                    const total = agg + con;
+                    if (total === 0) return null;
+                    const ratio = agg / total;
+                    const { label, color } = ratio >= 0.6
+                      ? { label: '⚡ 制度主导型', color: 'text-amber-400 border-amber-500/40 bg-amber-500/10' }
+                      : ratio <= 0.35
+                      ? { label: '💬 沟通主导型', color: 'text-primary border-primary/40 bg-primary/10' }
+                      : { label: '⚖️ 均衡型', color: 'text-green-400 border-green-500/40 bg-green-500/10' };
+                    return (
+                      <div className={`inline-block mt-1.5 px-3 py-0.5 rounded-full border text-xs font-medium ${color}`}>
+                        {label}
+                      </div>
+                    );
+                  })()}
                 </div>
                 {/* Multiplicative formula breakdown */}
                 <div className="flex items-center justify-center gap-2 text-sm flex-wrap">
