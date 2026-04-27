@@ -184,6 +184,18 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
   const rows = listData ?? [];
   const stats = statsData;
 
+  // Auto-scroll to current session row when data loads
+  const currentRowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (currentRowRef.current && currentSessionId != null) {
+      // Small delay to let the tab content become visible before scrolling
+      const t = setTimeout(() => {
+        currentRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+      return () => clearTimeout(t);
+    }
+  }, [listData, currentSessionId]);
+
   const [compareIds, setCompareIds] = useState<number[]>([]);
   const toggleCompare = (id: number) => {
     setCompareIds(prev =>
@@ -252,6 +264,7 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
           return (
             <div
               key={row.id}
+              ref={isCurrent ? currentRowRef : undefined}
               className={`rounded-lg border p-2.5 cursor-pointer transition-colors ${
                 isCurrent
                   ? "border-primary/50 bg-primary/10"
