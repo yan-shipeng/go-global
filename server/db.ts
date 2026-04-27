@@ -1,17 +1,54 @@
 import { eq, desc, asc, and, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import mysql2 from "mysql2";
 import { InsertUser, users, gameSessions, gameTurns, InsertGameSession, InsertGameTurn } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: mysql2.Pool | null = null;
+
+function buildPoolConfig(): mysql2.PoolOptions {
+  const rawUrl = process.env.DATABASE_URL ?? "";
+  // TiDB Cloud encodes SSL as ?ssl={"rejectUnauthorized":true} which mysql2
+  // cannot parse from the URI. Strip it out and apply it manually.
+  const [baseUrl, queryString] = rawUrl.split("?");
+  let sslConfig: mysql2.SslOptions | undefined;
+  if (queryString) {
+    const params = new URLSearchParams(queryString);
+    const sslParam = params.get("ssl");
+    if (sslParam) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(sslParam));
+        sslConfig = { rejectUnauthorized: parsed.rejectUnauthorized ?? true };
+      } catch {
+        sslConfig = { rejectUnauthorized: true };
+      }
+    }
+  }
+  const config: mysql2.PoolOptions = {
+    uri: baseUrl,
+    waitForConnections: true,
+    connectionLimit: 5,
+    queueLimit: 0,
+    connectTimeout: 10000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+  };
+  if (sslConfig) config.ssl = sslConfig;
+  return config;
+}
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const config = buildPoolConfig();
+      _pool = mysql2.createPool(config);
+      _db = drizzle(_pool);
+      console.log("[Database] Connection pool created (SSL:", !!config.ssl, ")");
     } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
+      console.warn("[Database] Failed to create pool:", error);
       _db = null;
+      _pool = null;
     }
   }
   return _db;

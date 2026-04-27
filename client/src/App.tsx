@@ -9,6 +9,7 @@ import GamePage from "./pages/GamePage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import ComparePage from "./pages/ComparePage";
 import HistoryPage from "./pages/HistoryPage";
+import GameTestPage from "./pages/GameTestPage";
 import NavBar from "./components/NavBar";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
           <Route path="/compare/:idA/:idB" component={ComparePage} />
           <Route path="/compare" component={LeaderboardPage} />
           <Route path="/history" component={HistoryPage} />
+          <Route path="/game-test" component={GameTestPage} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>
