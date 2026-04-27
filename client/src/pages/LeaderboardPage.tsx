@@ -7,6 +7,17 @@ import { Trophy, TrendingUp, Users, Zap, GitCompare } from "lucide-react";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
+function strategyBias(aggressive: number | null | undefined, conservative: number | null | undefined): { label: string; color: string } {
+  const a = aggressive ?? 0;
+  const c = conservative ?? 0;
+  const total = a + c;
+  if (total === 0) return { label: "-", color: "text-muted-foreground" };
+  const ratio = a / total;
+  if (ratio >= 0.6) return { label: "制度主导", color: "text-amber-400" };
+  if (ratio <= 0.35) return { label: "沟通主导", color: "text-cyan-400" };
+  return { label: "均衡型", color: "text-green-400" };
+}
+
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return <span className="text-2xl">🥇</span>;
   if (rank === 2) return <span className="text-2xl">🥈</span>;
@@ -92,7 +103,7 @@ export default function LeaderboardPage() {
           ) : (
             <div className="divide-y divide-border">
               {/* Desktop header row */}
-              <div className="hidden sm:grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px] gap-2 px-4 py-2 text-xs text-muted-foreground font-medium">
+              <div className="hidden sm:grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px_90px] gap-2 px-4 py-2 text-xs text-muted-foreground font-medium">
                 <span>排名</span>
                 <span>玩家</span>
                 <span className="text-right">得分</span>
@@ -100,6 +111,7 @@ export default function LeaderboardPage() {
                 <span className="text-right">剩余</span>
                 <span className="text-right">可信度</span>
                 <span className="text-right">压力</span>
+                <span className="text-right">策略偏向</span>
               </div>
               {rows.map(row => {
                 const isMe = !!playerName && row.playerName === playerName;
@@ -114,7 +126,7 @@ export default function LeaderboardPage() {
                     `}
                   >
                     {/* Desktop row */}
-                    <div className="hidden sm:grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px] gap-2 px-4 py-3 text-sm">
+                    <div className="hidden sm:grid grid-cols-[48px_1fr_80px_80px_80px_80px_80px_90px] gap-2 px-4 py-3 text-sm">
                       <div className="flex items-center">
                         <RankBadge rank={row.rank} />
                       </div>
@@ -128,6 +140,9 @@ export default function LeaderboardPage() {
                       <div className="text-right">{row.resourcesLeft ?? 0}</div>
                       <div className="text-right text-green-400">{row.finalCredibility ?? 0}</div>
                       <div className="text-right text-destructive">{row.finalPressure ?? 0}</div>
+                      <div className={`text-right text-xs font-medium ${strategyBias(row.aggressiveIndex, row.conservativeIndex).color}`}>
+                        {strategyBias(row.aggressiveIndex, row.conservativeIndex).label}
+                      </div>
                     </div>
 
                     {/* Mobile card row */}
@@ -140,10 +155,13 @@ export default function LeaderboardPage() {
                           <span className="font-medium text-sm truncate">{row.playerName ?? "匿名"}</span>
                           {isMe && <Badge variant="outline" className="text-xs border-yellow-400/50 text-yellow-400 shrink-0">我</Badge>}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">
                           <span>转化 <span className="text-foreground">{row.convertedCount ?? 0}/12</span></span>
                           <span>可信 <span className="text-green-400">{row.finalCredibility ?? 0}</span></span>
                           <span>压力 <span className="text-destructive">{row.finalPressure ?? 0}</span></span>
+                          <span className={`font-medium ${strategyBias(row.aggressiveIndex, row.conservativeIndex).color}`}>
+                            {strategyBias(row.aggressiveIndex, row.conservativeIndex).label}
+                          </span>
                         </div>
                       </div>
                       <div className="shrink-0 text-right">

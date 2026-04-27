@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_7b96b73d.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_bcb43cba.html?autoStart=1";
 
 interface HiddenTiesStats {
   total: number;
@@ -35,6 +35,8 @@ interface GameResult {
   totalScore: number;
   history: unknown[];
   hiddenTiesStats?: HiddenTiesStats;
+  aggressiveIndex?: number;
+  conservativeIndex?: number;
 }
 
 interface TurnData {
@@ -133,6 +135,8 @@ export default function GamePage() {
             finalPressure: result.finalPressure,
             convertedCount: result.convertedCount,
             totalRounds: result.totalRounds,
+            aggressiveIndex: result.aggressiveIndex ?? 0,
+            conservativeIndex: result.conservativeIndex ?? 0,
           });
           toast.success(`🎮 游戏结束！综合得分 ${result.totalScore} 分`);
         } catch {

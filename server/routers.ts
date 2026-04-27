@@ -97,11 +97,12 @@ const gameRouter = router({
       finalPressure: z.number(),
       convertedCount: z.number(),
       totalRounds: z.number(),
+      aggressiveIndex: z.number().optional().default(0),
+      conservativeIndex: z.number().optional().default(0),
     }))
     .mutation(async ({ input }) => {
       const session = await getGameSession(input.sessionId);
       if (!session) throw new Error("Session not found");
-
       const scores = computeScore({
         status: input.status,
         resourcesLeft: input.resourcesLeft,
@@ -109,7 +110,6 @@ const gameRouter = router({
         finalPressure: input.finalPressure,
         convertedCount: input.convertedCount,
       });
-
       await updateGameSession(input.sessionId, {
         status: input.status,
         resourcesLeft: input.resourcesLeft,
@@ -117,10 +117,11 @@ const gameRouter = router({
         finalPressure: input.finalPressure,
         convertedCount: input.convertedCount,
         totalRounds: input.totalRounds,
+        aggressiveIndex: input.aggressiveIndex,
+        conservativeIndex: input.conservativeIndex,
         ...scores,
         endedAt: new Date(),
       });
-
       return { scores };
     }),
 

@@ -29,6 +29,13 @@
       "when": 1776998230100,
       "tag": "0003_thick_scalphunter",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1777270765530,
+      "tag": "0004_dusty_giant_man",
+      "breakpoints": true
     }
   ]
 }

@@ -453,3 +453,9 @@
 - [x] Update ACTION_TYPE_ALIASES (remove 沟通/对话 alias)
 - [x] Update ACTION_GROUPS UI labels
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 72: Hero text fix + leaderboard strategy-bias column
+- [x] Home.tsx hero: fix "50 个资源" → "60 个资源"
+- [x] LeaderboardPage: add 策略偏向 column (制度主导 / 沟通主导 / 均衡型)
+- [x] Backend: expose aggressiveIndex + conservativeIndex in leaderboard.list result
+- [x] Run tests, save checkpoint

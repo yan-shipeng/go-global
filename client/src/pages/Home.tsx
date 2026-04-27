@@ -114,7 +114,7 @@ export default function Home() {
 
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-8 leading-relaxed">
             你被派往海外，执行一场组织整合。<br className="hidden sm:block" />
-            在 50 个资源内，说服 12 位关键人物接受变革。<br className="hidden sm:block" />
+            在 60 个资源内，说服 12 位关键人物接受变革。<br className="hidden sm:block" />
             与同学同台竞技，比较策略差异，洞察组织动态。
           </p>
 

@@ -48,6 +48,10 @@ export const gameSessions = mysqlTable("game_sessions", {
   overAchievementScore: float("overAchievementScore").default(0),
   totalScore: float("totalScore").default(0),
 
+  // Strategy bias tracking
+  aggressiveIndex: int("aggressiveIndex").default(0),
+  conservativeIndex: int("conservativeIndex").default(0),
+
   startedAt: timestamp("startedAt").defaultNow().notNull(),
   endedAt: timestamp("endedAt"),
 });
