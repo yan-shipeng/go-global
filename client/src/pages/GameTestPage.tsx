@@ -18,7 +18,7 @@ import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2 } from "lucide-r
 import { toast } from "sonner";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_51b31f2a.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_6c9b6e49.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface GameResult {
@@ -122,6 +122,15 @@ export default function GameTestPage() {
     iframeRef.current.contentWindow.postMessage({ type: "CHEAT_WIN" }, "*");
     setCheatSent(true);
     addLog("⚡ CHEAT_WIN sent to engine", true);
+  };
+
+  const sendSetResources = () => {
+    if (!iframeRef.current?.contentWindow) {
+      addLog("❌ iframe not ready", false);
+      return;
+    }
+    iframeRef.current.contentWindow.postMessage({ type: "SET_RESOURCES", value: 2 }, "*");
+    addLog("💰 SET_RESOURCES=2 sent to engine", true);
   };
 
   const handleMessage = useCallback(async (event: MessageEvent) => {
@@ -233,6 +242,15 @@ export default function GameTestPage() {
             >
               <Zap className="w-3.5 h-3.5" />
               ⚡ 一键全转化
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 border-blue-500/40 text-blue-400 hover:bg-blue-500/10"
+              onClick={sendSetResources}
+              disabled={!gameReady}
+            >
+              💰 资源→2
             </Button>
           </div>
 
