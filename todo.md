@@ -491,3 +491,11 @@
 - [x] Critical: root cause found — engine URL was never updated after Phase 70-72 patches; production used old engine without aggressiveIndex/GAME_ENDED fixes
 - [x] Fix: upload new engine, update GAME_ENGINE_URL to game-engine_1e4ccc5d.html
 - [x] 8/8 tests pass
+
+## CRITICAL Phase 76: Deep audit + self-test of session save pipeline
+- [x] Audit: API chain works perfectly (startSession → saveTurn x3 → endSession → leaderboard all OK)
+- [x] ROOT CAUSE: engine served from CloudFront CDN (cross-origin iframe) — window.parent===window check threw SecurityError, caught silently, postMessage NEVER fired
+- [x] FIX: removed window.parent===window guards from postTurnData and postGameEnded (Phase 76 patch)
+- [x] Engine uploaded as game-engine_fca4b127.html, GAME_ENGINE_URL updated in GamePage.tsx
+- [x] Self-test SELFTEST_PHASE76 confirmed in leaderboard (id=960005, totalScore=68, aggressiveIndex=2)
+- [x] 8/8 tests pass
