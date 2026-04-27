@@ -9,6 +9,17 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { usePlayerName } from "@/hooks/usePlayerName";
 import type { GameSession } from "../../../drizzle/schema";
 
+function strategyBias(aggressive: number | null | undefined, conservative: number | null | undefined): { label: string; color: string } {
+  const a = aggressive ?? 0;
+  const c = conservative ?? 0;
+  const total = a + c;
+  if (total === 0) return { label: "-", color: "text-muted-foreground" };
+  const ratio = a / total;
+  if (ratio >= 0.6) return { label: "制度主导", color: "text-amber-400" };
+  if (ratio <= 0.35) return { label: "沟通主导", color: "text-cyan-400" };
+  return { label: "均衡型", color: "text-green-400" };
+}
+
 export default function HistoryPage() {
   const { playerName } = usePlayerName();
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -110,15 +121,21 @@ export default function HistoryPage() {
                         </span>
                       </div>
                       {/* Mobile sub-stats */}
-                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground sm:hidden">
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground sm:hidden flex-wrap">
                         <span>转化 <span className="text-foreground">{session.convertedCount ?? 0}/12</span></span>
                         <span>可信 <span className="text-green-400">{session.finalCredibility ?? 0}</span></span>
                         <span>压力 <span className="text-destructive">{session.finalPressure ?? 0}</span></span>
+                        <span className={`font-medium ${strategyBias(session.aggressiveIndex, session.conservativeIndex).color}`}>
+                          {strategyBias(session.aggressiveIndex, session.conservativeIndex).label}
+                        </span>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <div className="font-bold text-primary">{Number(session.totalScore ?? 0).toFixed(1)}</div>
-                      <div className="text-xs text-muted-foreground">分</div>
+                      <div className={`text-xs font-medium hidden sm:block ${strategyBias(session.aggressiveIndex, session.conservativeIndex).color}`}>
+                        {strategyBias(session.aggressiveIndex, session.conservativeIndex).label}
+                      </div>
+                      <div className="text-xs text-muted-foreground sm:hidden">分</div>
                     </div>
                     <div className="text-muted-foreground shrink-0">
                       {expandedId === session.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

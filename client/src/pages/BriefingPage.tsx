@@ -256,6 +256,22 @@ function Slide4() {
         </div>
       </div>
 
+      {/* Strategy visibility tip */}
+      <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4 text-cyan-400" />
+          <span className="font-semibold text-cyan-300 text-sm">策略选择是公开的</span>
+        </div>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          <strong className="text-foreground">制度类动作</strong>（争取背书、宣布 KPI、调整激励）见效快但消耗大，且对部分人物有强烈负向影响； 
+          <strong className="text-foreground">沟通类动作</strong>（私人访谈、休闲聚会、发布邮件）建立基础但需要时间。
+          游戏结束后，你的<strong className="text-foreground">策略偏向</strong>（制度主导 / 沟通主导 / 均衡型）将在排行榜中公开显示。
+        </p>
+        <div className="flex items-center gap-2 text-xs text-cyan-400/80 bg-cyan-500/10 rounded-lg px-3 py-2">
+          📊 排行榜中可看到每位玩家的策略偏向，课堂复盘时可直接对比不同路径的得分差异。
+        </div>
+      </div>
+
       {/* Scoring formula */}
       <div className="rounded-xl border border-border bg-card/60 p-5 space-y-3">
         <div className="flex items-center gap-2">

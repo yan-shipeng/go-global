@@ -459,3 +459,8 @@
 - [x] LeaderboardPage: add 策略偏向 column (制度主导 / 沟通主导 / 均衡型)
 - [x] Backend: expose aggressiveIndex + conservativeIndex in leaderboard.list result
 - [x] Run tests, save checkpoint
+
+## Phase 73: Strategy-bias in HistoryPage + BriefingPage slide 4 tip
+- [x] HistoryPage: add strategyBias label to each session card (reuse same logic as LeaderboardPage)
+- [x] BriefingPage slide 4: add strategy tip paragraph about 制度 vs 沟通 tradeoff + visibility
+- [x] Run tests, save checkpoint
