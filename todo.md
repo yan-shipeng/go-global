@@ -439,3 +439,8 @@
 - [x] Frontend BriefingPage: update interview note/tip text if it mentions single-target only
 - [x] Engine: verify engine desc already updated (Phase 68)
 - [x] Save checkpoint
+
+## Phase 70: Bar-color legend + end-game timing fix
+- [x] Engine: add progress-bar color legend below target selector header (青=推进中, 橙=接近升阶, 绳=已转化)
+- [x] Engine: audit end-game timing — ensure last action effects fully resolve before postGameEnded/scoring
+- [x] Upload engine, update URL, run tests, save checkpoint
