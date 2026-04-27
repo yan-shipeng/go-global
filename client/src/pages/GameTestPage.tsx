@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_5aaaa9b6.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_3b14a1cb.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {

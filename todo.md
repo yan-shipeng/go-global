@@ -534,3 +534,8 @@
 - [x] Inspect engine ending screen HTML structure (tabs, layout)
 - [x] Modify game engine: add React summary panel slot inside ending screen
 - [x] Update GameTestPage.tsx: inject summary HTML into engine via postMessage instead of overlay
+
+## Phase 88: Fix ending screen not showing after resource exhaustion
+
+- [x] Trace resource-exhaustion path in game engine (checkEnding → _pendingEnd → modal → goNextRound)
+- [x] Fix the ending trigger so ending screen reliably shows when resources = 0
