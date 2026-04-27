@@ -477,3 +477,11 @@
 - [x] GamePage end panel: "查看排名" button already existed; strategy bias tag added to score card
 - [x] LeaderboardPage: my row now highlighted with yellow-400/10 bg + left border-l-4
 - [x] 8/8 tests pass
+
+## CRITICAL BUG: Session/turns not saved when resources run out
+- [x] Engine GAME_ENDED fires correctly via _pendingEnd flow
+- [x] GamePage handler uses refs correctly (no stale closure)
+- [x] ROOT CAUSE: server computeScore formula differs from engine formula — leaderboard showed wrong scores
+- [x] FIX: endSession now accepts totalScore/baseScore/healthScore from engine; server uses them directly
+- [x] FIX: GamePage passes result.totalScore/baseScore/healthScore to endSession
+- [x] TSC OK, 8/8 tests pass

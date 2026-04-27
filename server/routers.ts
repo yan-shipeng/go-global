@@ -97,19 +97,33 @@ const gameRouter = router({
       finalPressure: z.number(),
       convertedCount: z.number(),
       totalRounds: z.number(),
+      // Engine-computed scores (authoritative — use these directly)
+      totalScore: z.number().optional(),
+      baseScore: z.number().optional(),
+      conversionScore: z.number().optional(),
+      healthScore: z.number().optional(),
       aggressiveIndex: z.number().optional().default(0),
       conservativeIndex: z.number().optional().default(0),
     }))
     .mutation(async ({ input }) => {
       const session = await getGameSession(input.sessionId);
       if (!session) throw new Error("Session not found");
-      const scores = computeScore({
-        status: input.status,
-        resourcesLeft: input.resourcesLeft,
-        finalCredibility: input.finalCredibility,
-        finalPressure: input.finalPressure,
-        convertedCount: input.convertedCount,
-      });
+      // Use engine-provided scores if available; fall back to server computation
+      const scores = (input.totalScore != null)
+        ? {
+            totalScore: input.totalScore,
+            baseScore: input.baseScore ?? 0,
+            efficiencyScore: 0,
+            healthScore: input.healthScore ?? 0,
+            overAchievementScore: 0,
+          }
+        : computeScore({
+            status: input.status,
+            resourcesLeft: input.resourcesLeft,
+            finalCredibility: input.finalCredibility,
+            finalPressure: input.finalPressure,
+            convertedCount: input.convertedCount,
+          });
       await updateGameSession(input.sessionId, {
         status: input.status,
         resourcesLeft: input.resourcesLeft,

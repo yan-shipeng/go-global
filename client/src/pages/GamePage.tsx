@@ -146,6 +146,10 @@ export default function GamePage() {
           finalPressure: result.finalPressure,
           convertedCount: result.convertedCount,
           totalRounds: result.totalRounds,
+          // Pass engine-computed scores directly so leaderboard matches what player sees
+          totalScore: result.totalScore,
+          baseScore: result.baseScore,
+          healthScore: result.healthScore,
           aggressiveIndex: result.aggressiveIndex ?? 0,
           conservativeIndex: result.conservativeIndex ?? 0,
         });
