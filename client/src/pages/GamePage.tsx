@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_92e5a2d2.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_7b96b73d.html?autoStart=1";
 
 interface HiddenTiesStats {
   total: number;

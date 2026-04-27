@@ -444,3 +444,12 @@
 - [x] Engine: add progress-bar color legend below target selector header (青=推进中, 橙=接近升阶, 绳=已转化)
 - [x] Engine: audit end-game timing — ensure last action effects fully resolve before postGameEnded/scoring
 - [x] Upload engine, update URL, run tests, save checkpoint
+
+## Phase 71: Resources 60 + incentive rebalance + 4-category action types + prefs rewrite
+- [x] TOTAL_RESOURCES 50 → 60
+- [x] incentive: weeks 3→5, disrupt +2→3, effect 18→22
+- [x] Collapse action types to 4: 沟通/示范/赋能/制度 (政治+压力 → 制度)
+- [x] Rewrite all 12 character prefs with 4-category system
+- [x] Update ACTION_TYPE_ALIASES (remove 沟通/对话 alias)
+- [x] Update ACTION_GROUPS UI labels
+- [x] Upload engine, update URL, run tests, save checkpoint
