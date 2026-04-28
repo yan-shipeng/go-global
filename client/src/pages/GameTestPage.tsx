@@ -42,7 +42,7 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_89a91c69.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_98b5e349.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {
@@ -76,7 +76,7 @@ interface GameResult {
   conversionScore: number;
   healthScore: number;
   totalScore: number;
-  history: unknown[];
+  history: TurnData[];
   hiddenTiesStats?: HiddenTiesStats;
   aggressiveIndex?: number;
   conservativeIndex?: number;
@@ -162,18 +162,46 @@ function actionTypeLabel(type?: string | null) {
 }
 
 // ─── Turn Log component ───────────────────────────────────────────────────────
-function TurnLog({ sessionId, playerName }: { sessionId: number | null; playerName?: string }) {
+function normaliseTurn(h: TurnData, idx: number) {
+  return {
+    id: idx,
+    round: h.round,
+    actionId: h.actionId,
+    actionLabel: h.actionLabel,
+    actionType: h.actionType ?? null,
+    targets: h.targets,
+    prediction: h.prediction,
+    story: h.story ?? null,
+    outcome: (h.deltas?.converted ?? 0) > 0 ? "success" : "partial",
+    credibilityAfter: h.credAfter,
+    pressureAfter: h.pressureAfter,
+    resourcesAfter: h.weeksLeft,
+    weeksUsed: h.weeksUsed ?? 0,
+    deltaConverted: h.deltas?.converted ?? 0,
+    turnScore: h.turnScore ?? 0,
+    milestones: h.milestones ?? [],
+    movers: h.movers ?? [],
+    scoreDeltas: null,
+    sessionId: 0,
+    createdAt: null,
+  };
+}
+
+function TurnLog({ sessionId, playerName, fallbackTurns }: { sessionId: number | null; playerName?: string; fallbackTurns?: TurnData[] }) {
   const { data, isLoading } = trpc.game.getSession.useQuery(
     { sessionId: sessionId! },
     { enabled: sessionId != null }
   );
-  if (sessionId == null) {
+  if (sessionId == null && (!fallbackTurns || fallbackTurns.length === 0)) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">无会话记录</div>;
   }
-  if (isLoading) {
+  if (sessionId != null && isLoading) {
     return <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" />加载中…</div>;
   }
-  const turns = data?.turns ?? [];
+  const dbTurns = data?.turns ?? [];
+  const turns = dbTurns.length > 0
+    ? dbTurns
+    : (fallbackTurns ?? []).map(normaliseTurn);
   if (turns.length === 0) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无回合记录</div>;
   }
@@ -664,7 +692,7 @@ function FullResultPage({
         <TabsContent value="turns" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
           <ErrorBoundary>
             <div className="max-w-2xl">
-              <TurnLog sessionId={sessionId} playerName={playerName} />
+              <TurnLog sessionId={sessionId} playerName={playerName} fallbackTurns={result.history} />
             </div>
           </ErrorBoundary>
         </TabsContent>
