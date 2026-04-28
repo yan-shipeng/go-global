@@ -179,25 +179,24 @@ function actionTypeLabel(type?: string | null) {
 }
 
 // ─── Turn Overlay component ─────────────────────────────────────────────────
-// Action type visual config — solid hex colours for CSS var() usage
-const ACTION_TYPE_CONFIG: Record<string, { label: string; icon: string; textClass: string; hex: string }> = {
-  demonstrate: { label: "示范行动", icon: "🎯", textClass: "text-cyan-300",    hex: "#22d3ee" },
-  dialogue:    { label: "深度对话", icon: "💬", textClass: "text-blue-300",    hex: "#60a5fa" },
-  empower:     { label: "赋能支持", icon: "⚡",  textClass: "text-yellow-300",  hex: "#fde047" },
-  coalition:   { label: "联盟构建", icon: "🤝", textClass: "text-purple-300",  hex: "#c084fc" },
-  structure:   { label: "制度推进", icon: "🏛", textClass: "text-emerald-300", hex: "#34d399" },
-  pressure:    { label: "施压推进", icon: "⚠️", textClass: "text-red-300",     hex: "#f87171" },
-  interview:   { label: "访谈了解", icon: "🔍", textClass: "text-amber-300",   hex: "#fbbf24" },
+// Action type visual config — keys match engine Chinese type values
+const ACTION_TYPE_CONFIG: Record<string, { icon: string; hex: string; bg: string }> = {
+  "示范": { icon: "🎯", hex: "#22d3ee", bg: "from-cyan-950/80 to-slate-950/90" },
+  "沟通": { icon: "💬", hex: "#60a5fa", bg: "from-blue-950/80 to-slate-950/90" },
+  "赋能": { icon: "⚡",  hex: "#fde047", bg: "from-yellow-950/80 to-slate-950/90" },
+  "制度": { icon: "🏛", hex: "#34d399", bg: "from-emerald-950/80 to-slate-950/90" },
 };
+const DEFAULT_CFG = { icon: "💡", hex: "#94a3b8", bg: "from-slate-900/80 to-slate-950/90" };
 
 function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => void }) {
-  const cfg = ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? { label: turn.actionType ?? "", icon: "▶️", textClass: "text-primary", hex: "#0d8b96" };
+  const cfg = ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? DEFAULT_CFG;
   const targets: string[] = Array.isArray(turn.targets) ? turn.targets : [];
   const weeksUsed = turn.weeksUsed ?? null;
+  const c = cfg.hex;
 
-  // Auto-dismiss after 2.2s
+  // Auto-dismiss after 2.4s
   useEffect(() => {
-    const t = setTimeout(onDismiss, 2200);
+    const t = setTimeout(onDismiss, 2400);
     return () => clearTimeout(t);
   }, [onDismiss]);
 
@@ -208,162 +207,134 @@ function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => voi
     return () => window.removeEventListener("keydown", handler);
   }, [onDismiss]);
 
-  const c = cfg.hex;
-
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center cursor-pointer overflow-hidden"
-      style={{ background: "rgba(1,5,12,0.92)" }}
+      className="absolute inset-0 z-50 overflow-hidden cursor-pointer"
+      style={{ background: "#000" }}
       onClick={onDismiss}
     >
-      {/* ── Layer 1: full-screen colour flash ── */}
-      <div className="_to-flash absolute inset-0 pointer-events-none" style={{ background: c, animation: "toFlash 0.18s ease-out both" }} />
+      {/* ── Full-screen coloured BG that fades in then out ── */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${cfg.bg}`}
+        style={{ animation: "bgReveal 0.15s ease-out both" }}
+      />
 
-      {/* ── Layer 2: horizontal scan-line sweep ── */}
+      {/* ── Diagonal slash divider ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `linear-gradient(180deg, transparent 0%, ${c}22 48%, ${c}44 50%, ${c}22 52%, transparent 100%)`,
-          animation: "scanSweep 0.5s ease-out 0.05s both",
+          background: `linear-gradient(118deg, transparent 42%, ${c}18 42%, ${c}28 50%, transparent 50%)`,
+          animation: "slashReveal 0.25s ease-out 0.05s both",
         }}
       />
 
-      {/* ── Layer 3: large radial glow ── */}
+      {/* ── Top accent stripe ── */}
       <div
-        className="absolute rounded-full pointer-events-none"
-        style={{
-          width: "520px", height: "520px",
-          background: `radial-gradient(circle, ${c}30 0%, transparent 65%)`,
-          animation: "glowExpand 0.4s ease-out 0.05s both",
-        }}
+        className="absolute top-0 left-0 right-0 h-1"
+        style={{ background: `linear-gradient(90deg, ${c}, ${c}88, transparent)`, animation: "stripeIn 0.2s ease-out both" }}
       />
 
-      {/* ── Layer 4: corner accent lines ── */}
-      <div className="absolute inset-0 pointer-events-none" style={{ animation: "cornerFade 0.3s ease-out 0.08s both" }}>
-        {/* top-left */}
-        <div className="absolute top-4 left-4 w-8 h-0.5" style={{ background: c }} />
-        <div className="absolute top-4 left-4 w-0.5 h-8" style={{ background: c }} />
-        {/* top-right */}
-        <div className="absolute top-4 right-4 w-8 h-0.5" style={{ background: c }} />
-        <div className="absolute top-4 right-4 w-0.5 h-8" style={{ background: c }} />
-        {/* bottom-left */}
-        <div className="absolute bottom-4 left-4 w-8 h-0.5" style={{ background: c }} />
-        <div className="absolute bottom-4 left-4 w-0.5 h-8" style={{ background: c }} />
-        {/* bottom-right */}
-        <div className="absolute bottom-4 right-4 w-8 h-0.5" style={{ background: c }} />
-        <div className="absolute bottom-4 right-4 w-0.5 h-8" style={{ background: c }} />
+      {/* ── Bottom accent stripe ── */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-0.5"
+        style={{ background: `linear-gradient(90deg, transparent, ${c}66, ${c})`, animation: "stripeIn 0.2s ease-out 0.05s both" }}
+      />
+
+      {/* ── Round badge — top left ── */}
+      <div
+        className="absolute top-5 left-5 flex items-center gap-2"
+        style={{ animation: "slideRight 0.2s ease-out 0.1s both" }}
+      >
+        <div className="w-1 h-6 rounded-full" style={{ background: c }} />
+        <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: `${c}cc` }}>
+          ROUND {turn.round}
+        </span>
       </div>
 
-      {/* ── Layer 5: content card ── */}
+      {/* ── Skip hint — top right ── */}
       <div
-        className="relative w-80 rounded-2xl overflow-hidden"
-        style={{
-          background: "linear-gradient(160deg, rgba(10,22,34,0.97) 0%, rgba(4,12,20,0.99) 100%)",
-          border: `1px solid ${c}44`,
-          boxShadow: `0 0 40px ${c}30, 0 20px 60px rgba(0,0,0,0.7)`,
-          animation: "cardDrop 0.22s cubic-bezier(0.22,1,0.36,1) 0.06s both",
-        }}
-        onClick={e => e.stopPropagation()}
+        className="absolute top-5 right-5 text-[10px] tracking-wider"
+        style={{ color: `${c}44`, animation: "fadeIn 0.3s ease-out 0.3s both" }}
       >
-        {/* top glow bar */}
-        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${c}, ${c}00)` }} />
+        PRESS ANY KEY TO SKIP
+      </div>
 
-        <div className="px-6 pt-5 pb-5 flex flex-col items-center text-center">
-          {/* Round label — stagger 1 */}
-          <div className="text-[10px] font-semibold tracking-[0.25em] uppercase mb-3" style={{ color: `${c}99`, animation: "fadeUp 0.2s ease-out 0.12s both" }}>
-            ROUND {turn.round}
-          </div>
+      {/* ── Main content — centred ── */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8">
+        {/* Action type label */}
+        <div
+          className="text-xs font-bold tracking-[0.3em] uppercase"
+          style={{ color: `${c}99`, animation: "fadeUp 0.18s ease-out 0.1s both" }}
+        >
+          {turn.actionType ?? ""}
+        </div>
 
-          {/* Icon — stagger 2 */}
+        {/* Hero: action name */}
+        <div
+          className="text-center font-black leading-none"
+          style={{
+            fontSize: "clamp(2rem, 6vw, 3.5rem)",
+            color: "#fff",
+            textShadow: `0 0 40px ${c}80, 0 0 80px ${c}40`,
+            animation: "heroReveal 0.22s cubic-bezier(0.22,1,0.36,1) 0.08s both",
+            letterSpacing: "-0.02em",
+          }}
+        >
+          {turn.actionLabel}
+        </div>
+
+        {/* Divider line */}
+        <div
+          className="h-px w-32"
+          style={{ background: `linear-gradient(90deg, transparent, ${c}, transparent)`, animation: "lineExpand 0.25s ease-out 0.18s both" }}
+        />
+
+        {/* Targets row */}
+        {targets.length > 0 && (
           <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-3"
-            style={{
-              background: `${c}18`,
-              border: `1.5px solid ${c}55`,
-              boxShadow: `0 0 24px ${c}40`,
-              animation: "iconBlast 0.25s cubic-bezier(0.34,1.56,0.64,1) 0.1s both",
-            }}
+            className="flex flex-wrap justify-center gap-2"
+            style={{ animation: "fadeUp 0.2s ease-out 0.22s both" }}
           >
-            {cfg.icon}
-          </div>
-
-          {/* Action type — stagger 3 */}
-          <div
-            className={`text-[11px] font-bold tracking-[0.18em] uppercase mb-1 ${cfg.textClass}`}
-            style={{ animation: "fadeUp 0.2s ease-out 0.16s both" }}
-          >
-            {cfg.label}
-          </div>
-
-          {/* Action name — stagger 4, hero */}
-          <div
-            className="text-2xl font-black text-white leading-tight px-2 mb-4"
-            style={{ animation: "fadeUp 0.2s ease-out 0.2s both", textShadow: `0 0 20px ${c}60` }}
-          >
-            {turn.actionLabel}
-          </div>
-
-          {/* Divider */}
-          <div className="w-full h-px mb-4" style={{ background: `linear-gradient(90deg, transparent, ${c}40, transparent)` }} />
-
-          {/* Targets + cost row — stagger 5 */}
-          <div className="flex flex-wrap justify-center gap-1.5 mb-2" style={{ animation: "fadeUp 0.2s ease-out 0.24s both" }}>
             {targets.map((t, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5"
-                style={{ background: `${c}14`, border: `1px solid ${c}33`, color: `${c}cc` }}
+                className="text-sm font-semibold px-3 py-1 rounded-full"
+                style={{ background: `${c}18`, border: `1px solid ${c}44`, color: `${c}ee` }}
               >
-                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c }} />
                 {t}
               </span>
             ))}
-            {weeksUsed !== null && (
-              <span className="inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-300">
-                ⏱ {weeksUsed} 资源
-              </span>
-            )}
           </div>
+        )}
 
-          {/* Skip hint */}
-          <div className="text-[10px] mt-3" style={{ color: `${c}44`, animation: "fadeUp 0.2s ease-out 0.28s both" }}>
-            按任意键 / 点击跳过
+        {/* Resource cost */}
+        {weeksUsed !== null && (
+          <div
+            className="text-xs font-medium"
+            style={{ color: "#fbbf2499", animation: "fadeUp 0.2s ease-out 0.26s both" }}
+          >
+            ⏱ 消耗 {weeksUsed} 资源
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* bottom glow bar */}
-        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${c}00, ${c}, ${c}00)` }} />
+      {/* ── Bottom-left: large faded type icon as decoration ── */}
+      <div
+        className="absolute bottom-6 left-6 text-7xl select-none pointer-events-none"
+        style={{ opacity: 0.12, animation: "fadeIn 0.3s ease-out 0.05s both", filter: "blur(1px)" }}
+      >
+        {cfg.icon}
       </div>
 
       <style>{`
-        @keyframes toFlash {
-          0%   { opacity: 0.55; }
-          100% { opacity: 0; }
-        }
-        @keyframes scanSweep {
-          from { transform: translateY(-100%); opacity: 0.8; }
-          to   { transform: translateY(100%);  opacity: 0; }
-        }
-        @keyframes glowExpand {
-          from { opacity: 0; transform: scale(0.3); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes cornerFade {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        @keyframes cardDrop {
-          from { opacity: 0; transform: scale(1.06) translateY(-12px); }
-          to   { opacity: 1; transform: scale(1)    translateY(0); }
-        }
-        @keyframes iconBlast {
-          from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
-          to   { opacity: 1; transform: scale(1)   rotate(0deg); }
-        }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes bgReveal   { from { opacity:0 } to { opacity:1 } }
+        @keyframes slashReveal{ from { opacity:0; transform:translateX(-20px) } to { opacity:1; transform:translateX(0) } }
+        @keyframes stripeIn   { from { transform:scaleX(0); transform-origin:left } to { transform:scaleX(1); transform-origin:left } }
+        @keyframes slideRight { from { opacity:0; transform:translateX(-16px) } to { opacity:1; transform:translateX(0) } }
+        @keyframes fadeIn     { from { opacity:0 } to { opacity:1 } }
+        @keyframes fadeUp     { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes heroReveal { from { opacity:0; transform:scale(0.88) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
+        @keyframes lineExpand { from { transform:scaleX(0) } to { transform:scaleX(1) } }
       `}</style>
     </div>
   );
