@@ -195,15 +195,19 @@ const ACTION_TYPE_CONFIG: Record<string, { icon: string; hex: string; bg: string
 const DEFAULT_CFG = { icon: "💡", hex: "#94a3b8", bg: "from-slate-900/80 to-slate-950/90" };
 
 function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => void }) {
-  const cfg = ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? DEFAULT_CFG;
+  const isFinal = turn.weeksLeft === 0;
+  const finalHex = "#ef4444";
+  const cfg = isFinal
+    ? { icon: "🔥", hex: finalHex, bg: "from-red-950/90 to-slate-950/95" }
+    : (ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? DEFAULT_CFG);
   const targets: string[] = Array.isArray(turn.targets) ? turn.targets : [];
   const weeksUsed = turn.weeksUsed ?? null;
   const c = cfg.hex;
 
   useEffect(() => {
-    const t = setTimeout(onDismiss, 2400);
+    const t = setTimeout(onDismiss, isFinal ? 3000 : 2400);
     return () => clearTimeout(t);
-  }, [onDismiss]);
+  }, [onDismiss, isFinal]);
 
   useEffect(() => {
     const handler = () => onDismiss();
@@ -218,19 +222,33 @@ function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => voi
       onClick={onDismiss}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${cfg.bg}`} style={{ animation: "bgReveal 0.15s ease-out both" }} />
+      {isFinal && (
+        <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: `inset 0 0 80px ${finalHex}55, inset 0 0 160px ${finalHex}22`, animation: "finalPulse 0.8s ease-in-out 0.1s infinite alternate" }} />
+      )}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{ background: `linear-gradient(118deg, transparent 42%, ${c}18 42%, ${c}28 50%, transparent 50%)`, animation: "slashReveal 0.25s ease-out 0.05s both" }}
       />
-      <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(90deg, ${c}, ${c}88, transparent)`, animation: "stripeIn 0.2s ease-out both" }} />
+      <div className="absolute top-0 left-0 right-0" style={{ height: isFinal ? "3px" : "4px", background: `linear-gradient(90deg, ${c}, ${c}88, transparent)`, animation: "stripeIn 0.2s ease-out both" }} />
       <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: `linear-gradient(90deg, transparent, ${c}66, ${c})`, animation: "stripeIn 0.2s ease-out 0.05s both" }} />
       <div className="absolute top-5 left-5 flex items-center gap-2" style={{ animation: "slideRight 0.2s ease-out 0.1s both" }}>
         <div className="w-1 h-6 rounded-full" style={{ background: c }} />
         <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ color: `${c}cc` }}>ROUND {turn.round}</span>
       </div>
-      <div className="absolute top-5 right-5 text-[10px] tracking-wider" style={{ color: `${c}44`, animation: "fadeIn 0.3s ease-out 0.3s both" }}>PRESS ANY KEY TO SKIP</div>
+      {isFinal ? (
+        <div
+          className="absolute top-4 right-5 flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-widest uppercase"
+          style={{ background: `${finalHex}22`, border: `1px solid ${finalHex}66`, color: finalHex, animation: "finalBadge 0.3s cubic-bezier(0.34,1.56,0.64,1) 0.12s both" }}
+        >
+          ⚠️ 最终行动
+        </div>
+      ) : (
+        <div className="absolute top-5 right-5 text-[10px] tracking-wider" style={{ color: `${c}44`, animation: "fadeIn 0.3s ease-out 0.3s both" }}>PRESS ANY KEY TO SKIP</div>
+      )}
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8">
-        <div className="text-xs font-bold tracking-[0.3em] uppercase" style={{ color: `${c}99`, animation: "fadeUp 0.18s ease-out 0.1s both" }}>{turn.actionType ?? ""}</div>
+        <div className="text-xs font-bold tracking-[0.3em] uppercase" style={{ color: `${c}99`, animation: "fadeUp 0.18s ease-out 0.1s both" }}>
+          {isFinal ? "最后一次机会" : (turn.actionType ?? "")}
+        </div>
         <div
           className="text-center font-black leading-none"
           style={{ fontSize: "clamp(2rem, 6vw, 3.5rem)", color: "#fff", textShadow: `0 0 40px ${c}80, 0 0 80px ${c}40`, animation: "heroReveal 0.22s cubic-bezier(0.22,1,0.36,1) 0.08s both", letterSpacing: "-0.02em" }}
@@ -244,19 +262,21 @@ function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => voi
           </div>
         )}
         {weeksUsed !== null && (
-          <div className="text-xs font-medium" style={{ color: "#fbbf2499", animation: "fadeUp 0.2s ease-out 0.26s both" }}>⏱ 消耗 {weeksUsed} 资源</div>
+          <div className="text-xs font-medium" style={{ color: isFinal ? `${finalHex}88` : "#fbbf2499", animation: "fadeUp 0.2s ease-out 0.26s both" }}>⏱ 消耗 {weeksUsed} 资源</div>
         )}
       </div>
       <div className="absolute bottom-6 left-6 text-7xl select-none pointer-events-none" style={{ opacity: 0.12, animation: "fadeIn 0.3s ease-out 0.05s both", filter: "blur(1px)" }}>{cfg.icon}</div>
       <style>{`
-        @keyframes bgReveal   { from { opacity:0 } to { opacity:1 } }
-        @keyframes slashReveal{ from { opacity:0; transform:translateX(-20px) } to { opacity:1; transform:translateX(0) } }
-        @keyframes stripeIn   { from { transform:scaleX(0); transform-origin:left } to { transform:scaleX(1); transform-origin:left } }
-        @keyframes slideRight { from { opacity:0; transform:translateX(-16px) } to { opacity:1; transform:translateX(0) } }
-        @keyframes fadeIn     { from { opacity:0 } to { opacity:1 } }
-        @keyframes fadeUp     { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
-        @keyframes heroReveal { from { opacity:0; transform:scale(0.88) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
-        @keyframes lineExpand { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+        @keyframes bgReveal    { from { opacity:0 } to { opacity:1 } }
+        @keyframes slashReveal { from { opacity:0; transform:translateX(-20px) } to { opacity:1; transform:translateX(0) } }
+        @keyframes stripeIn    { from { transform:scaleX(0); transform-origin:left } to { transform:scaleX(1); transform-origin:left } }
+        @keyframes slideRight  { from { opacity:0; transform:translateX(-16px) } to { opacity:1; transform:translateX(0) } }
+        @keyframes fadeIn      { from { opacity:0 } to { opacity:1 } }
+        @keyframes fadeUp      { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+        @keyframes heroReveal  { from { opacity:0; transform:scale(0.88) translateY(8px) } to { opacity:1; transform:scale(1) translateY(0) } }
+        @keyframes lineExpand  { from { transform:scaleX(0) } to { transform:scaleX(1) } }
+        @keyframes finalPulse  { from { opacity:0.6 } to { opacity:1 } }
+        @keyframes finalBadge  { from { opacity:0; transform:scale(0.7) translateX(8px) } to { opacity:1; transform:scale(1) translateX(0) } }
       `}</style>
     </div>
   );

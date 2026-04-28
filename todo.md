@@ -619,3 +619,6 @@
 ## Phase 107: Cinematic TurnOverlay
 - [x] Faster entrance (< 200ms), full-screen flash + scan-line effect, staggered content reveal
 - [x] Apply same to GameTestPage.tsx
+
+## Phase 109: Final Round Special Effect- [x] When weeksLeft === 0, TurnOverlay shows red BG + pulsing border + 「最终行动」 badge
+- [x] Apply same to GameTestPage.tsx
