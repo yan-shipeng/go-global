@@ -10,14 +10,12 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import ComparePage from "./pages/ComparePage";
 import HistoryPage from "./pages/HistoryPage";
 import GameTestPage from "./pages/GameTestPage";
-import NavBar from "./components/NavBar";
 
 function Router() {
   const [location] = useLocation();
   const isGameRoute = location === "/game" || location === "/game-test";
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {!isGameRoute && <NavBar />}
       <main className={isGameRoute ? "flex-1 flex flex-col h-screen" : "flex-1"}>
         <Switch>
           <Route path="/" component={Home} />
