@@ -56,7 +56,11 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine-patch-intro_09b70f64.html?autoStart=1";
+const GAME_ENGINE_BASE_URL = "/manus-storage/game-engine-patch-intro_09b70f64.html";
+function buildEngineUrl(playerName: string) {
+  const params = new URLSearchParams({ autoStart: "1", playerName });
+  return `${GAME_ENGINE_BASE_URL}?${params.toString()}`;
+}
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {
@@ -1187,7 +1191,7 @@ export default function GameTestPage() {
               <iframe
                 key={iframeKey}
                 ref={iframeRef}
-                src={GAME_ENGINE_URL}
+                src={buildEngineUrl(playerName ?? "")}
                 className="w-full h-full"
                 onLoad={handleIframeLoad}
                 sandbox="allow-scripts allow-forms allow-popups allow-downloads"

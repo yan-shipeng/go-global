@@ -48,7 +48,11 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine-patch-intro_09b70f64.html?autoStart=1";
+const GAME_ENGINE_BASE_URL = "/manus-storage/game-engine-patch-intro_09b70f64.html";
+function buildEngineUrl(playerName: string) {
+  const params = new URLSearchParams({ autoStart: "1", playerName });
+  return `${GAME_ENGINE_BASE_URL}?${params.toString()}`;
+}
 const SESSION_ID_KEY = "china-outbound-session-id";
 
 interface HiddenTiesStats {
@@ -897,11 +901,12 @@ export default function GamePage() {
     setTimeout(() => {
       try { win.postMessage({ type: "SKIP_INTRO" }, "*"); } catch (_) {}
     }, 80);
-    // Fallback: if GAME_READY never arrives within 4 s, unblock the UI anyway
+    // Fallback: if GAME_READY never arrives within 2 s, unblock the UI anyway
+    // (playerName is now embedded in URL so engine skips intro faster)
     if (gameReadyTimeoutRef.current) clearTimeout(gameReadyTimeoutRef.current);
     gameReadyTimeoutRef.current = setTimeout(() => {
       setGameReady(true);
-    }, 4000);
+    }, 2000);
   }, [playerName]);
 
   const handleStartGame = useCallback(async (name?: string) => {
@@ -1160,7 +1165,7 @@ export default function GamePage() {
           <iframe
             key={iframeKey}
             ref={iframeRef}
-            src={GAME_ENGINE_URL}
+            src={buildEngineUrl(playerName ?? "")}
             className="w-full h-full border-none"
             onLoad={handleIframeLoad}
             title="中国企业出海变革模拟"
