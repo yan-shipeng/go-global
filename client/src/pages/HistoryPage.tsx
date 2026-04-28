@@ -23,6 +23,8 @@ function strategyBias(aggressive: number | null | undefined, conservative: numbe
 export default function HistoryPage() {
   const { playerName } = usePlayerName();
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  // Detect if there's a recent game result in localStorage (set by GamePage after game ends)
+  const hasRecentResult = !!localStorage.getItem("china-outbound-game-result");
 
   const { data: sessions, isLoading } = trpc.history.byPlayerName.useQuery(
     { playerName: playerName || "" },
@@ -52,12 +54,21 @@ export default function HistoryPage() {
 
   return (
     <div className="container py-6 max-w-4xl">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
-          <History className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
-          个人历史
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">{playerName} 的所有游戏记录</p>
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+            <History className="w-6 h-6 sm:w-8 sm:h-8 text-primary shrink-0" />
+            个人历史
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">{playerName} 的所有游戏记录</p>
+        </div>
+        {hasRecentResult && (
+          <Link href="/game">
+            <Button className="bg-primary hover:bg-primary/90 gap-1.5 shrink-0">
+              ← 返回结算页
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Trend chart */}

@@ -61,6 +61,8 @@ function buildEngineSrcdoc(playerName: string): string {
   return injection + gameEngineHtml;
 }
 const SESSION_ID_KEY = "china-outbound-session-id";
+const GAME_RESULT_KEY = "china-outbound-game-result";
+const FROZEN_SESSION_KEY = "china-outbound-frozen-session";
 
 interface HiddenTiesStats {
   total: number;
@@ -837,8 +839,32 @@ function FullResultPage({
 export default function GamePage() {
   const { playerName } = usePlayerName();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [gameResult, setGameResult] = useState<GameResult | null>(null);
-  const [frozenSessionId, setFrozenSessionId] = useState<number | null>(null);
+  const [gameResult, setGameResultState] = useState<GameResult | null>(() => {
+    try {
+      const stored = localStorage.getItem(GAME_RESULT_KEY);
+      return stored ? (JSON.parse(stored) as GameResult) : null;
+    } catch { return null; }
+  });
+  const setGameResult = useCallback((r: GameResult | null) => {
+    setGameResultState(r);
+    try {
+      if (r != null) localStorage.setItem(GAME_RESULT_KEY, JSON.stringify(r));
+      else localStorage.removeItem(GAME_RESULT_KEY);
+    } catch { /* ignore */ }
+  }, []);
+  const [frozenSessionId, setFrozenSessionIdState] = useState<number | null>(() => {
+    try {
+      const stored = localStorage.getItem(FROZEN_SESSION_KEY);
+      return stored ? Number(stored) : null;
+    } catch { return null; }
+  });
+  const setFrozenSessionId = useCallback((id: number | null) => {
+    setFrozenSessionIdState(id);
+    try {
+      if (id != null) localStorage.setItem(FROZEN_SESSION_KEY, String(id));
+      else localStorage.removeItem(FROZEN_SESSION_KEY);
+    } catch { /* ignore */ }
+  }, []);
   const [iframeKey, setIframeKey] = useState(0);
   // Start as false so overlay covers iframe from first render — prevents intro flash
   const [gameReady, setGameReady] = useState<boolean>(false);

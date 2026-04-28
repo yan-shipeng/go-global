@@ -600,3 +600,7 @@
 - [x] Fix CSV export movers column to handle string format
 - [x] Sync all TurnLog changes to GameTestPage.tsx
 - [x] TypeScript 0 errors, 8/8 tests pass
+
+## Phase 106: Fix result page navigation
+- [x] Persist gameResult + frozenSessionId to localStorage so result page survives navigation to /history
+- [x] Add "← 返回结算页" button in HistoryPage when a recent result exists in localStorage
