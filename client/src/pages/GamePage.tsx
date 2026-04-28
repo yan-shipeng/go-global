@@ -574,7 +574,7 @@ function FullResultPage({
         {/* ── 结局复盘 tab ── */}
         <TabsContent value="narrative" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
           {narrative ? (
-            <div className="max-w-2xl space-y-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Story */}
               <div className={`rounded-xl border p-5 ${accentBorder}`}>
                 <div className={`text-xs font-semibold uppercase tracking-wider mb-2 ${accentClass}`}>结局故事</div>
@@ -590,9 +590,9 @@ function FullResultPage({
                 </div>
               </div>
               {/* Real-world cases */}
-              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 lg:col-span-2">
                 <div className="text-xs font-semibold uppercase tracking-wider mb-3 text-amber-400">🌍 真实案例参照</div>
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {narrative.realWorld.split("\n").filter(Boolean).map((line, i) => (
                     <p key={i} className="text-sm text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: line }} />
                   ))}
@@ -609,33 +609,36 @@ function FullResultPage({
         {/* ── 本局总览 tab ── */}
         <TabsContent value="overview" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
           <ErrorBoundary>
-            <div className="max-w-2xl space-y-5">
-              {/* Score formula */}
-              <div className="rounded-xl border border-border bg-card/40 p-4">
-                <div className="text-xs font-semibold text-muted-foreground mb-3">得分公式</div>
-                <div className="text-xs font-mono text-muted-foreground space-y-1">
-                  <div>转化率 = {convertedCount}/{totalPeople} = {Math.round(convertedCount/totalPeople*100)}%</div>
-                  <div>健康指数 = (max(0, {finalCred}−{finalPressure}) + 10) / 20 = {(healthScore/100).toFixed(2)}</div>
-                  <div className="text-primary font-semibold">综合得分 = {Math.round(convertedCount/totalPeople*100)}% × {(healthScore/100).toFixed(2)} × 100 = <span className="text-lg">{totalScore}</span></div>
-                </div>
-              </div>
-              {/* Stats grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {stats.map(({ label, value, highlight }) => (
-                  <div key={label} className={`rounded-lg border p-3 text-center ${highlight ? "border-primary/40 bg-primary/5" : "border-border bg-card/30"}`}>
-                    <div className={`font-bold text-lg leading-none mb-1 ${highlight ? "text-primary" : "text-foreground"}`}>{value}</div>
-                    <div className="text-xs text-muted-foreground">{label}</div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Left column: score formula + stats grid */}
+              <div className="space-y-4">
+                {/* Score formula */}
+                <div className="rounded-xl border border-border bg-card/40 p-4">
+                  <div className="text-xs font-semibold text-muted-foreground mb-3">得分公式</div>
+                  <div className="text-xs font-mono text-muted-foreground space-y-1">
+                    <div>转化率 = {convertedCount}/{totalPeople} = {Math.round(convertedCount/totalPeople*100)}%</div>
+                    <div>健康指数 = (max(0, {finalCred}−{finalPressure}) + 10) / 20 = {(healthScore/100).toFixed(2)}</div>
+                    <div className="text-primary font-semibold">综合得分 = {Math.round(convertedCount/totalPeople*100)}% × {(healthScore/100).toFixed(2)} × 100 = <span className="text-lg">{totalScore}</span></div>
                   </div>
-                ))}
-                {/* Strategy bias */}
-                <div className={`rounded-lg border p-3 text-center ${bias.color}`}>
-                  <div className="font-semibold text-sm leading-none mb-1">{bias.label}</div>
-                  <div className="text-xs text-muted-foreground">策略风格</div>
+                </div>
+                {/* Stats grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-3">
+                  {stats.map(({ label, value, highlight }) => (
+                    <div key={label} className={`rounded-lg border p-3 text-center ${highlight ? "border-primary/40 bg-primary/5" : "border-border bg-card/30"}`}>
+                      <div className={`font-bold text-lg leading-none mb-1 ${highlight ? "text-primary" : "text-foreground"}`}>{value}</div>
+                      <div className="text-xs text-muted-foreground">{label}</div>
+                    </div>
+                  ))}
+                  {/* Strategy bias */}
+                  <div className={`rounded-lg border p-3 text-center ${bias.color}`}>
+                    <div className="font-semibold text-sm leading-none mb-1">{bias.label}</div>
+                    <div className="text-xs text-muted-foreground">策略风格</div>
+                  </div>
                 </div>
               </div>
-              {/* Hidden ties */}
-              {result.hiddenTiesStats && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+              {/* Right column: hidden ties */}
+              {result.hiddenTiesStats ? (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
                   <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
                     <span>🔗</span>
                     <span>信任网利用率</span>
@@ -643,32 +646,36 @@ function FullResultPage({
                       {result.hiddenTiesStats.discoveredCount}/{result.hiddenTiesStats.total} 条已发现
                     </span>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
-                    <div className="rounded bg-amber-500/10 border border-amber-500/20 px-2 py-1.5">
-                      <div className="font-semibold text-amber-300">{result.hiddenTiesStats.discoveredCount}</div>
-                      <div className="text-muted-foreground">已发现</div>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-3">
+                      <div className="font-bold text-xl text-amber-300">{result.hiddenTiesStats.discoveredCount}</div>
+                      <div className="text-muted-foreground mt-1">已发现</div>
                     </div>
-                    <div className="rounded bg-green-500/10 border border-green-500/20 px-2 py-1.5">
-                      <div className="font-semibold text-green-400">{result.hiddenTiesStats.activatedCount}</div>
-                      <div className="text-muted-foreground">已激活</div>
+                    <div className="rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-3">
+                      <div className="font-bold text-xl text-green-400">{result.hiddenTiesStats.activatedCount}</div>
+                      <div className="text-muted-foreground mt-1">已激活</div>
                     </div>
-                    <div className="rounded bg-red-500/10 border border-red-500/20 px-2 py-1.5">
-                      <div className="font-semibold text-red-400">{result.hiddenTiesStats.missedCount}</div>
-                      <div className="text-muted-foreground">错失路径</div>
+                    <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-3 py-3">
+                      <div className="font-bold text-xl text-red-400">{result.hiddenTiesStats.missedCount}</div>
+                      <div className="text-muted-foreground mt-1">错失路径</div>
                     </div>
                   </div>
                   {result.hiddenTiesStats.activatedPairs?.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs">
                       <span className="text-green-400 font-medium">已激活：</span>
-                      {result.hiddenTiesStats.activatedPairs.join("、")}
+                      <span className="text-muted-foreground">{result.hiddenTiesStats.activatedPairs.join("、")}</span>
                     </div>
                   )}
                   {result.hiddenTiesStats.missedPairs?.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs">
                       <span className="text-red-400 font-medium">错失：</span>
-                      {result.hiddenTiesStats.missedPairs.join("、")}
+                      <span className="text-muted-foreground">{result.hiddenTiesStats.missedPairs.join("、")}</span>
                     </div>
                   )}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-border bg-card/20 p-4 flex items-center justify-center text-muted-foreground text-sm">
+                  暂无信任网数据
                 </div>
               )}
             </div>
@@ -678,20 +685,16 @@ function FullResultPage({
         {/* ── Leaderboard tab ── */}
         <TabsContent value="leaderboard" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
           <ErrorBoundary>
-            <div className="max-w-2xl">
-              <LeaderboardPanel playerName={playerName} currentSessionId={sessionId} />
-            </div>
+            <LeaderboardPanel playerName={playerName} currentSessionId={sessionId} />
           </ErrorBoundary>
         </TabsContent>
 
         {/* ── Turn log tab ── */}
-          <TabsContent value="turns" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
-              <div className="max-w-2xl">
-                <TurnLog sessionId={sessionId} playerName={playerName} fallbackTurns={result.history} />
-              </div>
-            </ErrorBoundary>
-          </TabsContent>
+        <TabsContent value="turns" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          <ErrorBoundary>
+            <TurnLog sessionId={sessionId} playerName={playerName} fallbackTurns={result.history} />
+          </ErrorBoundary>
+        </TabsContent>
       </Tabs>
     </div>
   );
