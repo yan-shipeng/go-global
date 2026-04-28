@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation } from "wouter";
-import { Trophy, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
+import { Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 import BriefingPage from "./BriefingPage";
 
@@ -178,12 +178,6 @@ export default function Home() {
                 <Gamepad2 className="w-4 h-4" />
                 开始游戏
               </Button>
-              <Link href="/leaderboard">
-                <Button size="lg" variant="outline" className="gap-2 px-8">
-                  <Trophy className="w-4 h-4" />
-                  查看排行榜
-                </Button>
-              </Link>
             </div>
           )}
         </div>
