@@ -75,6 +75,22 @@ export default function Home() {
           </Button>
           <Button
             type="button"
+            variant="outline"
+            size="sm"
+            className="gap-1.5 border-border text-muted-foreground hover:text-foreground"
+            disabled={!nameInput.trim()}
+            onClick={() => {
+              const trimmed = nameInput.trim();
+              if (!trimmed) return;
+              setPlayerName(trimmed);
+              navigate("/game");
+            }}
+          >
+            <SkipForward className="w-3.5 h-3.5" />
+            跳过介绍，直接开始游戏
+          </Button>
+          <Button
+            type="button"
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
