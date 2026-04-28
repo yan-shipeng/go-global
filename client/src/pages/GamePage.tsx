@@ -708,6 +708,8 @@ export default function GamePage() {
   const [frozenSessionId, setFrozenSessionId] = useState<number | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [gameReady, setGameReady] = useState<boolean | null>(null);
+  // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
+  const [gameEnding, setGameEnding] = useState(false);
 
   // Persist sessionId in both state and localStorage so it survives re-renders
   const [sessionId, setSessionIdState] = useState<number | null>(() => {
@@ -822,6 +824,8 @@ export default function GamePage() {
     }
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
+      // Immediately show transition overlay to hide iframe ending screen
+      setGameEnding(true);
       // Freeze sessionId at this exact moment
       const currentSid = sessionIdRef.current;
       setFrozenSessionId(currentSid);
@@ -851,6 +855,7 @@ export default function GamePage() {
         }
       }
       // Show full-screen result page (Plan A) — replaces iframe
+      setGameEnding(false);
       setGameResult(result);
     }
   }, []);
@@ -872,9 +877,9 @@ export default function GamePage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)] relative">
+    <div className="flex flex-col h-screen relative">
       {/* Game toolbar — only shown while game is active (not during result page) */}
-      {!gameResult && (
+      {!gameResult && !gameEnding && (
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground flex items-center gap-1.5">
@@ -910,6 +915,14 @@ export default function GamePage() {
               </Button>
             </Link>
           </div>
+        </div>
+      )}
+
+      {/* Transition overlay: covers iframe immediately on GAME_ENDED to hide flash */}
+      {gameEnding && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background">
+          <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+          <p className="text-sm text-muted-foreground">正在计算结果…</p>
         </div>
       )}
 

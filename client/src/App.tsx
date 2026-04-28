@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -13,10 +13,12 @@ import GameTestPage from "./pages/GameTestPage";
 import NavBar from "./components/NavBar";
 
 function Router() {
+  const [location] = useLocation();
+  const isGameRoute = location === "/game" || location === "/game-test";
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
-      <NavBar />
-      <main className="flex-1">
+      {!isGameRoute && <NavBar />}
+      <main className={isGameRoute ? "flex-1 flex flex-col h-screen" : "flex-1"}>
         <Switch>
           <Route path="/" component={Home} />
           <Route path="/game" component={GamePage} />

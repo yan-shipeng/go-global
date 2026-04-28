@@ -721,6 +721,8 @@ export default function GameTestPage() {
   const [gameReady, setGameReady] = useState(false);
   const [cheatSent, setCheatSent] = useState(false);
   const [log, setLog] = useState<LogEntry[]>([]);
+  // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
+  const [gameEnding, setGameEnding] = useState(false);
 
   const addLog = useCallback((msg: string, ok: boolean) => {
     const ts = new Date().toLocaleTimeString("zh-CN", { hour12: false });
@@ -850,6 +852,8 @@ export default function GameTestPage() {
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
       addLog(`📨 GAME_ENDED received — score=${result.totalScore}, converted=${result.convertedCount}/${result.totalPeople}`, true);
+      // Immediately show transition overlay to hide iframe ending screen
+      setGameEnding(true);
       // Freeze sessionId at this exact moment
       const currentSid = sessionIdRef.current;
       setFrozenSessionId(currentSid);
@@ -883,6 +887,7 @@ export default function GameTestPage() {
         addLog("⚠️ GAME_ENDED but sessionId is null — not saved", false);
       }
       // Show full-screen result page (Plan A) — replaces iframe
+      setGameEnding(false);
       setGameResult(result);
     }
   }, [addLog]);
@@ -894,7 +899,7 @@ export default function GameTestPage() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background relative">
       {/* ── Left: game area (iframe OR full-screen result) ── */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Control bar — always visible */}
@@ -959,7 +964,14 @@ export default function GameTestPage() {
         </div>
 
         {/* Main area: iframe OR full-screen result */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-hidden relative">
+          {/* Transition overlay: covers iframe immediately on GAME_ENDED to hide flash */}
+          {gameEnding && (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background">
+              <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">正在计算结果…</p>
+            </div>
+          )}
           {/* Plan A: show FullResultPage when game ends, otherwise show iframe */}
           {gameResult != null ? (
             <FullResultPage
