@@ -2,6 +2,10 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -36,6 +40,12 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  // Serve game engine HTML locally (avoids slow CloudFront CDN)
+  app.get("/game-engine.html", (_req, res) => {
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.sendFile(path.join(__dirname, "../assets/game-engine.html"));
+  });
   // tRPC API
   app.use(
     "/api/trpc",
