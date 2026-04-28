@@ -56,7 +56,7 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_BASE_URL = "/game-engine.html";
+const GAME_ENGINE_BASE_URL = "/api/game-engine";
 function buildEngineUrl(playerName: string) {
   const params = new URLSearchParams({ autoStart: "1", playerName });
   return `${GAME_ENGINE_BASE_URL}?${params.toString()}`;
