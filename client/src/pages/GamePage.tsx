@@ -179,25 +179,25 @@ function actionTypeLabel(type?: string | null) {
 }
 
 // ─── Turn Overlay component ─────────────────────────────────────────────────
-// Action type visual config
-const ACTION_TYPE_CONFIG: Record<string, { label: string; icon: string; color: string; glow: string }> = {
-  demonstrate: { label: "示范行动", icon: "🎯", color: "text-cyan-300",   glow: "rgba(34,211,238,0.18)" },
-  dialogue:    { label: "深度对话", icon: "💬", color: "text-blue-300",   glow: "rgba(96,165,250,0.18)" },
-  empower:     { label: "赋能支持", icon: "⚡", color: "text-yellow-300", glow: "rgba(253,224,71,0.15)" },
-  coalition:   { label: "联盟构建", icon: "🤝", color: "text-purple-300", glow: "rgba(192,132,252,0.18)" },
-  structure:   { label: "制度推进", icon: "🏛", color: "text-emerald-300",glow: "rgba(52,211,153,0.18)" },
-  pressure:    { label: "施压推进", icon: "⚠️", color: "text-red-300",    glow: "rgba(248,113,113,0.18)" },
-  interview:   { label: "访谈了解", icon: "🔍", color: "text-amber-300",  glow: "rgba(251,191,36,0.15)" },
+// Action type visual config — solid hex colours for CSS var() usage
+const ACTION_TYPE_CONFIG: Record<string, { label: string; icon: string; textClass: string; hex: string }> = {
+  demonstrate: { label: "示范行动", icon: "🎯", textClass: "text-cyan-300",    hex: "#22d3ee" },
+  dialogue:    { label: "深度对话", icon: "💬", textClass: "text-blue-300",    hex: "#60a5fa" },
+  empower:     { label: "赋能支持", icon: "⚡",  textClass: "text-yellow-300",  hex: "#fde047" },
+  coalition:   { label: "联盟构建", icon: "🤝", textClass: "text-purple-300",  hex: "#c084fc" },
+  structure:   { label: "制度推进", icon: "🏛", textClass: "text-emerald-300", hex: "#34d399" },
+  pressure:    { label: "施压推进", icon: "⚠️", textClass: "text-red-300",     hex: "#f87171" },
+  interview:   { label: "访谈了解", icon: "🔍", textClass: "text-amber-300",   hex: "#fbbf24" },
 };
 
 function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => void }) {
-  const cfg = ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? { label: turn.actionType ?? "", icon: "▶", color: "text-primary", glow: "rgba(13,139,150,0.18)" };
+  const cfg = ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? { label: turn.actionType ?? "", icon: "▶️", textClass: "text-primary", hex: "#0d8b96" };
   const targets: string[] = Array.isArray(turn.targets) ? turn.targets : [];
   const weeksUsed = turn.weeksUsed ?? null;
 
-  // Auto-dismiss after 1.8s
+  // Auto-dismiss after 2.2s
   useEffect(() => {
-    const t = setTimeout(onDismiss, 1800);
+    const t = setTimeout(onDismiss, 2200);
     return () => clearTimeout(t);
   }, [onDismiss]);
 
@@ -208,89 +208,161 @@ function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => voi
     return () => window.removeEventListener("keydown", handler);
   }, [onDismiss]);
 
+  const c = cfg.hex;
+
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center cursor-pointer"
-      style={{ background: "rgba(2,8,15,0.88)", backdropFilter: "blur(8px)" }}
+      className="absolute inset-0 z-50 flex items-center justify-center cursor-pointer overflow-hidden"
+      style={{ background: "rgba(1,5,12,0.92)" }}
       onClick={onDismiss}
     >
-      {/* Radial glow behind card */}
+      {/* ── Layer 1: full-screen colour flash ── */}
+      <div className="_to-flash absolute inset-0 pointer-events-none" style={{ background: c, animation: "toFlash 0.18s ease-out both" }} />
+
+      {/* ── Layer 2: horizontal scan-line sweep ── */}
       <div
-        className="absolute w-80 h-80 rounded-full pointer-events-none"
-        style={{ background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`, animation: "overlayGlow 0.6s ease-out both" }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `linear-gradient(180deg, transparent 0%, ${c}22 48%, ${c}44 50%, ${c}22 52%, transparent 100%)`,
+          animation: "scanSweep 0.5s ease-out 0.05s both",
+        }}
       />
 
-      {/* Card */}
+      {/* ── Layer 3: large radial glow ── */}
       <div
-        className="relative w-72 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+        className="absolute rounded-full pointer-events-none"
         style={{
-          background: "linear-gradient(160deg, rgba(13,30,42,0.98) 0%, rgba(6,17,26,0.99) 100%)",
-          animation: "turnOverlayIn 0.4s cubic-bezier(0.22,1,0.36,1) both",
+          width: "520px", height: "520px",
+          background: `radial-gradient(circle, ${c}30 0%, transparent 65%)`,
+          animation: "glowExpand 0.4s ease-out 0.05s both",
+        }}
+      />
+
+      {/* ── Layer 4: corner accent lines ── */}
+      <div className="absolute inset-0 pointer-events-none" style={{ animation: "cornerFade 0.3s ease-out 0.08s both" }}>
+        {/* top-left */}
+        <div className="absolute top-4 left-4 w-8 h-0.5" style={{ background: c }} />
+        <div className="absolute top-4 left-4 w-0.5 h-8" style={{ background: c }} />
+        {/* top-right */}
+        <div className="absolute top-4 right-4 w-8 h-0.5" style={{ background: c }} />
+        <div className="absolute top-4 right-4 w-0.5 h-8" style={{ background: c }} />
+        {/* bottom-left */}
+        <div className="absolute bottom-4 left-4 w-8 h-0.5" style={{ background: c }} />
+        <div className="absolute bottom-4 left-4 w-0.5 h-8" style={{ background: c }} />
+        {/* bottom-right */}
+        <div className="absolute bottom-4 right-4 w-8 h-0.5" style={{ background: c }} />
+        <div className="absolute bottom-4 right-4 w-0.5 h-8" style={{ background: c }} />
+      </div>
+
+      {/* ── Layer 5: content card ── */}
+      <div
+        className="relative w-80 rounded-2xl overflow-hidden"
+        style={{
+          background: "linear-gradient(160deg, rgba(10,22,34,0.97) 0%, rgba(4,12,20,0.99) 100%)",
+          border: `1px solid ${c}44`,
+          boxShadow: `0 0 40px ${c}30, 0 20px 60px rgba(0,0,0,0.7)`,
+          animation: "cardDrop 0.22s cubic-bezier(0.22,1,0.36,1) 0.06s both",
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Accent top bar with action type colour */}
-        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${cfg.glow.replace(/,[^,]+\)$/, ",1)")}, transparent)` }} />
+        {/* top glow bar */}
+        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${c}, ${c}00)` }} />
 
-        <div className="px-6 pt-5 pb-6 flex flex-col items-center text-center gap-4">
-          {/* Round label */}
-          <div className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/60 uppercase">回合 {turn.round}</div>
+        <div className="px-6 pt-5 pb-5 flex flex-col items-center text-center">
+          {/* Round label — stagger 1 */}
+          <div className="text-[10px] font-semibold tracking-[0.25em] uppercase mb-3" style={{ color: `${c}99`, animation: "fadeUp 0.2s ease-out 0.12s both" }}>
+            ROUND {turn.round}
+          </div>
 
-          {/* Big action icon */}
+          {/* Icon — stagger 2 */}
           <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+            className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl mb-3"
             style={{
-              background: cfg.glow,
-              border: `1px solid ${cfg.glow.replace(/,[^,]+\)$/, ",0.5)")}`,
-              animation: "iconPop 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.1s both",
+              background: `${c}18`,
+              border: `1.5px solid ${c}55`,
+              boxShadow: `0 0 24px ${c}40`,
+              animation: "iconBlast 0.25s cubic-bezier(0.34,1.56,0.64,1) 0.1s both",
             }}
           >
             {cfg.icon}
           </div>
 
-          {/* Action type badge */}
-          <div className={`text-xs font-semibold tracking-wider uppercase ${cfg.color}`}>{cfg.label}</div>
+          {/* Action type — stagger 3 */}
+          <div
+            className={`text-[11px] font-bold tracking-[0.18em] uppercase mb-1 ${cfg.textClass}`}
+            style={{ animation: "fadeUp 0.2s ease-out 0.16s both" }}
+          >
+            {cfg.label}
+          </div>
 
-          {/* Action name — hero text */}
-          <div className="text-xl font-black text-foreground leading-tight px-2">{turn.actionLabel}</div>
+          {/* Action name — stagger 4, hero */}
+          <div
+            className="text-2xl font-black text-white leading-tight px-2 mb-4"
+            style={{ animation: "fadeUp 0.2s ease-out 0.2s both", textShadow: `0 0 20px ${c}60` }}
+          >
+            {turn.actionLabel}
+          </div>
 
-          {/* Target chips */}
-          {targets.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {targets.map((t, i) => (
-                <span key={i} className="inline-flex items-center gap-1 text-xs border border-white/10 bg-white/5 text-muted-foreground rounded-full px-2.5 py-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary/70 shrink-0" />
-                  {t}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* Divider */}
+          <div className="w-full h-px mb-4" style={{ background: `linear-gradient(90deg, transparent, ${c}40, transparent)` }} />
 
-          {/* Resource cost */}
-          {weeksUsed !== null && (
-            <div className="flex items-center gap-1.5 text-xs text-amber-400/80">
-              <span className="text-base">⏱</span>
-              消耗 <span className="font-bold text-amber-400">{weeksUsed}</span> 资源
-            </div>
-          )}
+          {/* Targets + cost row — stagger 5 */}
+          <div className="flex flex-wrap justify-center gap-1.5 mb-2" style={{ animation: "fadeUp 0.2s ease-out 0.24s both" }}>
+            {targets.map((t, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5"
+                style={{ background: `${c}14`, border: `1px solid ${c}33`, color: `${c}cc` }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c }} />
+                {t}
+              </span>
+            ))}
+            {weeksUsed !== null && (
+              <span className="inline-flex items-center gap-1 text-xs rounded-full px-2.5 py-0.5 bg-amber-500/10 border border-amber-500/30 text-amber-300">
+                ⏱ {weeksUsed} 资源
+              </span>
+            )}
+          </div>
 
           {/* Skip hint */}
-          <div className="text-[10px] text-muted-foreground/35 mt-1">按任意键 / 点击跳过</div>
+          <div className="text-[10px] mt-3" style={{ color: `${c}44`, animation: "fadeUp 0.2s ease-out 0.28s both" }}>
+            按任意键 / 点击跳过
+          </div>
         </div>
+
+        {/* bottom glow bar */}
+        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${c}00, ${c}, ${c}00)` }} />
       </div>
 
       <style>{`
-        @keyframes turnOverlayIn {
-          from { opacity: 0; transform: translateY(32px) scale(0.93); }
-          to   { opacity: 1; transform: translateY(0)    scale(1);    }
+        @keyframes toFlash {
+          0%   { opacity: 0.55; }
+          100% { opacity: 0; }
         }
-        @keyframes iconPop {
-          from { opacity: 0; transform: scale(0.5); }
-          to   { opacity: 1; transform: scale(1);   }
+        @keyframes scanSweep {
+          from { transform: translateY(-100%); opacity: 0.8; }
+          to   { transform: translateY(100%);  opacity: 0; }
         }
-        @keyframes overlayGlow {
-          from { opacity: 0; transform: scale(0.6); }
-          to   { opacity: 1; transform: scale(1);   }
+        @keyframes glowExpand {
+          from { opacity: 0; transform: scale(0.3); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+        @keyframes cornerFade {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes cardDrop {
+          from { opacity: 0; transform: scale(1.06) translateY(-12px); }
+          to   { opacity: 1; transform: scale(1)    translateY(0); }
+        }
+        @keyframes iconBlast {
+          from { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+          to   { opacity: 1; transform: scale(1)   rotate(0deg); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>

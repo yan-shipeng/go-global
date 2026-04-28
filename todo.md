@@ -615,3 +615,7 @@
 - [x] Patch game engine: delay showModal until React overlay is dismissed (OVERLAY_DISMISSED postMessage)
 - [x] Redesign TurnOverlay to emphasize action execution (action name, type, targets) — not results
 - [x] Fix ordering: React overlay first, then engine result modal
+
+## Phase 107: Cinematic TurnOverlay
+- [x] Faster entrance (< 200ms), full-screen flash + scan-line effect, staggered content reveal
+- [x] Apply same to GameTestPage.tsx
