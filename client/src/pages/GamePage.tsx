@@ -26,6 +26,7 @@ import { usePlayerName } from "@/hooks/usePlayerName";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
 } from "recharts";
+import gameEngineHtml from "../game-engine.html?raw";
 
 // ─── CSV export helper ────────────────────────────────────────────────────────
 function escapeCsv(val: unknown): string {
@@ -48,10 +49,16 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_BASE_URL = "/api/game-engine";
-function buildEngineUrl(playerName: string) {
-  const params = new URLSearchParams({ autoStart: "1", playerName });
-  return `${GAME_ENGINE_BASE_URL}?${params.toString()}`;
+// Inject playerName + autoStart into the engine HTML via a fake location.search override.
+// Using srcdoc means the engine is served from the JS bundle — no external CDN needed.
+function buildEngineSrcdoc(playerName: string): string {
+  const escaped = playerName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/</g, '\\u003c');
+  const injection = `<script>try{Object.defineProperty(location,'search',{configurable:true,get:function(){return '?autoStart=1&playerName=${escaped}';}});}catch(e){}<\/script>`;
+  const headIdx = gameEngineHtml.indexOf('<head>');
+  if (headIdx !== -1) {
+    return gameEngineHtml.slice(0, headIdx + 6) + injection + gameEngineHtml.slice(headIdx + 6);
+  }
+  return injection + gameEngineHtml;
 }
 const SESSION_ID_KEY = "china-outbound-session-id";
 
@@ -1165,11 +1172,11 @@ export default function GamePage() {
           <iframe
             key={iframeKey}
             ref={iframeRef}
-            src={buildEngineUrl(playerName ?? "")}
+            srcDoc={buildEngineSrcdoc(playerName ?? "")}
             className="w-full h-full border-none"
             onLoad={handleIframeLoad}
             title="中国企业出海变革模拟"
-            sandbox="allow-scripts allow-forms allow-popups allow-downloads"
+            sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"
           />
         </div>
       ) : (

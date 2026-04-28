@@ -40,13 +40,6 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
-  // Serve game engine HTML locally (avoids slow CloudFront CDN)
-  // Must use /api/ prefix so Manus proxy forwards to Express (not SPA fallback)
-  app.get("/api/game-engine", (_req, res) => {
-    res.setHeader("Cache-Control", "public, max-age=3600");
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.sendFile(path.join(__dirname, "../assets/game-engine.html"));
-  });
   // tRPC API
   app.use(
     "/api/trpc",
