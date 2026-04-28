@@ -16,7 +16,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List, FileDown, Download } from "lucide-react";
+import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List, FileDown, Download, Home } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
@@ -549,6 +549,12 @@ function FullResultPage({
           <Link href="/history">
             <Button size="sm" variant="outline" className="gap-1 bg-card">
               我的记录 <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
+          <Link href="/">
+            <Button size="sm" variant="outline" className="gap-1.5 bg-card">
+              <Home className="w-3.5 h-3.5" />
+              返回首页
             </Button>
           </Link>
         </div>

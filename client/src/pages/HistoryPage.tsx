@@ -40,8 +40,9 @@ export default function HistoryPage() {
     );
   }
 
-  const chartData = sessions
-    ?.filter((s: GameSession) => s.status !== "active")
+  // Only show completed sessions (win or fail), not active ones
+  const completedSessions = sessions?.filter((s: GameSession) => s.status !== "active") ?? [];
+  const chartData = completedSessions
     .map((s: GameSession, i: number) => ({
       局次: `第${i + 1}局`,
       得分: Number(s.totalScore ?? 0),
@@ -90,14 +91,14 @@ export default function HistoryPage() {
       {/* Sessions list */}
       <Card className="bg-card border-border">
         <CardHeader className="pb-3 px-4">
-          <CardTitle className="text-sm sm:text-base">所有对局（{sessions?.length ?? 0} 局）</CardTitle>
+          <CardTitle className="text-sm sm:text-base">已完成对局（{completedSessions.length} 局）</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isLoading ? (
             <div className="p-8 text-center text-muted-foreground">加载中...</div>
-          ) : !sessions?.length ? (
+          ) : !completedSessions.length ? (
             <div className="p-8 text-center text-muted-foreground">
-              还没有游戏记录，快去开始第一局吧！
+              还没有已完成的游戏记录，快去开始第一局吧！
               <br />
               <Link href="/game">
                 <Button className="mt-4 bg-primary hover:bg-primary/90">开始游戏</Button>
@@ -105,17 +106,19 @@ export default function HistoryPage() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {sessions.map((session: GameSession, idx: number) => (
+              {completedSessions.map((session: GameSession, idx: number) => (
                 <div key={session.id}>
                   {/* Row header */}
                   <div
                     className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/10 transition-colors"
                     onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
                   >
-                    <span className="text-xs text-muted-foreground font-mono w-7 shrink-0">#{sessions.length - idx}</span>
+                    <span className="text-xs text-muted-foreground font-mono w-7 shrink-0">#{completedSessions.length - idx}</span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">已完成</Badge>
+                        <Badge className={`text-xs ${session.status === 'win' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`}>
+                          {session.status === 'win' ? '变革成功' : '资源耗尽'}
+                        </Badge>
                         <span className="text-xs text-muted-foreground">
                           {new Date(session.startedAt).toLocaleDateString("zh-CN", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
@@ -175,7 +178,7 @@ export default function HistoryPage() {
                         ))}
                       </div>
 
-                      <Link href={`/compare/${session.id}/${sessions.find((s: GameSession) => s.id !== session.id)?.id ?? session.id}`}>
+                      <Link href={`/compare/${session.id}/${completedSessions.find((s: GameSession) => s.id !== session.id)?.id ?? session.id}`}>
                         <Button size="sm" variant="outline" className="gap-1.5 text-xs">
                           <GitCompare className="w-3 h-3" />
                           与其他局对比
