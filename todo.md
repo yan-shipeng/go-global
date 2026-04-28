@@ -564,3 +564,14 @@
 - [x] Add missing fields to DB schema (actionType, story, deltaConverted, weeksUsed, turnScore, milestones, movers) and saveTurn procedure
 - [x] Enrich TurnLog component with all new fields
 - [x] Add one-click PDF export button using browser print API with print-optimized CSS
+
+## Phase 92: Apply FullResultPage to /game, clean up, CSV export
+
+- [x] Rewrite GamePage.tsx to use FullResultPage (Plan A) — same as /game-test, with narrative + 本局总览 + 排行榜 + 回合日志
+- [x] Update GamePage.tsx GAME_TURN handler to save all enriched fields (actionType, story, deltaConverted, weeksUsed, turnScore, milestones, movers)
+- [x] Add frozenSessionId pattern to GamePage.tsx (captures sessionId at GAME_ENDED moment)
+- [x] Remove GameSummaryPage import and /game-summary route from App.tsx (cleanup)
+- [x] Add CSV export helper (escapeCsv, downloadCsv) to both GamePage.tsx and GameTestPage.tsx
+- [x] Add "下载 CSV" button to 回合日志 tab in both pages (exports all enriched fields)
+- [x] Pass playerName to TurnLog for CSV filename in both pages
+- [x] TSC 0 errors, 8/8 tests pass

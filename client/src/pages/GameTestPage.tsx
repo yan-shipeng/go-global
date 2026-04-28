@@ -16,11 +16,31 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List } from "lucide-react";
+import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List, FileDown, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
-import { FileDown } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
+
+// ─── CSV export helper ────────────────────────────────────────────────────────
+function escapeCsv(val: unknown): string {
+  if (val == null) return "";
+  const s = String(val);
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadCsv(rows: unknown[][], filename: string) {
+  const csv = rows.map(r => r.map(escapeCsv).join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const GAME_ENGINE_URL = "/manus-storage/game-engine_ca0c5ad1.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
@@ -142,7 +162,7 @@ function actionTypeLabel(type?: string | null) {
 }
 
 // ─── Turn Log component ───────────────────────────────────────────────────────
-function TurnLog({ sessionId }: { sessionId: number | null }) {
+function TurnLog({ sessionId, playerName }: { sessionId: number | null; playerName?: string }) {
   const { data, isLoading } = trpc.game.getSession.useQuery(
     { sessionId: sessionId! },
     { enabled: sessionId != null }
@@ -157,8 +177,39 @@ function TurnLog({ sessionId }: { sessionId: number | null }) {
   if (turns.length === 0) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无回合记录</div>;
   }
+
+  const handleExportCsv = () => {
+    const header = ["回合", "行动", "行动类型", "目标", "结果", "可信度后", "压力后", "资源后", "消耗资源", "新增转化", "本回合得分", "里程碑", "影响人物", "故事"];
+    const dataRows = turns.map(t => [
+      t.round,
+      t.actionLabel || t.actionId || "",
+      t.actionType || "",
+      ((t.targets as string[]) ?? []).join("|"),
+      t.outcome || "",
+      t.credibilityAfter ?? "",
+      t.pressureAfter ?? "",
+      t.resourcesAfter ?? "",
+      t.weeksUsed ?? "",
+      t.deltaConverted ?? "",
+      t.turnScore ?? "",
+      ((t.milestones as string[] | null) ?? []).join("|"),
+      ((t.movers as Array<{ name: string; before: number; after: number }> | null) ?? [])
+        .map(m => `${m.name}(${m.before}→${m.after})`).join("|"),
+      t.story || "",
+    ]);
+    const name = playerName ? `${playerName}_` : "";
+    downloadCsv([header, ...dataRows], `出海变革_测试_${name}session${sessionId}_回合日志.csv`);
+  };
+
   return (
     <div className="space-y-3">
+      {/* CSV export button */}
+      <div className="flex justify-end">
+        <Button size="sm" variant="outline" className="gap-1.5 bg-card border-border text-xs" onClick={handleExportCsv}>
+          <Download className="w-3.5 h-3.5" />
+          下载 CSV
+        </Button>
+      </div>
       {turns.map((t, idx) => {
         const prev = idx > 0 ? turns[idx - 1] : null;
         const credDelta = prev != null ? (t.credibilityAfter ?? 0) - (prev.credibilityAfter ?? 0) : 0;
@@ -542,7 +593,7 @@ function FullResultPage({
         <TabsContent value="turns" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
           <ErrorBoundary>
             <div className="max-w-2xl">
-              <TurnLog sessionId={sessionId} />
+              <TurnLog sessionId={sessionId} playerName={playerName} />
             </div>
           </ErrorBoundary>
         </TabsContent>

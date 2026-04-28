@@ -1,14 +1,40 @@
+/**
+ * MAIN GAME PAGE — /game
+ * Real player game page. After game ends, shows FullResultPage (Plan A):
+ * one unified full-screen page with 结局复盘 + 本局总览 + 排行榜 + 回合日志.
+ */
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Trophy, RotateCcw, UserRound, ChevronRight } from "lucide-react";
+import { Trophy, RotateCcw, UserRound, ChevronRight, Loader2, BookOpen, Users, List, FileDown, Download } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_3b14a1cb.html?autoStart=1";
+// ─── CSV export helper ────────────────────────────────────────────────────────
+function escapeCsv(val: unknown): string {
+  if (val == null) return "";
+  const s = String(val);
+  if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function downloadCsv(rows: unknown[][], filename: string) {
+  const csv = rows.map(r => r.map(escapeCsv).join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+const GAME_ENGINE_URL = "/manus-storage/game-engine_ca0c5ad1.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-session-id";
 
 interface HiddenTiesStats {
@@ -19,6 +45,14 @@ interface HiddenTiesStats {
   discoveredPairs: string[];
   activatedPairs: string[];
   missedPairs: string[];
+}
+
+interface EndingNarrative {
+  cls: string;
+  title: string;
+  story: string;
+  teach: string;
+  realWorld: string;
 }
 
 interface GameResult {
@@ -38,18 +72,26 @@ interface GameResult {
   hiddenTiesStats?: HiddenTiesStats;
   aggressiveIndex?: number;
   conservativeIndex?: number;
+  narrative?: EndingNarrative | null;
 }
 
 interface TurnData {
   round: number;
   actionId: string;
   actionLabel: string;
+  actionType?: string;
   targets: string[];
   prediction: string;
+  story?: string;
   deltas: { cred: number; pressure: number; converted: number };
+  movers?: Array<{ id: string; name: string; before: number; after: number }>;
   credAfter: number;
   pressureAfter: number;
+  weeksUsed?: number;
   weeksLeft: number;
+  turnScore?: number;
+  milestones?: string[];
+  convertedAfter?: number;
 }
 
 // ─── Strategy bias helper ────────────────────────────────────────────────────
@@ -95,81 +137,175 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+// ─── Action type label helper ─────────────────────────────────────────────────
+function actionTypeLabel(type?: string | null) {
+  const map: Record<string, string> = {
+    demonstrate: "示范行动",
+    dialogue: "深度对话",
+    empower: "赋能支持",
+    coalition: "联盟构建",
+    structure: "制度推进",
+    pressure: "施压推进",
+    interview: "访谈了解",
+  };
+  return type ? (map[type] ?? type) : null;
+}
+
 // ─── Turn Log component ───────────────────────────────────────────────────────
-function TurnLog({ sessionId }: { sessionId: number | null }) {
-  // Guard: never call tRPC with null sessionId
+function TurnLog({ sessionId, playerName }: { sessionId: number | null; playerName?: string }) {
   const { data, isLoading } = trpc.game.getSession.useQuery(
     { sessionId: sessionId! },
     { enabled: sessionId != null }
   );
-
   if (sessionId == null) {
-    return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        无会话记录
-      </div>
-    );
+    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">无会话记录</div>;
   }
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        加载回合日志…
+      <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" />加载中…
       </div>
     );
   }
   const turns = data?.turns ?? [];
   if (turns.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
-        暂无回合记录
-      </div>
-    );
+    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无回合记录</div>;
   }
+
+  const handleExportCsv = () => {
+    const header = ["回合", "行动", "行动类型", "目标", "结果", "可信度后", "压力后", "资源后", "消耗资源", "新增转化", "本回合得分", "里程碑", "影响人物", "故事"];
+    const dataRows = turns.map(t => [
+      t.round,
+      t.actionLabel || t.actionId || "",
+      t.actionType || "",
+      ((t.targets as string[]) ?? []).join("|"),
+      t.outcome || "",
+      t.credibilityAfter ?? "",
+      t.pressureAfter ?? "",
+      t.resourcesAfter ?? "",
+      t.weeksUsed ?? "",
+      t.deltaConverted ?? "",
+      t.turnScore ?? "",
+      ((t.milestones as string[] | null) ?? []).join("|"),
+      ((t.movers as Array<{ name: string; before: number; after: number }> | null) ?? [])
+        .map(m => `${m.name}(${m.before}→${m.after})`).join("|"),
+      t.story || "",
+    ]);
+    const name = playerName ? `${playerName}_` : "";
+    downloadCsv([header, ...dataRows], `出海变革_${name}session${sessionId}_回合日志.csv`);
+  };
+
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
+      {/* CSV export button */}
+      <div className="flex justify-end">
+        <Button size="sm" variant="outline" className="gap-1.5 bg-card border-border text-xs" onClick={handleExportCsv}>
+          <Download className="w-3.5 h-3.5" />
+          下载 CSV
+        </Button>
+      </div>
       {turns.map((t, idx) => {
-        // Compute deltas vs previous turn (or initial values for round 1)
         const prev = idx > 0 ? turns[idx - 1] : null;
         const credDelta = prev != null ? (t.credibilityAfter ?? 0) - (prev.credibilityAfter ?? 0) : 0;
         const pressDelta = prev != null ? (t.pressureAfter ?? 0) - (prev.pressureAfter ?? 0) : 0;
         const targets = (t.targets as string[]) ?? [];
         const outcome = t.outcome;
+        const milestones = (t.milestones as string[] | null) ?? [];
+        const movers = (t.movers as Array<{ id: string; name: string; before: number; after: number }> | null) ?? [];
+        const typeLabel = actionTypeLabel(t.actionType as string | undefined);
+        const deltaConverted = (t.deltaConverted as number | null) ?? 0;
+        const weeksUsed = (t.weeksUsed as number | null) ?? 0;
+        const turnScore = (t.turnScore as number | null) ?? 0;
+        const story = t.story as string | null | undefined;
+        const prediction = t.prediction as string | null | undefined;
         return (
-          <div key={t.id} className="rounded-lg border border-border bg-card/40 p-3 space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">R{t.round}</span>
-              <span className="text-sm font-medium flex-1 min-w-0 truncate">{t.actionLabel || t.actionId}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded border shrink-0 ${
-                outcome === "success"
-                  ? "text-green-400 border-green-500/30 bg-green-500/10"
-                  : "text-amber-400 border-amber-500/30 bg-amber-500/10"
-              }`}>
-                {outcome === "success" ? "✓ 转化" : "△ 部分"}
-              </span>
-            </div>
-            {targets.length > 0 && (
-              <div className="text-xs text-muted-foreground pl-14">
-                目标：{targets.join("、")}
+          <div key={t.id} className="rounded-xl border border-border bg-card/40 p-4 space-y-3">
+            {/* Row 1: round + action + type badge + outcome */}
+            <div className="flex items-start gap-2 flex-wrap">
+              <span className="text-xs font-mono text-muted-foreground w-8 shrink-0 mt-0.5">R{t.round}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-semibold">{t.actionLabel || t.actionId}</span>
+                  {typeLabel && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground bg-muted/30">{typeLabel}</span>
+                  )}
+                  <span className={`text-xs px-1.5 py-0.5 rounded border shrink-0 ${
+                    outcome === "success"
+                      ? "text-green-400 border-green-500/30 bg-green-500/10"
+                      : "text-amber-400 border-amber-500/30 bg-amber-500/10"
+                  }`}>
+                    {outcome === "success" ? "✓ 转化" : "△ 部分"}
+                  </span>
+                  {turnScore > 0 && (
+                    <span className="text-xs text-primary font-mono">+{turnScore.toFixed(1)}分</span>
+                  )}
+                </div>
+                {targets.length > 0 && (
+                  <div className="text-xs text-muted-foreground mt-0.5">目标：{targets.join("、")}</div>
+                )}
               </div>
-            )}
-            <div className="flex items-center gap-3 pl-14 text-xs">
+            </div>
+
+            {/* Row 2: stats */}
+            <div className="flex items-center gap-3 pl-10 text-xs flex-wrap">
               <span className="text-muted-foreground">
                 可信度 <span className={credDelta > 0 ? "text-green-400" : credDelta < 0 ? "text-red-400" : "text-muted-foreground"}>
                   {credDelta > 0 ? `+${credDelta}` : credDelta !== 0 ? String(credDelta) : "±0"}
                 </span>
-                {" "}→ {t.credibilityAfter ?? "-"}
+                {" "}→ <span className="text-foreground">{t.credibilityAfter ?? "-"}</span>
               </span>
               <span className="text-muted-foreground">
                 压力 <span className={pressDelta < 0 ? "text-green-400" : pressDelta > 0 ? "text-red-400" : "text-muted-foreground"}>
                   {pressDelta > 0 ? `+${pressDelta}` : pressDelta !== 0 ? String(pressDelta) : "±0"}
                 </span>
-                {" "}→ {t.pressureAfter ?? "-"}
+                {" "}→ <span className="text-foreground">{t.pressureAfter ?? "-"}</span>
               </span>
-              <span className="text-muted-foreground">
-                资源 → {t.resourcesAfter ?? "-"}
-              </span>
+              <span className="text-muted-foreground">资源 → <span className="text-foreground">{t.resourcesAfter ?? "-"}</span></span>
+              {weeksUsed > 0 && <span className="text-muted-foreground">消耗 <span className="text-amber-400">{weeksUsed}</span></span>}
+              {deltaConverted > 0 && <span className="text-green-400 font-medium">+{deltaConverted} 人转化</span>}
             </div>
+
+            {/* Row 3: milestones */}
+            {milestones.length > 0 && (
+              <div className="pl-10 flex flex-wrap gap-1">
+                {milestones.map((m, i) => (
+                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary">{m}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Row 4: movers */}
+            {movers.length > 0 && (
+              <div className="pl-10 space-y-0.5">
+                <div className="text-[10px] text-muted-foreground font-medium mb-1">影响人物：</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {movers.map((m, i) => {
+                    const delta = m.after - m.before;
+                    return (
+                      <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                        delta > 0 ? "border-green-500/30 bg-green-500/10 text-green-400" : "border-border bg-muted/20 text-muted-foreground"
+                      }`}>
+                        {m.name} {delta > 0 ? `+${delta}` : delta < 0 ? String(delta) : ""}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Row 5: prediction */}
+            {prediction && (
+              <div className="pl-10 text-xs text-muted-foreground italic border-l-2 border-border pl-3 ml-8">
+                预判：{prediction}
+              </div>
+            )}
+
+            {/* Row 6: story */}
+            {story && (
+              <div className="pl-10 text-xs text-foreground/80 leading-relaxed bg-muted/20 rounded-lg p-2.5 ml-0">
+                {story}
+              </div>
+            )}
           </div>
         );
       })}
@@ -188,7 +324,6 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
   const currentRowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (currentRowRef.current && currentSessionId != null) {
-      // Small delay to let the tab content become visible before scrolling
       const t = setTimeout(() => {
         currentRowRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 150);
@@ -307,8 +442,8 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
   );
 }
 
-// ─── Post-game summary overlay ────────────────────────────────────────────────
-function PostGameSummary({
+// ─── Full-screen Result Page (Plan A) ─────────────────────────────────────────
+function FullResultPage({
   result,
   sessionId,
   playerName,
@@ -319,7 +454,6 @@ function PostGameSummary({
   playerName: string;
   onRestart: () => void;
 }) {
-  // Defensive: ensure all numeric fields are numbers
   const totalScore = Number(result.totalScore) || 0;
   const convertedCount = Number(result.convertedCount) || 0;
   const totalPeople = Number(result.totalPeople) || 12;
@@ -331,102 +465,147 @@ function PostGameSummary({
   const agg = Number(result.aggressiveIndex) || 0;
   const con = Number(result.conservativeIndex) || 0;
   const bias = strategyBias(agg, con);
+  const narrative = result.narrative;
+
+  const isWin = result.won;
+  const accentClass = isWin ? "text-green-400" : "text-red-400";
+  const accentBorder = isWin ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5";
+
+  const stats = [
+    { label: "综合得分", value: `${totalScore}`, highlight: true },
+    { label: "已转化", value: `${convertedCount}/${totalPeople}` },
+    { label: "剩余资源", value: `${resourcesLeft}` },
+    { label: "总回合", value: `${totalRounds}` },
+    { label: "最终可信度", value: `${finalCred}` },
+    { label: "最终压力", value: `${finalPressure}` },
+    { label: "健康指数", value: `${healthScore}` },
+  ];
 
   return (
-    <div className="absolute inset-0 z-50 flex flex-col bg-background" style={{ overflow: "hidden" }}>
-      {/* Header bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/60 shrink-0">
-        <div className="flex items-center gap-3">
-          <Trophy className="w-5 h-5 text-primary shrink-0" />
-          <div>
-            <div className="text-sm font-semibold text-foreground">游戏结束 · 复盘时刻</div>
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* ── Top header bar ── */}
+      <div className={`shrink-0 px-6 py-4 border-b border-border flex items-center gap-4 ${isWin ? "bg-green-500/5" : "bg-red-500/5"}`}>
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Trophy className={`w-6 h-6 shrink-0 ${accentClass}`} />
+          <div className="min-w-0">
+            <div className={`text-lg font-bold ${accentClass} leading-tight`}>
+              {narrative?.title ?? (isWin ? "游戏结束 · 变革成功" : "游戏结束 · 复盘时刻")}
+            </div>
             <div className="text-xs text-muted-foreground">{playerName}</div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="text-right mr-1">
-            <div className="text-2xl font-bold text-primary leading-none">{totalScore}</div>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right">
+            <div className="text-3xl font-bold text-primary leading-none">{totalScore}</div>
             <div className="text-xs text-muted-foreground">综合得分</div>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 bg-card border-border"
+            onClick={() => window.print()}
+          >
+            <FileDown className="w-3.5 h-3.5" />
+            导出 PDF
+          </Button>
           <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
             <RotateCcw className="w-3.5 h-3.5" />
             再玩一局
           </Button>
+          <Link href="/history">
+            <Button size="sm" variant="outline" className="gap-1 bg-card">
+              我的记录 <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Tabs — flex-1 so they fill remaining height */}
-      <div className="flex flex-col flex-1 min-h-0">
-        <Tabs defaultValue="overview" className="flex flex-col flex-1 min-h-0 gap-0">
-          <div className="px-4 pt-3 pb-1 shrink-0 border-b border-border/50">
-            <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="overview" className="flex-1 sm:flex-none">📊 本局总览</TabsTrigger>
-              <TabsTrigger value="leaderboard" className="flex-1 sm:flex-none">🏆 排行榜</TabsTrigger>
-              <TabsTrigger value="turns" className="flex-1 sm:flex-none">📋 回合日志</TabsTrigger>
-            </TabsList>
-          </div>
+      {/* ── Main content: tabs ── */}
+      <Tabs defaultValue="narrative" className="flex flex-col flex-1 min-h-0">
+        <TabsList className="shrink-0 mx-6 mt-4 mb-0 w-auto self-start gap-1 bg-muted/40">
+          <TabsTrigger value="narrative" className="gap-1.5 text-xs">
+            <BookOpen className="w-3.5 h-3.5" />
+            结局复盘
+          </TabsTrigger>
+          <TabsTrigger value="overview" className="gap-1.5 text-xs">
+            <Trophy className="w-3.5 h-3.5" />
+            本局总览
+          </TabsTrigger>
+          <TabsTrigger value="leaderboard" className="gap-1.5 text-xs">
+            <Users className="w-3.5 h-3.5" />
+            排行榜
+          </TabsTrigger>
+          <TabsTrigger value="turns" className="gap-1.5 text-xs">
+            <List className="w-3.5 h-3.5" />
+            回合日志
+          </TabsTrigger>
+        </TabsList>
 
-          {/* ── Overview tab ── */}
-          <TabsContent value="overview" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 space-y-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
-              {/* Score breakdown */}
-              <div className="rounded-lg border border-border bg-card/50 p-4 space-y-3">
-                <div className="text-center">
-                  <div className="text-5xl font-bold text-primary">{totalScore}</div>
-                  <div className="text-sm text-muted-foreground mt-1">综合得分（满分 100）</div>
-                  {(agg + con) > 0 && (
-                    <div className={`inline-block mt-2 px-3 py-0.5 rounded-full border text-xs font-medium ${bias.color}`}>
-                      {bias.label}
-                    </div>
-                  )}
-                </div>
-
-                {/* Multiplicative formula */}
-                <div className="flex items-center justify-center gap-2 text-sm flex-wrap pt-1">
-                  <div className="text-center px-3 py-1.5 rounded bg-primary/10 border border-primary/30">
-                    <div className="text-xs text-muted-foreground mb-0.5">转化率</div>
-                    <div className="font-mono font-semibold text-primary">
-                      {convertedCount}/{totalPeople}
-                      <span className="text-xs ml-1 opacity-70">
-                        = {totalPeople > 0 ? Math.round(convertedCount / totalPeople * 100) : 0}%
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-muted-foreground text-lg">×</span>
-                  <div className="text-center px-3 py-1.5 rounded bg-green-500/10 border border-green-500/30">
-                    <div className="text-xs text-muted-foreground mb-0.5">健康度指数</div>
-                    <div className="font-mono font-semibold text-green-400">
-                      {healthScore}%
-                      <span className="text-xs ml-1 opacity-70">
-                        (可信{finalCred}−压{finalPressure})
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-muted-foreground text-lg">×</span>
-                  <div className="text-center px-3 py-1.5 rounded bg-muted/30 border border-border">
-                    <div className="text-xs text-muted-foreground mb-0.5">满分</div>
-                    <div className="font-mono font-semibold text-foreground">100</div>
-                  </div>
+        {/* ── 结局复盘 tab ── */}
+        <TabsContent value="narrative" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          {narrative ? (
+            <div className="max-w-2xl space-y-5">
+              {/* Story */}
+              <div className={`rounded-xl border p-5 ${accentBorder}`}>
+                <div className={`text-xs font-semibold uppercase tracking-wider mb-2 ${accentClass}`}>结局故事</div>
+                <p className="text-sm text-foreground leading-relaxed">{narrative.story}</p>
+              </div>
+              {/* Teaching points */}
+              <div className="rounded-xl border border-border bg-card/40 p-5">
+                <div className="text-xs font-semibold uppercase tracking-wider mb-3 text-primary">📚 教学要点</div>
+                <div className="space-y-2">
+                  {narrative.teach.split("\n").filter(Boolean).map((line, i) => (
+                    <p key={i} className="text-sm text-foreground leading-relaxed">{line}</p>
+                  ))}
                 </div>
               </div>
+              {/* Real-world cases */}
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+                <div className="text-xs font-semibold uppercase tracking-wider mb-3 text-amber-400">🌍 真实案例参照</div>
+                <div className="space-y-2">
+                  {narrative.realWorld.split("\n").filter(Boolean).map((line, i) => (
+                    <p key={i} className="text-sm text-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: line }} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-16 text-muted-foreground text-sm">
+              暂无结局叙事数据
+            </div>
+          )}
+        </TabsContent>
 
+        {/* ── 本局总览 tab ── */}
+        <TabsContent value="overview" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          <ErrorBoundary>
+            <div className="max-w-2xl space-y-5">
+              {/* Score formula */}
+              <div className="rounded-xl border border-border bg-card/40 p-4">
+                <div className="text-xs font-semibold text-muted-foreground mb-3">得分公式</div>
+                <div className="text-xs font-mono text-muted-foreground space-y-1">
+                  <div>转化率 = {convertedCount}/{totalPeople} = {Math.round(convertedCount/totalPeople*100)}%</div>
+                  <div>健康指数 = (max(0, {finalCred}−{finalPressure}) + 10) / 20 = {(healthScore/100).toFixed(2)}</div>
+                  <div className="text-primary font-semibold">综合得分 = {Math.round(convertedCount/totalPeople*100)}% × {(healthScore/100).toFixed(2)} × 100 = <span className="text-lg">{totalScore}</span></div>
+                </div>
+              </div>
               {/* Stats grid */}
-              <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                {[
-                  { label: "转化人数", value: `${convertedCount}/${totalPeople}` },
-                  { label: "剩余资源", value: String(resourcesLeft) },
-                  { label: "共用回合", value: String(totalRounds) },
-                ].map(({ label, value }) => (
-                  <div key={label} className="bg-muted/20 rounded-lg p-3 border border-border">
-                    <div className="font-semibold text-base text-foreground">{value}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {stats.map(({ label, value, highlight }) => (
+                  <div key={label} className={`rounded-lg border p-3 text-center ${highlight ? "border-primary/40 bg-primary/5" : "border-border bg-card/30"}`}>
+                    <div className={`font-bold text-lg leading-none mb-1 ${highlight ? "text-primary" : "text-foreground"}`}>{value}</div>
+                    <div className="text-xs text-muted-foreground">{label}</div>
                   </div>
                 ))}
+                {/* Strategy bias */}
+                <div className={`rounded-lg border p-3 text-center ${bias.color}`}>
+                  <div className="font-semibold text-sm leading-none mb-1">{bias.label}</div>
+                  <div className="text-xs text-muted-foreground">策略风格</div>
+                </div>
               </div>
-
               {/* Hidden ties */}
               {result.hiddenTiesStats && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
                   <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-400">
                     <span>🔗</span>
                     <span>信任网利用率</span>
@@ -462,38 +641,28 @@ function PostGameSummary({
                   )}
                 </div>
               )}
+            </div>
+          </ErrorBoundary>
+        </TabsContent>
 
-              {/* CTA buttons */}
-              <div className="flex gap-2 pt-1">
-                <Button className="flex-1 bg-primary hover:bg-primary/90" onClick={onRestart}>
-                  <RotateCcw className="w-4 h-4 mr-1.5" />
-                  再玩一局
-                </Button>
-                <Link href="/history" className="flex-1">
-                  <Button variant="outline" className="w-full gap-1.5 bg-card">
-                    我的记录
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
+        {/* ── Leaderboard tab ── */}
+        <TabsContent value="leaderboard" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+          <ErrorBoundary>
+            <div className="max-w-2xl">
+              <LeaderboardPanel playerName={playerName} currentSessionId={sessionId} />
+            </div>
+          </ErrorBoundary>
+        </TabsContent>
+
+        {/* ── Turn log tab ── */}
+          <TabsContent value="turns" className="flex-1 overflow-y-auto px-6 pb-6 pt-4 data-[state=inactive]:hidden">
+            <ErrorBoundary>
+              <div className="max-w-2xl">
+                <TurnLog sessionId={sessionId} playerName={playerName} />
               </div>
             </ErrorBoundary>
           </TabsContent>
-
-          {/* ── Leaderboard tab ── */}
-          <TabsContent value="leaderboard" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
-              <LeaderboardPanel playerName={playerName} currentSessionId={sessionId} />
-            </ErrorBoundary>
-          </TabsContent>
-
-          {/* ── Turn log tab ── */}
-          <TabsContent value="turns" className="flex-1 overflow-y-auto px-4 pb-6 pt-4 data-[state=inactive]:hidden">
-            <ErrorBoundary>
-              <TurnLog sessionId={sessionId} />
-            </ErrorBoundary>
-          </TabsContent>
-        </Tabs>
-      </div>
+      </Tabs>
     </div>
   );
 }
@@ -503,6 +672,7 @@ export default function GamePage() {
   const { playerName } = usePlayerName();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
+  const [frozenSessionId, setFrozenSessionId] = useState<number | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
   const [gameReady, setGameReady] = useState<boolean | null>(null);
 
@@ -536,8 +706,10 @@ export default function GamePage() {
   const sessionIdRef = useRef<number | null>(sessionId);
   const endSessionRef = useRef(endSession.mutateAsync);
   const saveTurnRef = useRef(saveTurnMutation.mutateAsync);
+  const utilsRef = useRef(utils);
   useEffect(() => { endSessionRef.current = endSession.mutateAsync; });
   useEffect(() => { saveTurnRef.current = saveTurnMutation.mutateAsync; });
+  useEffect(() => { utilsRef.current = utils; });
 
   const handleIframeLoad = () => {
     if (!iframeRef.current || !playerName) return;
@@ -550,13 +722,14 @@ export default function GamePage() {
   const handleStartGame = useCallback(async (name?: string) => {
     const activeName = name ?? playerName;
     if (!activeName) return;
+    setGameResult(null);
+    setFrozenSessionId(null);
+    setGameReady(false);
     try {
       const session = await startSession.mutateAsync({ playerName: activeName });
       const newId = session.sessionId;
       setSessionId(newId);
       sessionIdRef.current = newId;
-      setGameResult(null);
-      setGameReady(false);
       setIframeKey(k => k + 1);
       await new Promise(r => setTimeout(r, 50));
     } catch {
@@ -585,6 +758,14 @@ export default function GamePage() {
           pressureAfter: turn.pressureAfter,
           resourcesAfter: turn.weeksLeft,
           outcome: turn.deltas.converted > 0 ? "success" : "partial",
+          // Extended fields
+          actionType: turn.actionType,
+          story: turn.story,
+          deltaConverted: turn.deltas.converted,
+          weeksUsed: turn.weeksUsed,
+          turnScore: turn.turnScore,
+          milestones: turn.milestones,
+          movers: turn.movers,
         });
       } catch {
         // Non-blocking
@@ -592,13 +773,14 @@ export default function GamePage() {
     }
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
-      // Set gameResult immediately so the overlay renders
-      setGameResult(result);
-      // Only save to DB if we have a valid session
-      if (sid !== null) {
+      // Freeze sessionId at this exact moment
+      const currentSid = sessionIdRef.current;
+      setFrozenSessionId(currentSid);
+      // Save to DB first, then show result page
+      if (currentSid !== null) {
         try {
           await endSessionRef.current({
-            sessionId: sid,
+            sessionId: currentSid,
             status: result.won ? "win" : "fail",
             resourcesLeft: Number(result.resourcesLeft) || 0,
             finalCredibility: Number(result.finalCred) || 0,
@@ -611,17 +793,18 @@ export default function GamePage() {
             aggressiveIndex: Number(result.aggressiveIndex) || 0,
             conservativeIndex: Number(result.conservativeIndex) || 0,
           });
-          // Invalidate queries so TurnLog and leaderboard show fresh data
-          await utils.game.getSession.invalidate({ sessionId: sid });
-          await utils.leaderboard.list.invalidate();
+          await utilsRef.current.game.getSession.invalidate({ sessionId: currentSid });
+          await utilsRef.current.leaderboard.list.invalidate();
           toast.success(`🎮 游戏结束！综合得分 ${Number(result.totalScore) || 0} 分，记录已保存`);
         } catch (err) {
           console.error("[endSession] failed:", err);
           toast.error("保存游戏记录失败，请截图联系管理员");
         }
       }
+      // Show full-screen result page (Plan A) — replaces iframe
+      setGameResult(result);
     }
-  }, [utils]);
+  }, []);
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
@@ -641,7 +824,7 @@ export default function GamePage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px)] relative">
-      {/* Game toolbar — only shown while game is active */}
+      {/* Game toolbar — only shown while game is active (not during result page) */}
       {!gameResult && (
         <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50 shrink-0">
           <div className="flex items-center gap-3">
@@ -681,38 +864,39 @@ export default function GamePage() {
         </div>
       )}
 
-      {/* Post-game summary overlay (full-page, tabbed) */}
-      {gameResult && (
-        <ErrorBoundary
-          fallback={
-            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background px-4">
-              <Trophy className="w-12 h-12 text-primary" />
-              <div className="text-xl font-bold text-foreground">游戏结束！</div>
-              <div className="text-4xl font-bold text-primary">{Number(gameResult.totalScore) || 0} 分</div>
-              <div className="text-sm text-muted-foreground">转化 {Number(gameResult.convertedCount) || 0}/{Number(gameResult.totalPeople) || 12} 人</div>
-              <Button className="mt-4 bg-primary hover:bg-primary/90" onClick={() => handleStartGame()}>
-                <RotateCcw className="w-4 h-4 mr-1.5" />
-                再玩一局
-              </Button>
-            </div>
-          }
-        >
-          <PostGameSummary
-            result={gameResult}
-            sessionId={sessionId}
-            playerName={playerName}
-            onRestart={() => {
-              setGameResult(null);
-              setSessionId(null);
-              sessionIdRef.current = null;
-              handleStartGame();
-            }}
-          />
-        </ErrorBoundary>
-      )}
-
-      {/* Game iframe or start prompt */}
-      {sessionId !== null ? (
+      {/* Full-screen result page (Plan A) — replaces iframe after game ends */}
+      {gameResult ? (
+        <div className="flex-1 overflow-hidden">
+          <ErrorBoundary
+            fallback={
+              <div className="flex flex-col items-center justify-center h-full gap-4 bg-background px-4">
+                <Trophy className="w-12 h-12 text-primary" />
+                <div className="text-xl font-bold text-foreground">游戏结束！</div>
+                <div className="text-4xl font-bold text-primary">{Number(gameResult.totalScore) || 0} 分</div>
+                <div className="text-sm text-muted-foreground">转化 {Number(gameResult.convertedCount) || 0}/{Number(gameResult.totalPeople) || 12} 人</div>
+                <Button className="mt-4 bg-primary hover:bg-primary/90" onClick={() => handleStartGame()}>
+                  <RotateCcw className="w-4 h-4 mr-1.5" />
+                  再玩一局
+                </Button>
+              </div>
+            }
+          >
+            <FullResultPage
+              result={gameResult}
+              sessionId={frozenSessionId}
+              playerName={playerName}
+              onRestart={() => {
+                setGameResult(null);
+                setFrozenSessionId(null);
+                setSessionId(null);
+                sessionIdRef.current = null;
+                handleStartGame();
+              }}
+            />
+          </ErrorBoundary>
+        </div>
+      ) : sessionId !== null ? (
+        /* Game iframe */
         <div className="flex-1 relative">
           {gameReady !== null && (
             <div
@@ -738,6 +922,7 @@ export default function GamePage() {
           />
         </div>
       ) : (
+        /* No session yet — prompt to start */
         <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4">
           <div className="text-center max-w-md">
             <div className="text-6xl mb-4">🚀</div>
