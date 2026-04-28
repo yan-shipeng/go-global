@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation } from "wouter";
-import { Trophy, GitCompare, History, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
+import { Trophy, Gamepad2, Zap, Pencil, ArrowRight, SkipForward } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 import BriefingPage from "./BriefingPage";
 
@@ -187,98 +186,6 @@ export default function Home() {
               </Link>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-10 sm:py-16 px-4 border-t border-border">
-        <div className="container max-w-4xl mx-auto">
-          <h2 className="text-xl sm:text-2xl font-bold text-center mb-6 sm:mb-10 text-foreground">平台功能</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {[
-              {
-                icon: Gamepad2,
-                title: "沉浸式模拟",
-                desc: "12 位角色、14 种动作、隐藏关系网络，每局都是全新挑战",
-                href: "/game",
-              },
-              {
-                icon: Trophy,
-                title: "全球排行榜",
-                desc: "综合得分 = 转化率 × 健康度指数 × 100，满分 100 分，两个维度相乘，缺一不可",
-                href: "/leaderboard",
-              },
-              {
-                icon: GitCompare,
-                title: "决策对比",
-                desc: "逐回合对比任意两位玩家的动作选择与预判，发现策略差异",
-                href: "/compare",
-              },
-              {
-                icon: History,
-                title: "个人历史",
-                desc: "查看所有历史局次，追踪可信度、压力、转化率的变化趋势",
-                href: "/history",
-              },
-            ].map(({ icon: Icon, title, desc, href }) => (
-              <Link key={href} href={href}>
-                <Card className="h-full bg-card border-border hover:border-primary/50 transition-colors cursor-pointer group">
-                  <CardContent className="p-5">
-                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                      <Icon className="w-4.5 h-4.5 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-1.5">{title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Score formula */}
-      <section className="py-10 sm:py-12 px-4 border-t border-border bg-card/30">
-        <div className="container max-w-3xl mx-auto text-center">
-          <h2 className="text-lg sm:text-xl font-bold mb-5 sm:mb-6 text-foreground">综合得分算法</h2>
-
-          {/* Formula display — vertical stack on mobile, horizontal on sm+ */}
-          <div className="flex flex-col sm:flex-row sm:flex-wrap justify-center gap-2 sm:gap-3 items-center text-sm mb-5 sm:mb-6">
-            <div className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-card border border-primary/40">
-              <div className="text-xs text-muted-foreground mb-0.5">转化率</div>
-              <div className="font-mono font-semibold text-primary text-sm">转化人数 ÷ 12</div>
-            </div>
-            <span className="text-muted-foreground text-xl sm:text-2xl font-light">×</span>
-            <div className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-card border border-green-500/40">
-              <div className="text-xs text-muted-foreground mb-0.5">健康度指数</div>
-              <div className="font-mono font-semibold text-green-400 text-xs sm:text-sm">(max(0, 可信度−压力) + 10) ÷ 20</div>
-            </div>
-            <span className="text-muted-foreground text-xl sm:text-2xl font-light">×</span>
-            <div className="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-card border border-border">
-              <div className="text-xs text-muted-foreground mb-0.5">满分</div>
-              <div className="font-mono font-semibold text-foreground text-sm">100</div>
-            </div>
-          </div>
-
-          {/* Explanation */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-xl mx-auto mb-4">
-            <div className="px-4 py-3 rounded-lg bg-primary/5 border border-primary/20">
-              <div className="text-xs font-semibold text-primary mb-1">转化率（0–1）</div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                12 人全转化 = 1.0，6 人 = 0.5。转化越多，乘数越大。
-              </p>
-            </div>
-            <div className="px-4 py-3 rounded-lg bg-green-500/5 border border-green-500/20">
-              <div className="text-xs font-semibold text-green-400 mb-1">健康度指数（0–1）</div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                可信度 10、压力 0 时 = 1.0；两者相等时 = 0.5；压力远超可信度时趋近 0。
-              </p>
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            两个维度相乘：任何一项极差都会大幅拉低总分。满分 100 分（12 人全转化 × 最佳健康度）。
-          </p>
         </div>
       </section>
     </div>
