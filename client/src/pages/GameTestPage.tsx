@@ -42,7 +42,7 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_ca0c5ad1.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_89a91c69.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {
@@ -322,7 +322,10 @@ function TurnLog({ sessionId, playerName }: { sessionId: number | null; playerNa
 // ─── Leaderboard Panel ────────────────────────────────────────────────────────
 function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string; currentSessionId: number | null }) {
   const { data: listData } = trpc.leaderboard.list.useQuery({ limit: 50 });
+  const { data: statsData } = trpc.leaderboard.stats.useQuery();
   const rows = listData ?? [];
+  const stats = statsData;
+
   const currentRowRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (currentRowRef.current && currentSessionId != null) {
@@ -332,46 +335,114 @@ function LeaderboardPanel({ playerName, currentSessionId }: { playerName: string
       return () => clearTimeout(t);
     }
   }, [listData, currentSessionId]);
-  if (rows.length === 0) {
-    return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无排行榜数据</div>;
-  }
+
+  const [compareIds, setCompareIds] = useState<number[]>([]);
+  const toggleCompare = (id: number) => {
+    setCompareIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 2 ? [...prev, id] : [prev[1], id]
+    );
+  };
+
   return (
-    <div className="space-y-1.5">
-      {rows.map((row, i) => {
-        const isMe = !!playerName && row.playerName === playerName;
-        const isCurrent = row.id === currentSessionId;
+    <div className="space-y-4">
+      {/* Global stats */}
+      {stats && (
+        <div className="grid grid-cols-4 gap-2 text-center text-xs">
+          {[
+            { label: "完成局数", value: String((stats as any)?.count ?? 0) },
+            { label: "平均得分", value: (stats as any)?.avgTotal?.toFixed(1) ?? "-" },
+            { label: "平均健康度", value: (stats as any)?.avgHealth?.toFixed(1) ?? "-" },
+            { label: "平均效率分", value: `+${(stats as any)?.avgEfficiency?.toFixed(1) ?? "-"}` },
+          ].map(({ label, value }) => (
+            <div key={label} className="bg-muted/20 rounded-lg p-2 border border-border">
+              <div className="font-semibold text-sm">{value}</div>
+              <div className="text-muted-foreground mt-0.5">{label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {compareIds.length === 2 && (() => {
+        const a = rows.find((r: (typeof rows)[0]) => r.id === compareIds[0]);
+        const b = rows.find((r: (typeof rows)[0]) => r.id === compareIds[1]);
+        if (!a || !b) return null;
         return (
-          <div
-            key={row.id}
-            ref={isCurrent ? currentRowRef : undefined}
-            className={`rounded-lg border p-2.5 ${
-              isCurrent
-                ? "border-primary/50 bg-primary/10"
-                : isMe
-                ? "border-border bg-muted/30"
-                : "border-border bg-card/30"
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <RankBadge rank={i + 1} />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="truncate font-medium">{row.playerName ?? "匿名"}</span>
-                  {isCurrent && <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/50 text-primary shrink-0">本局</Badge>}
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <div className="font-bold text-primary">{row.totalScore?.toFixed(1) ?? "-"}</div>
-              </div>
+          <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-xs space-y-1">
+            <div className="font-semibold text-primary mb-2 flex items-center gap-1.5">
+              <span>🔍</span> 对比分析
+              <button className="ml-auto text-muted-foreground hover:text-foreground" onClick={() => setCompareIds([])}>✕</button>
             </div>
-            <div className="flex items-center gap-3 mt-1.5 pl-8 text-xs text-muted-foreground flex-wrap">
-              <span>{row.convertedCount}/12 转化</span>
-              <span>可信 {row.finalCredibility ?? "-"}</span>
-              <span>压力 {row.finalPressure ?? "-"}</span>
-            </div>
+            {[
+              { label: "得分", va: a.totalScore, vb: b.totalScore },
+              { label: "转化", va: `${a.convertedCount}/12`, vb: `${b.convertedCount}/12` },
+              { label: "可信度", va: a.finalCredibility, vb: b.finalCredibility },
+              { label: "压力", va: a.finalPressure, vb: b.finalPressure },
+            ].map(({ label, va, vb }) => (
+              <div key={label} className="flex items-center gap-2">
+                <span className="text-muted-foreground w-10">{label}</span>
+                <span className="flex-1 text-right font-mono">{va}</span>
+                <span className="text-muted-foreground">vs</span>
+                <span className="flex-1 font-mono">{vb}</span>
+              </div>
+            ))}
           </div>
         );
-      })}
+      })()}
+
+      {compareIds.length > 0 && compareIds.length < 2 && (
+        <div className="text-xs text-muted-foreground text-center py-1">
+          💡 点击任意信息栏进行决策对比（已选 {compareIds.length}/2）
+        </div>
+      )}
+
+      {/* Rows */}
+      <div className="space-y-1.5">
+        {rows.map((row: (typeof rows)[0], i: number) => {
+          const isMe = !!playerName && row.playerName === playerName;
+          const isCurrent = row.id === currentSessionId;
+          const isSelected = compareIds.includes(row.id);
+          return (
+            <div
+              key={row.id}
+              ref={isCurrent ? currentRowRef : undefined}
+              className={`rounded-lg border p-2.5 cursor-pointer transition-colors ${
+                isCurrent
+                  ? "border-primary/50 bg-primary/10"
+                  : isSelected
+                  ? "border-primary/30 bg-primary/5"
+                  : isMe
+                  ? "border-border bg-muted/30"
+                  : "border-border bg-card/30 hover:bg-muted/20"
+              }`}
+              onClick={() => toggleCompare(row.id)}
+            >
+              <div className="flex items-center gap-2">
+                <RankBadge rank={i + 1} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate font-medium">{row.playerName ?? "匿名"}</span>
+                    {isCurrent && <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/50 text-primary shrink-0">本局</Badge>}
+                    {isSelected && <Badge variant="outline" className="text-[10px] px-1 py-0 border-primary/50 text-primary shrink-0">✓</Badge>}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="font-bold text-primary">{row.totalScore?.toFixed(1) ?? "-"}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-1.5 pl-8 text-xs text-muted-foreground flex-wrap">
+                <span>{row.convertedCount}/12 转化</span>
+                <span>可信 {row.finalCredibility ?? "-"}</span>
+                <span>压力 {row.finalPressure ?? "-"}</span>
+                {row.aggressiveIndex != null && row.conservativeIndex != null && (
+                  <span className={strategyBias(row.aggressiveIndex, row.conservativeIndex).color}>
+                    {strategyBias(row.aggressiveIndex, row.conservativeIndex).label}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

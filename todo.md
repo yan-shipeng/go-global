@@ -546,10 +546,9 @@
 - [x] Fix iframe height and leaderboard data loading/display
 
 ## Phase 90: Plan A — unified full-screen result page
-
-- [ ] Extend GAME_ENDED payload with ending narrative (title, story, teachPoints, realWorld, endingType)
-- [ ] Build GameResultPage component: full-screen, replaces iframe, shows narrative + 本局总览 + 排行榜 + 回合日志
-- [ ] Apply to both GameTestPage.tsx and GamePage.tsx
+- [x] Extend GAME_ENDED payload with ending narrative (title, story, teachPoints, realWorld, endingType)
+- [x] Build GameResultPage component: full-screen, replaces iframe, shows narrative + 本局总览 + 排行榜 + 回合日志
+- [x] Apply to both GameTestPage.tsx and GamePage.tsxx
 
 ## Phase 90: Plan A — unified full-screen result page
 
@@ -574,4 +573,18 @@
 - [x] Add CSV export helper (escapeCsv, downloadCsv) to both GamePage.tsx and GameTestPage.tsx
 - [x] Add "下载 CSV" button to 回合日志 tab in both pages (exports all enriched fields)
 - [x] Pass playerName to TurnLog for CSV filename in both pages
+- [x] TSC 0 errors, 8/8 tests pass
+
+## Phase 93: Fix PM inclusion bugs + sync /game-test result page
+
+- [x] Fix game engine: postGameEnded convertedCount now excludes PM (Object.entries + id!=='pm')
+- [x] Fix game engine: detectMilestones beforeConv/afterConv now exclude PM
+- [x] Fix game engine: scoreThisRound deltaConverted now excludes PM
+- [x] Fix game engine: newlyConverted in scoreThisRound and keyNode bonus now exclude PM
+- [x] Fix game engine: GAME_TURN convertedAfter now excludes PM
+- [x] Fix game engine: checkRandomEvents convertedIds now excludes PM
+- [x] Re-upload patched engine as game-engine_89a91c69.html
+- [x] Update GAME_ENGINE_URL in GamePage.tsx to game-engine_89a91c69.html
+- [x] Update GAME_ENGINE_URL in GameTestPage.tsx to game-engine_89a91c69.html
+- [x] Sync GameTestPage.tsx LeaderboardPanel to match GamePage.tsx (global stats + compare feature + strategy bias)
 - [x] TSC 0 errors, 8/8 tests pass
