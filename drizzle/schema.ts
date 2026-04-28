@@ -77,6 +77,15 @@ export const gameTurns = mysqlTable("game_turns", {
   pressureAfter: int("pressureAfter").default(0),
   resourcesAfter: int("resourcesAfter").default(0),
   outcome: varchar("outcome", { length: 32 }), // 'success' | 'fail' | 'partial'
+  // Extended fields for richer turn log
+  actionType: varchar("actionType", { length: 64 }), // e.g. '示范' | '对话' | '赋能'
+  story: text("story"), // narrative text for this turn
+  deltaConverted: int("deltaConverted").default(0), // new conversions this turn
+  weeksUsed: int("weeksUsed").default(0), // resources consumed this turn
+  turnScore: float("turnScore").default(0), // score contribution this turn
+  milestones: json("milestones").$type<string[]>(), // milestone tags e.g. ['首次转化']
+  movers: json("movers").$type<Array<{ id: string; name: string; before: number; after: number }>>()
+    , // people whose scores changed
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

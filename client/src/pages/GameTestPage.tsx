@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import { FileDown } from "lucide-react";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
 const GAME_ENGINE_URL = "/manus-storage/game-engine_ca0c5ad1.html?autoStart=1";
@@ -66,12 +67,19 @@ interface TurnData {
   round: number;
   actionId: string;
   actionLabel: string;
+  actionType?: string;
   targets: string[];
   prediction: string;
+  story?: string;
   deltas: { cred: number; pressure: number; converted: number };
+  movers?: Array<{ id: string; name: string; before: number; after: number }>;
   credAfter: number;
   pressureAfter: number;
+  weeksUsed?: number;
   weeksLeft: number;
+  turnScore?: number;
+  milestones?: string[];
+  convertedAfter?: number;
 }
 
 type LogEntry = { ts: string; msg: string; ok: boolean };
@@ -119,6 +127,20 @@ class ErrorBoundary extends React.Component<
   }
 }
 
+// ─── Action type label helper ─────────────────────────────────────────────────
+function actionTypeLabel(type?: string | null) {
+  const map: Record<string, string> = {
+    demonstrate: "示范行动",
+    dialogue: "深度对话",
+    empower: "赋能支持",
+    coalition: "联盟构建",
+    structure: "制度推进",
+    pressure: "施压推进",
+    interview: "访谈了解",
+  };
+  return type ? (map[type] ?? type) : null;
+}
+
 // ─── Turn Log component ───────────────────────────────────────────────────────
 function TurnLog({ sessionId }: { sessionId: number | null }) {
   const { data, isLoading } = trpc.game.getSession.useQuery(
@@ -136,46 +158,109 @@ function TurnLog({ sessionId }: { sessionId: number | null }) {
     return <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">暂无回合记录</div>;
   }
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {turns.map((t, idx) => {
         const prev = idx > 0 ? turns[idx - 1] : null;
         const credDelta = prev != null ? (t.credibilityAfter ?? 0) - (prev.credibilityAfter ?? 0) : 0;
         const pressDelta = prev != null ? (t.pressureAfter ?? 0) - (prev.pressureAfter ?? 0) : 0;
         const targets = (t.targets as string[]) ?? [];
         const outcome = t.outcome;
+        const milestones = (t.milestones as string[] | null) ?? [];
+        const movers = (t.movers as Array<{ id: string; name: string; before: number; after: number }> | null) ?? [];
+        const typeLabel = actionTypeLabel(t.actionType as string | undefined);
+        const deltaConverted = (t.deltaConverted as number | null) ?? 0;
+        const weeksUsed = (t.weeksUsed as number | null) ?? 0;
+        const turnScore = (t.turnScore as number | null) ?? 0;
+        const story = t.story as string | null | undefined;
+        const prediction = t.prediction as string | null | undefined;
         return (
-          <div key={t.id} className="rounded-lg border border-border bg-card/40 p-3 space-y-1.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-mono text-muted-foreground w-12 shrink-0">R{t.round}</span>
-              <span className="text-sm font-medium flex-1 min-w-0 truncate">{t.actionLabel || t.actionId}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded border shrink-0 ${
-                outcome === "success"
-                  ? "text-green-400 border-green-500/30 bg-green-500/10"
-                  : "text-amber-400 border-amber-500/30 bg-amber-500/10"
-              }`}>
-                {outcome === "success" ? "✓ 转化" : "△ 部分"}
-              </span>
-            </div>
-            {targets.length > 0 && (
-              <div className="text-xs text-muted-foreground pl-14">
-                目标：{targets.join("、")}
+          <div key={t.id} className="rounded-xl border border-border bg-card/40 p-4 space-y-3">
+            {/* Row 1: round + action + type badge + outcome */}
+            <div className="flex items-start gap-2 flex-wrap">
+              <span className="text-xs font-mono text-muted-foreground w-8 shrink-0 mt-0.5">R{t.round}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-semibold">{t.actionLabel || t.actionId}</span>
+                  {typeLabel && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground bg-muted/30">{typeLabel}</span>
+                  )}
+                  <span className={`text-xs px-1.5 py-0.5 rounded border shrink-0 ${
+                    outcome === "success"
+                      ? "text-green-400 border-green-500/30 bg-green-500/10"
+                      : "text-amber-400 border-amber-500/30 bg-amber-500/10"
+                  }`}>
+                    {outcome === "success" ? "✓ 转化" : "△ 部分"}
+                  </span>
+                  {turnScore > 0 && (
+                    <span className="text-xs text-primary font-mono">+{turnScore.toFixed(1)}分</span>
+                  )}
+                </div>
+                {targets.length > 0 && (
+                  <div className="text-xs text-muted-foreground mt-0.5">目标：{targets.join("、")}</div>
+                )}
               </div>
-            )}
-            <div className="flex items-center gap-3 pl-14 text-xs">
+            </div>
+
+            {/* Row 2: stats */}
+            <div className="flex items-center gap-3 pl-10 text-xs flex-wrap">
               <span className="text-muted-foreground">
                 可信度 <span className={credDelta > 0 ? "text-green-400" : credDelta < 0 ? "text-red-400" : "text-muted-foreground"}>
                   {credDelta > 0 ? `+${credDelta}` : credDelta !== 0 ? String(credDelta) : "±0"}
                 </span>
-                {" "}→ {t.credibilityAfter ?? "-"}
+                {" "}→ <span className="text-foreground">{t.credibilityAfter ?? "-"}</span>
               </span>
               <span className="text-muted-foreground">
                 压力 <span className={pressDelta < 0 ? "text-green-400" : pressDelta > 0 ? "text-red-400" : "text-muted-foreground"}>
                   {pressDelta > 0 ? `+${pressDelta}` : pressDelta !== 0 ? String(pressDelta) : "±0"}
                 </span>
-                {" "}→ {t.pressureAfter ?? "-"}
+                {" "}→ <span className="text-foreground">{t.pressureAfter ?? "-"}</span>
               </span>
-              <span className="text-muted-foreground">资源 → {t.resourcesAfter ?? "-"}</span>
+              <span className="text-muted-foreground">资源 → <span className="text-foreground">{t.resourcesAfter ?? "-"}</span></span>
+              {weeksUsed > 0 && <span className="text-muted-foreground">消耗 <span className="text-amber-400">{weeksUsed}</span></span>}
+              {deltaConverted > 0 && <span className="text-green-400 font-medium">+{deltaConverted} 人转化</span>}
             </div>
+
+            {/* Row 3: milestones */}
+            {milestones.length > 0 && (
+              <div className="pl-10 flex flex-wrap gap-1">
+                {milestones.map((m, i) => (
+                  <span key={i} className="text-[10px] px-1.5 py-0.5 rounded-full border border-primary/30 bg-primary/10 text-primary">{m}</span>
+                ))}
+              </div>
+            )}
+
+            {/* Row 4: movers */}
+            {movers.length > 0 && (
+              <div className="pl-10 space-y-0.5">
+                <div className="text-[10px] text-muted-foreground font-medium mb-1">影响人物：</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {movers.map((m, i) => {
+                    const delta = m.after - m.before;
+                    return (
+                      <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                        delta > 0 ? "border-green-500/30 bg-green-500/10 text-green-400" : "border-border bg-muted/20 text-muted-foreground"
+                      }`}>
+                        {m.name} {delta > 0 ? `+${delta}` : delta < 0 ? String(delta) : ""}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Row 5: prediction */}
+            {prediction && (
+              <div className="pl-10 text-xs text-muted-foreground italic border-l-2 border-border pl-3 ml-8">
+                预判：{prediction}
+              </div>
+            )}
+
+            {/* Row 6: story */}
+            {story && (
+              <div className="pl-10 text-xs text-foreground/80 leading-relaxed bg-muted/20 rounded-lg p-2.5 ml-0">
+                {story}
+              </div>
+            )}
           </div>
         );
       })}
@@ -298,6 +383,15 @@ function FullResultPage({
             <div className="text-3xl font-bold text-primary leading-none">{totalScore}</div>
             <div className="text-xs text-muted-foreground">综合得分</div>
           </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5 bg-card border-border"
+            onClick={() => window.print()}
+          >
+            <FileDown className="w-3.5 h-3.5" />
+            导出 PDF
+          </Button>
           <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90" onClick={onRestart}>
             <RotateCcw className="w-3.5 h-3.5" />
             再测一局
@@ -569,6 +663,14 @@ export default function GameTestPage() {
           pressureAfter: turn.pressureAfter,
           resourcesAfter: turn.weeksLeft,
           outcome: turn.deltas.converted > 0 ? "success" : "partial",
+          // Extended fields
+          actionType: turn.actionType,
+          story: turn.story,
+          deltaConverted: turn.deltas.converted,
+          weeksUsed: turn.weeksUsed,
+          turnScore: turn.turnScore,
+          milestones: turn.milestones,
+          movers: turn.movers,
         });
         addLog(`✅ GAME_TURN R${turn.round} saved`, true);
       } catch (err: unknown) {
@@ -627,7 +729,7 @@ export default function GameTestPage() {
       {/* ── Left: game area (iframe OR full-screen result) ── */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Control bar — always visible */}
-        <div className="shrink-0 flex items-center gap-2 px-4 py-2 border-b border-border bg-card/60 flex-wrap">
+        <div className="print-hide shrink-0 flex items-center gap-2 px-4 py-2 border-b border-border bg-card/60 flex-wrap">
           <Link href="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors mr-1">← 返回首页</Link>
           <Badge variant="outline" className="text-xs text-amber-400 border-amber-500/30">🧪 测试模式</Badge>
           <div className="flex-1" />
@@ -668,7 +770,7 @@ export default function GameTestPage() {
         </div>
 
         {/* Status bar */}
-        <div className="shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-border bg-background/50 flex-wrap text-xs">
+        <div className="print-hide shrink-0 flex items-center gap-2 px-4 py-1.5 border-b border-border bg-background/50 flex-wrap text-xs">
           <span className="text-muted-foreground">会话：</span>
           {sessionId != null
             ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">#{sessionId}</Badge>
@@ -726,7 +828,7 @@ export default function GameTestPage() {
       </div>
 
       {/* ── Right: event log ── */}
-      <div className="w-72 shrink-0 flex flex-col border-l border-border p-4 gap-3 overflow-hidden">
+      <div className="print-hide w-72 shrink-0 flex flex-col border-l border-border p-4 gap-3 overflow-hidden">
         <div className="text-sm font-semibold text-foreground shrink-0">📋 事件日志</div>
         <div className="flex-1 min-h-0 overflow-y-auto space-y-1">
           {log.length === 0 && (

@@ -151,3 +151,35 @@
     }
   }
 }
+
+/* ── Print / PDF export styles ──────────────────────────────────────────────────── */
+@media print {
+  /* Show all tab panels regardless of active state */
+  [role="tabpanel"] { display: block !important; overflow: visible !important; }
+  [data-state="inactive"] { display: block !important; }
+
+  /* Hide interactive controls and sidebar */
+  [data-print-hide],
+  button,
+  [role="tablist"],
+  nav,
+  .print-hide { display: none !important; }
+
+  /* Force light background for readability */
+  * {
+    background: white !important;
+    color: #111 !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure full width and no overflow clipping */
+  html, body { width: 100%; margin: 0; padding: 0; overflow: visible !important; }
+  #root { overflow: visible !important; height: auto !important; }
+
+  /* Page breaks */
+  .print-break-before { page-break-before: always; }
+  .print-break-inside-avoid { page-break-inside: avoid; }
+}

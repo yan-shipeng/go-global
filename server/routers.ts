@@ -85,6 +85,19 @@ const gameRouter = router({
       pressureAfter: z.number(),
       resourcesAfter: z.number(),
       outcome: z.string().optional(),
+      // Extended fields
+      actionType: z.string().optional(),
+      story: z.string().optional(),
+      deltaConverted: z.number().optional(),
+      weeksUsed: z.number().optional(),
+      turnScore: z.number().optional(),
+      milestones: z.array(z.string()).optional(),
+      movers: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        before: z.number(),
+        after: z.number(),
+      })).optional(),
     }))
     .mutation(async ({ input }) => {
       const session = await withDbRetry(() => getGameSession(input.sessionId));
@@ -101,6 +114,13 @@ const gameRouter = router({
         pressureAfter: input.pressureAfter,
         resourcesAfter: input.resourcesAfter,
         outcome: input.outcome,
+        actionType: input.actionType,
+        story: input.story,
+        deltaConverted: input.deltaConverted ?? 0,
+        weeksUsed: input.weeksUsed ?? 0,
+        turnScore: input.turnScore ?? 0,
+        milestones: input.milestones ?? [],
+        movers: input.movers ?? [],
       }));
       return { turnId };
     }),

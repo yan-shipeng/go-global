@@ -557,3 +557,10 @@
 - [x] Build FullResultPage component (replaces iframe after game ends)
 - [x] Upload new engine game-engine_ca0c5ad1.html with narrative support
 - [x] Update GameTestPage.tsx to use new engine and FullResultPage
+
+## Phase 91: Enrich result page + PDF export
+
+- [x] Audit all valuable data in GAME_TURN and GAME_ENDED payloads
+- [x] Add missing fields to DB schema (actionType, story, deltaConverted, weeksUsed, turnScore, milestones, movers) and saveTurn procedure
+- [x] Enrich TurnLog component with all new fields
+- [x] Add one-click PDF export button using browser print API with print-optimized CSS
