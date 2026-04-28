@@ -433,13 +433,13 @@ function TurnLog({ sessionId, playerName, fallbackTurns }: { sessionId: number |
             </ResponsiveContainer>
           </div>
           <div className="rounded-xl border border-border bg-card/40 p-3">
-            <div className="text-[10px] text-muted-foreground mb-2 font-medium">激进压力</div>
+            <div className="text-[10px] text-muted-foreground mb-2 font-medium">反抗阻力</div>
             <ResponsiveContainer width="100%" height={80}>
               <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                 <XAxis dataKey="round" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} labelFormatter={(v) => `R${v}`} formatter={(v: number) => [`${v}`, "激进压力"]} />
+                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} labelFormatter={(v) => `R${v}`} formatter={(v: number) => [`${v}`, "反抗阻力"]} />
                 {milestoneRounds.map(r => <ReferenceLine key={r} x={r} stroke="#e0a050" strokeDasharray="3 3" strokeWidth={1} />)}
                 <Line type="monotone" dataKey="pressure" stroke="#ef4444" strokeWidth={2} dot={false} connectNulls />
               </LineChart>

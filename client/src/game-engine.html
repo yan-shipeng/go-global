@@ -15,7 +15,7 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>中国企业出海变革模拟 v22 · 教学增强版</title>
+  <title>中国企业出海整合管理</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -435,7 +435,7 @@
 <div class="app">
   <div class="topbar">
     <div>
-      <div class="title">中国企业出海变革模拟 v20</div>
+      <div class="title">中国企业出海整合管理</div>
       <div class="sub" id="learnerBadge" style="display:none"></div>
     </div>
     <div id="topbarActions" style="display:none;gap:8px;flex-wrap:wrap">
@@ -452,7 +452,7 @@
     <div class="kpi"><div class="small">回合</div><div class="num" id="roundKpi">1</div></div>
     <div class="kpi"><div class="small">已转化率 <span style="color:var(--success);font-weight:700">★</span></div><div class="num" id="convertedKpi">0%</div><div class="small" id="convertedKpiSub" style="margin-top:2px">转化越多得分越高</div></div>
     <div class="kpi"><div class="small">可信度</div><div class="num" id="credKpi">6</div></div>
-    <div class="kpi"><div class="small">激进压力</div><div class="num" id="pressureKpi">0</div></div>
+    <div class="kpi"><div class="small">反抗阻力</div><div class="num" id="pressureKpi">0</div></div>
   </div>
 
   <div class="tabs" id="tabsBar" style="display:none">
@@ -815,7 +815,7 @@
             <div class="intro-card">
               <span class="intro-card-icon">📊</span>
               <div class="intro-card-title">四个关键指标</div>
-              <div class="intro-card-body">剩余资源 · 转化率 · 可信度 · 激进压力。压力过高会触发反弹。</div>
+              <div class="intro-card-body">剩余资源 · 转化率 · 可信度 · 反抗阻力。压力过高会触发反弹。</div>
             </div>
             <div class="intro-card">
               <span class="intro-card-icon">🔗</span>
@@ -1396,7 +1396,7 @@ const ACTIONS=[
       const r = affectAll(2, '你再次请总部站台，但这一次信号强度明显衰减。', '制度');
       r.details.unshift(
         `⚠️ 政治资本透支：这已是你第 ${useN} 次请CEO背书，组织内部开始议论「是不是自己搞不定」。`,
-        `可信度 -2，激进压力 +1。` + (ceoHit.length ? `CEO对你的评分 -8（被频繁"消费"）。` : 'CEO态度已冷淡。')
+        `可信度 -2，反抗阻力 +1。` + (ceoHit.length ? `CEO对你的评分 -8（被频繁"消费"）。` : 'CEO态度已冷淡。')
       );
       return r;
     }
@@ -1554,7 +1554,7 @@ const ACTIONS=[
       return {
         story:'你讲了一个「成功案例」，但在座同事内心OS：「你自己那里连一个真正打通的案例都没有，这是从PPT拷的吧？」',
         details:[
-          '⚠️ 急于讲叙事但缺乏本土证据：听众感到被愚弄，激进压力 +1。',
+          '⚠️ 急于讲叙事但缺乏本土证据：听众感到被愚弄，反抗阻力 +1。',
           hitNames.length ? `👥 反感：${hitNames.join('、')} 分数 -8（觉得你在画大饼）。` : '',
           '💡 建议先用「小范围试点」或「上手培训」做出至少 1 个本土案例再讲。'
         ].filter(Boolean),
@@ -1599,7 +1599,7 @@ const ACTIONS=[
       state.pressure = Math.min(10, state.pressure + 2);
       const det = [
         `⚠️ 进展报告反噬：满屏「变革正在发生」的PPT背后，真正落地的项目屈指可数。`,
-        `可信度 -2，激进压力 +2（怨言在底层制造部门串联）。`,
+        `可信度 -2，反抗阻力 +2（怨言在底层制造部门串联）。`,
         doersHit.length ? `👷 实干派质疑：${doersHit.join('、')} 心理距离拉大（分数 -5）。` : `👷 实干派尚未明表态，但反馈已在私下累积。`
       ];
       return {story:'你发布了一份「变革成果阶段汇报」，但车间组长在企业微信群里读完只回了一个「?」——没人知道文章里的成果是啥。', details:det};
@@ -1634,7 +1634,7 @@ const ACTIONS=[
       state.pressure = Math.min(10, state.pressure + 2);
       return {story:`你公开表彰了${p.name}，但台下的人面面相觑——他们都知道${p.name}还没有任何实质性的变革行动。`,
         details:[
-          `❌ 表彰严重失当：${p.name}目前仍处于「${statusText(p.status)}」状态，尚未形成任何示范效应。激进压力 +2。`,
+          `❌ 表彰严重失当：${p.name}目前仍处于「${statusText(p.status)}」状态，尚未形成任何示范效应。反抗阻力 +2。`,
           `📚 管理学原理：${factionCtx}`,
           hitNames.length ? `👥 全组织质疑：${hitNames.join('、')} 对你的判断力产生怀疑（分数 -8）。` : '',
           `💡 建议：目标必须至少达到「参与」状态（score ≥ 60）才能进行公开认可，才能形成真正的榜样效应。`
@@ -1649,7 +1649,7 @@ const ACTIONS=[
       state.pressure = Math.min(10, state.pressure + 1);
       return {story:`你公开表彰了${p.name}，但${p.name}还没有足够的成果——这次表彰让他/她感到被「捧杀」，同事也开始质疑你的判断。`,
         details:[
-          `❌ 表彰时机失当：${p.name}当前处于「${statusText(p.status)}」状态，尚未有足够的成果支撑公开认可。${p.name}感到被孤立（分数 -12），激进压力 +1。`,
+          `❌ 表彰时机失当：${p.name}当前处于「${statusText(p.status)}」状态，尚未有足够的成果支撑公开认可。${p.name}感到被孤立（分数 -12），反抗阻力 +1。`,
           `📚 管理学原理：过早的公开表彰会让被表彰者在同事中显得「被特殊对待」，反而引发同伴压力和孤立效应（Peer Isolation Effect）。`,
           `💡 建议：等待${p.name}进入「参与」状态（score ≥ 60）后再进行公开认可，效果才能真正放大。`
         ],fail:true};
@@ -1689,7 +1689,7 @@ const ACTIONS=[
       return {
         story:'你在全体会上宣布了硬性KPI与时限，但台下的议论是「你自己还没打通一个案例，凭什么压我们」。',
         details:[
-          '⚠️ 信用未立而先推KPI：实干派怒火起来。可信度 -2，激进压力 +2。',
+          '⚠️ 信用未立而先推KPI：实干派怒火起来。可信度 -2，反抗阻力 +2。',
           hit.length ? `👥 反弹：${hit.join('、')} 分数 -6（感到被“指标绱架”）。` : '👥 所有实干派已表态或已转化，反弹较小。',
           '💡 建议：先通过试点/培训达到 3 以上转化，或可信度提升到 8+ 再推硬性KPI。'
         ]
@@ -2459,8 +2459,8 @@ function applyConsequences(action, impact){
     if(state.resources < 5) penalty = Math.ceil(penalty * 1.5); // 资源紧张时惩罚放大
     if(state.pressure >= 6) penalty = Math.ceil(penalty * 1.5); // 高压状态下惩罚放大
     state.credibility = Math.max(0, state.credibility - penalty); // 允许降至 0（原保底为 1）
-    state.pressure = Math.min(10, state.pressure + 1); // 任何失败都额外增加组织激进压力 +1
-    notes.push(`决策失误，组织对你的判断产生严重疑虑（可信度 -${penalty}，激进压力 +1）。`);
+    state.pressure = Math.min(10, state.pressure + 1); // 任何失败都额外增加组织反抗阻力 +1
+    notes.push(`决策失误，组织对你的判断产生严重疑虑（可信度 -${penalty}，反抗阻力 +1）。`);
     state.consecutiveSuccesses = 0;
   }
   else {
@@ -3360,7 +3360,7 @@ function buildActionCard(a, idx){
           ${wait>0?'⏳ 还需 '+wait+' 轮':'⛔ 资源数不足'}
         </span>`
       : credBad
-        ? `<span class="disabled-badge" style="background:rgba(224,138,58,.15);color:#e08a3a;border-color:rgba(224,138,58,.4)" title="可信度不足（需${a.reqCred}，当前${state.credibility}），强行执行将增加激进压力">
+        ? `<span class="disabled-badge" style="background:rgba(224,138,58,.15);color:#e08a3a;border-color:rgba(224,138,58,.4)" title="可信度不足（需${a.reqCred}，当前${state.credibility}），强行执行将增加反抗阻力">
             ⚠️ 强行可执行
           </span>`
         : '';
@@ -3443,7 +3443,7 @@ function renderDecisionPreview(a, targetIds){
   const p = predictImpact(a, targetIds);
   if(!p){ box.style.display='none'; return; }
   const credTxt = p.credDir>0 ? '<span class="dp-pos">可信度 ↑</span>' : '<span class="dp-neg">可信度 ↓</span>';
-  const pressTxt = p.pressDir>0 ? `<span class="dp-neg">激进压力 +${p.pressDir}</span>` : '<span class="dp-neutral">压力~</span>';
+  const pressTxt = p.pressDir>0 ? `<span class="dp-neg">反抗阻力 +${p.pressDir}</span>` : '<span class="dp-neutral">压力~</span>';
   const rateTxt = (a.need===0 || targetIds.length===a.need)
     ? `<span class="dp-pos">有望推进转化</span>`
     : `<span class="dp-neutral">待选目标</span>`;
@@ -3479,7 +3479,7 @@ function updateRunButton(){
   if(wait>0) problems.push(`该动作还需等待${wait}轮`);
   if(state.resources<dynCost) problems.push(`资源数不足（需${dynCost}资源，剩${state.resources}资源）`);
   if(a.reqPressure && state.pressure < a.reqPressure) warnings.push(`⚠️ 当前压力为 ${state.pressure}，此动作需要压力 ≥ ${a.reqPressure} 才有实质效果（执行后会浪费资源）`);
-  if(!credOk) warnings.push(`⚠️ 可信度不足（需${a.reqCred}，有${state.credibility}）——强行执行将增加激进压力 +${Math.min(3, a.reqCred-state.credibility)}`);
+  if(!credOk) warnings.push(`⚠️ 可信度不足（需${a.reqCred}，有${state.credibility}）——强行执行将增加反抗阻力 +${Math.min(3, a.reqCred-state.credibility)}`);
   if(problems.length){ hint.textContent = h + ' · ' + problems.join('；'); hint.className='hint-strip warn'; }
   else if(warnings.length){ hint.textContent = h + ' · ' + warnings.join('；') + '，确认强行执行'; hint.className='hint-strip warn'; }
   else { hint.textContent = h + ' · 点击「执行本轮决策」'; hint.className='hint-strip'; }
@@ -3516,9 +3516,9 @@ function endingNarratives(type){
     else if (finalCred >= 5) credPhrase = `可信度还有 ${finalCred}（尚可）`;
     else credPhrase = `可信度只剩 ${finalCred}（已透支）`;
     let pressPhrase;
-    if (state.pressure <= 1) pressPhrase = `激进压力仅 ${state.pressure}（较低）`;
-    else if (state.pressure <= 3) pressPhrase = `激进压力 ${state.pressure}（可控）`;
-    else pressPhrase = `激进压力高达 ${state.pressure}`;
+    if (state.pressure <= 1) pressPhrase = `反抗阻力仅 ${state.pressure}（较低）`;
+    else if (state.pressure <= 3) pressPhrase = `反抗阻力 ${state.pressure}（可控）`;
+    else pressPhrase = `反抗阻力高达 ${state.pressure}`;
     // 根据整体爆发风险给出内部估评描述
     let verdict;
     if (finalCred >= 7 && state.pressure <= 2) {
@@ -3538,7 +3538,7 @@ function endingNarratives(type){
   // 组织反弹失败也需要区分成因：压力爆表 vs 资源数耗尽进展不够
   let failCause;
   if (state.pressure >= 7 || finalCred <= 2) {
-    failCause = `可信度跌至 ${finalCred}、激进压力高达 ${state.pressure}，组织开始反弹`;
+    failCause = `可信度跌至 ${finalCred}、反抗阻力高达 ${state.pressure}，组织开始反弹`;
   } else if (finalCred <= 4) {
     failCause = `已转化率止步于 ${finalRate}%，可信度仅剩 ${finalCred}，资源数也已耗尽`;
   } else {
@@ -3966,7 +3966,7 @@ function runTurn(){
   const a=ACTIONS[state.selectedAction];
   const wait=Math.max(0,(state.nextAvailable[a.id]||state.round)-state.round);
   const credOk=state.credibility>=a.reqCred;
-  // v20: 允许在可信度不足时强行执行，但承担额外激进压力代价
+  // v20: 允许在可信度不足时强行执行，但承担额外反抗阻力代价
   const credOverride = !credOk && state.credibility >= 1; // 可信度至少为 1 才能强行
   const actualNeed = (a.id==='social-gathering') ? state.selectedTargets.length : a.need;
   const execCost = a.weeks;
@@ -4004,13 +4004,13 @@ function runTurn(){
   if(a.need===0) { Object.keys(state.people).forEach(id=>state.touchedThisTurn.add(id)); }
   else { state.selectedTargets.forEach(id=>state.touchedThisTurn.add(id)); }
 
-  // v20: 强行执行惩罚：可信度不足时额外增加激进压力
+  // v20: 强行执行惩罚：可信度不足时额外增加反抗阻力
   const credOverridePenalty = [];
   if(credOverride){
     const credGap = a.reqCred - state.credibility;
     const extraPressure = Math.min(3, credGap); // 差距每 1 点增加 1 压力，最多 +3
     state.pressure = Math.min(10, state.pressure + extraPressure);
-    credOverridePenalty.push(`⚠️ 强行执行（可信度 ${state.credibility}/${a.reqCred}）：组织感知到你并没有足够的信用基础就强行推进。激进压力 +${extraPressure}（现 ${state.pressure}）。`);
+    credOverridePenalty.push(`⚠️ 强行执行（可信度 ${state.credibility}/${a.reqCred}）：组织感知到你并没有足够的信用基础就强行推进。反抗阻力 +${extraPressure}（现 ${state.pressure}）。`);
     credOverridePenalty.push(`💡 建议：先通过「以身作则」、「小范围试点」等动作提升可信度至 ${a.reqCred} 再执行此动作，效果会明显更好。`);
   }
 
@@ -4145,8 +4145,8 @@ function runTurn(){
   const dPress = after.pressure - before.pressure;
   if(dCred > 0) sideEffects.push({ kind:'pos', text:`可信度 +${dCred}（现 ${after.cred}）` });
   else if(dCred < 0) sideEffects.push({ kind:'neg', text:`可信度 ${dCred}（现 ${after.cred}）` });
-  if(dPress > 0) sideEffects.push({ kind:'neg', text:`激进压力 +${dPress}（现 ${after.pressure}）` });
-  else if(dPress < 0) sideEffects.push({ kind:'pos', text:`激进压力 ${dPress}（现 ${after.pressure}）` });
+  if(dPress > 0) sideEffects.push({ kind:'neg', text:`反抗阻力 +${dPress}（现 ${after.pressure}）` });
+  else if(dPress < 0) sideEffects.push({ kind:'pos', text:`反抗阻力 ${dPress}（现 ${after.pressure}）` });
   if(deltaConverted > 0) sideEffects.push({ kind:'pos', text:`新增已转化 +${deltaConverted} 人（累计 ${Object.entries(after.people).filter(([id,x])=>id!=='pm' && x.status===4).length}）` });
   sideEffects.push({ kind:'neutral', text:`消耗 ${execCost} 资源，剩余 ${state.resources} / ${TOTAL_RESOURCES} 资源` });
   sideEffects.push({ kind:'neutral', text:`本动作覆盖 ${touched} 人，冷却 ${a.cooldown} 回合` });
@@ -4386,7 +4386,7 @@ function exportGamePdf(){
       <h2>📊 关键指标</h2>
       <table class="kpi">
         <tr><th>已转化率</th><td>${convRate}%</td><th>已转化人数</th><td>${(typeof convertedCount==='function')?convertedCount():'-'} / 12</td></tr>
-        <tr><th>可信度</th><td>${state.credibility}</td><th>激进压力</th><td>${state.pressure}</td></tr>
+        <tr><th>可信度</th><td>${state.credibility}</td><th>反抗阻力</th><td>${state.pressure}</td></tr>
         <tr><th>剩余资源</th><td>${state.resources}/${typeof TOTAL_RESOURCES!=='undefined'?TOTAL_RESOURCES:32}</td><th>回合数</th><td>${Math.max(1, state.round-1)}</td></tr>
       </table>
     </section>`;
@@ -4446,7 +4446,7 @@ function exportGamePdf(){
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>中国企业出海变革模拟 · PDF 报告 · ${escapeHtml(state.learnerName||'用户')}<\/title>
+<title>中国企业出海整合管理 · PDF 报告 · ${escapeHtml(state.learnerName||'用户')}<\/title>
 <style>
   @page { size: A4; margin: 14mm 12mm; }
   *{box-sizing:border-box}
@@ -4492,7 +4492,7 @@ function exportGamePdf(){
   <div class="print-hint">🖨️ 在弹出的打印窗口中选择「另存为 PDF」
     <button onclick="window.print()">重新打印<\/button><\/div>
   <div class="cover">
-    <h1>🎫 中国企业出海变革模拟 · PDF 报告<\/h1>
+    <h1>🎫 中国企业出海整合管理 · PDF 报告<\/h1>
     <dl class="meta">
       <dt>姓名<\/dt><dd>${escapeHtml(state.learnerName||'（未填写）')}<\/dd>
       <dt>角色<\/dt><dd>${escapeHtml(roleName)}<\/dd>
@@ -4585,7 +4585,7 @@ function renderLogScreen(){
   const wrap = el('trendWrap'); wrap.innerHTML='';
   wrap.appendChild(buildTrendCard('已转化人数', state.trend.converted, 'var(--success)', 0, 12));
   wrap.appendChild(buildTrendCard('可信度', state.trend.cred, 'var(--s3)', 0, 12));
-  wrap.appendChild(buildTrendCard('激进压力', state.trend.pressure, 'var(--danger)', 0, Math.max(10, ...state.trend.pressure)));
+  wrap.appendChild(buildTrendCard('反抗阻力', state.trend.pressure, 'var(--danger)', 0, Math.max(10, ...state.trend.pressure)));
 
   const list = el('logList'); list.innerHTML='';
   if(state.history.length===0){
