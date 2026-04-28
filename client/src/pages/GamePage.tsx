@@ -8,6 +8,17 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Trophy, RotateCcw, UserRound, ChevronRight, Loader2, BookOpen, Users, List, FileDown, Download, Home } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -910,10 +921,32 @@ export default function GamePage() {
                 {startSession.isPending ? "创建中..." : "🚀 开始新游戏"}
               </Button>
             ) : (
-              <Button size="sm" variant="outline" className="gap-1.5 bg-card" onClick={() => handleStartGame()}>
-                <RotateCcw className="w-3.5 h-3.5" />
-                重新开始
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1.5 bg-card">
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    重新开始
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>确认重新开始？</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-2">
+                      <span className="block">重新开始将结束当前进行中的游戏，请确保已保存你的记录。</span>
+                      <span className="block font-medium text-foreground">📌 建议：先截图或导出 PDF / CSV，再重新开始。</span>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                      onClick={() => handleStartGame()}
+                    >
+                      确认重新开始
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
             <Link href="/leaderboard">
               <Button size="sm" variant="ghost" className="gap-1.5">

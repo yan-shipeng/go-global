@@ -16,6 +16,17 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, BookOpen, Users, List, FileDown, Download, Home } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -919,15 +930,48 @@ export default function GameTestPage() {
             defaultValue={testPlayerName}
             onBlur={e => { if (e.target.value) setPlayerName(e.target.value); }}
           />
-          <Button
-            size="sm"
-            className="bg-primary hover:bg-primary/90 gap-1.5"
-            onClick={handleStartGame}
-            disabled={startSession.isPending}
-          >
-            {startSession.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
-            {sessionId ? "重置游戏" : "开始游戏"}
-          </Button>
+          {sessionId ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 gap-1.5"
+                  disabled={startSession.isPending}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  重置游戏
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>确认重新开始？</AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-2">
+                    <span className="block">重新开始将结束当前进行中的游戏，请确保已保存你的记录。</span>
+                    <span className="block font-medium text-foreground">📌 建议：先截图或导出 PDF / CSV，再重新开始。</span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                    onClick={handleStartGame}
+                  >
+                    确认重新开始
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary/90 gap-1.5"
+              onClick={handleStartGame}
+              disabled={startSession.isPending}
+            >
+              {startSession.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+              开始游戏
+            </Button>
+          )}
           <Button
             size="sm"
             variant="outline"
