@@ -128,19 +128,19 @@ export default function Home() {
         <div className="relative z-10 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-medium mb-6">
             <Zap className="w-3 h-3" />
-            EMBA 变革管理模拟 · 多人竞技版
+            EMBA 出海管理模拟 · 多人竞技版
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4 leading-tight">
             中国企业
-            <span className="text-primary"> 出海变革</span>
+            <span className="text-primary"> 出海整合</span>
             <br />
-            模拟挑战
+            <span className="text-foreground/70 font-semibold">模拟挑战</span>
           </h1>
 
           <p className="text-muted-foreground text-sm sm:text-base lg:text-lg mb-8 leading-relaxed">
             你被派往海外，执行一场组织整合。<br className="hidden sm:block" />
-            在 60 个资源内，说服 12 位关键人物接受变革。<br className="hidden sm:block" />
+            在 60 个资源内，说服 12 位关键人物接受整合。<br className="hidden sm:block" />
             与同学同台竞技，比较策略差异，洞察组织动态。
           </p>
 
