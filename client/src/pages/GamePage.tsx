@@ -711,13 +711,25 @@ export default function GamePage() {
   useEffect(() => { saveTurnRef.current = saveTurnMutation.mutateAsync; });
   useEffect(() => { utilsRef.current = utils; });
 
-  const handleIframeLoad = () => {
+  const gameReadyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleIframeLoad = useCallback(() => {
     if (!iframeRef.current || !playerName) return;
     const win = iframeRef.current.contentWindow;
     if (!win) return;
+    // Send SET_PLAYER first, then SKIP_INTRO so the engine has the name
+    // before it tries to call revealSimulationChrome()
     win.postMessage({ type: "SET_PLAYER", name: playerName }, "*");
-    win.postMessage({ type: "SKIP_INTRO" }, "*");
-  };
+    // Small delay so the engine's message listener can process SET_PLAYER
+    setTimeout(() => {
+      try { win.postMessage({ type: "SKIP_INTRO" }, "*"); } catch (_) {}
+    }, 80);
+    // Fallback: if GAME_READY never arrives within 4 s, unblock the UI anyway
+    if (gameReadyTimeoutRef.current) clearTimeout(gameReadyTimeoutRef.current);
+    gameReadyTimeoutRef.current = setTimeout(() => {
+      setGameReady(true);
+    }, 4000);
+  }, [playerName]);
 
   const handleStartGame = useCallback(async (name?: string) => {
     const activeName = name ?? playerName;
@@ -740,6 +752,10 @@ export default function GamePage() {
   const handleMessage = useCallback(async (event: MessageEvent) => {
     if (!event.data?.type) return;
     if (event.data.type === "GAME_READY") {
+      if (gameReadyTimeoutRef.current) {
+        clearTimeout(gameReadyTimeoutRef.current);
+        gameReadyTimeoutRef.current = null;
+      }
       setGameReady(true);
       return;
     }

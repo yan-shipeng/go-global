@@ -734,13 +734,25 @@ export default function GameTestPage() {
     }
   }, [testPlayerName, startSession, setSessionId, addLog]);
 
+  const gameReadyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleIframeLoad = useCallback(() => {
     if (!iframeRef.current) return;
     const win = iframeRef.current.contentWindow;
     if (!win) return;
+    // Send SET_PLAYER first, then SKIP_INTRO after a short delay so the engine
+    // has the player name before revealSimulationChrome() is called
     win.postMessage({ type: "SET_PLAYER", name: testPlayerName }, "*");
-    win.postMessage({ type: "SKIP_INTRO" }, "*");
-    addLog("iframe loaded → SET_PLAYER + SKIP_INTRO sent", true);
+    setTimeout(() => {
+      try { win.postMessage({ type: "SKIP_INTRO" }, "*"); } catch (_) {}
+    }, 80);
+    addLog("iframe loaded → SET_PLAYER sent, SKIP_INTRO queued (+80ms)", true);
+    // Fallback: if GAME_READY never arrives within 4 s, unblock the UI anyway
+    if (gameReadyTimeoutRef.current) clearTimeout(gameReadyTimeoutRef.current);
+    gameReadyTimeoutRef.current = setTimeout(() => {
+      setGameReady(true);
+      addLog("⚠️ GAME_READY timeout — unblocking UI", false);
+    }, 4000);
   }, [testPlayerName, addLog]);
 
   const sendCheatWin = () => {
@@ -766,6 +778,10 @@ export default function GameTestPage() {
   const handleMessage = useCallback(async (event: MessageEvent) => {
     if (!event.data?.type) return;
     if (event.data.type === "GAME_READY") {
+      if (gameReadyTimeoutRef.current) {
+        clearTimeout(gameReadyTimeoutRef.current);
+        gameReadyTimeoutRef.current = null;
+      }
       setGameReady(true);
       addLog("✅ GAME_READY received", true);
       return;
