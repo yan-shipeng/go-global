@@ -31,6 +31,9 @@ import { Trophy, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, ChevronRight, B
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
+} from "recharts";
 
 // ─── CSV export helper ────────────────────────────────────────────────────────
 function escapeCsv(val: unknown): string {
@@ -103,7 +106,7 @@ interface TurnData {
   prediction: string;
   story?: string;
   deltas: { cred: number; pressure: number; converted: number };
-  movers?: Array<{ id: string; name: string; before: number; after: number }>;
+  movers?: string[] | Array<{ id: string; name: string; before: number; after: number }>;
   credAfter: number;
   pressureAfter: number;
   weeksUsed?: number;
@@ -173,6 +176,40 @@ function actionTypeLabel(type?: string | null) {
 }
 
 // ─── Turn Log component ───────────────────────────────────────────────────────
+// Status labels matching the game engine (STATUS_LABELS in engine)
+const STATUS_LABELS_MAP: Record<string, number> = {
+  "未动": 0, "意识觉醒": 1, "初步理解": 2, "主动参与": 3, "已转化": 4,
+};
+const STATUS_COLOR: Record<string, string> = {
+  "未动": "text-muted-foreground border-border bg-muted/20",
+  "意识觉醒": "text-yellow-400 border-yellow-500/30 bg-yellow-500/10",
+  "初步理解": "text-amber-400 border-amber-500/30 bg-amber-500/10",
+  "主动参与": "text-blue-400 border-blue-500/30 bg-blue-500/10",
+  "已转化": "text-green-400 border-green-500/30 bg-green-500/10",
+};
+/** Parse a mover string like "张三：未动 → 意识觉醒" into structured parts */
+function parseMoverString(s: string): { name: string; beforeLabel: string; afterLabel: string; isUpgrade: boolean } | null {
+  const m = s.match(/^(.+?)：(.+?) → (.+)$/);
+  if (!m) return null;
+  const [, name, beforeLabel, afterLabel] = m;
+  const before = STATUS_LABELS_MAP[beforeLabel.trim()] ?? -1;
+  const after = STATUS_LABELS_MAP[afterLabel.trim()] ?? -1;
+  return { name: name.trim(), beforeLabel: beforeLabel.trim(), afterLabel: afterLabel.trim(), isUpgrade: after > before };
+}
+/** Normalise movers: accept both string[] (from engine) and object[] (from DB) */
+function normaliseMoverItem(m: unknown): { name: string; beforeLabel: string; afterLabel: string; isUpgrade: boolean } | null {
+  if (typeof m === "string") return parseMoverString(m);
+  if (m && typeof m === "object") {
+    const obj = m as { name?: string; before?: number; after?: number };
+    if (obj.name != null) {
+      const statusLabels = ["未动", "意识觉醒", "初步理解", "主动参与", "已转化"];
+      const beforeLabel = statusLabels[obj.before ?? 0] ?? String(obj.before ?? 0);
+      const afterLabel = statusLabels[obj.after ?? 0] ?? String(obj.after ?? 0);
+      return { name: obj.name, beforeLabel, afterLabel, isUpgrade: (obj.after ?? 0) > (obj.before ?? 0) };
+    }
+  }
+  return null;
+}
 function normaliseTurn(h: TurnData, idx: number) {
   return {
     id: idx,
@@ -232,16 +269,77 @@ function TurnLog({ sessionId, playerName, fallbackTurns }: { sessionId: number |
       t.deltaConverted ?? "",
       t.turnScore ?? "",
       ((t.milestones as string[] | null) ?? []).join("|"),
-      ((t.movers as Array<{ name: string; before: number; after: number }> | null) ?? [])
-        .map(m => `${m.name}(${m.before}→${m.after})`).join("|"),
+      ((t.movers as unknown[] | null) ?? [])
+        .map(m => {
+          const parsed = normaliseMoverItem(m);
+          return parsed ? `${parsed.name}(${parsed.beforeLabel}→${parsed.afterLabel})` : String(m);
+        }).join("|"),
       t.story || "",
     ]);
     const name = playerName ? `${playerName}_` : "";
     downloadCsv([header, ...dataRows], `出海变革_测试_${name}session${sessionId}_回合日志.csv`);
   };
 
+  // Build trend data from turns
+  const trendData = turns.map((t, idx) => ({
+    round: t.round ?? (idx + 1),
+    converted: (t.deltaConverted as number | null) != null
+      ? turns.slice(0, idx + 1).reduce((acc, x) => acc + ((x.deltaConverted as number | null) ?? 0), 0)
+      : null,
+    cred: t.credibilityAfter ?? null,
+    pressure: t.pressureAfter ?? null,
+  }));
+  const hasTrend = trendData.some(d => d.cred != null);
+  const milestoneRounds = turns
+    .filter(t => ((t.milestones as string[] | null) ?? []).length > 0)
+    .map(t => t.round as number);
+
   return (
     <div className="space-y-3">
+      {/* Trend charts */}
+      {hasTrend && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2">
+          <div className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="text-[10px] text-muted-foreground mb-2 font-medium">已转化人数</div>
+            <ResponsiveContainer width="100%" height={80}>
+              <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="round" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} domain={[0, 12]} />
+                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} labelFormatter={(v) => `R${v}`} formatter={(v: number) => [`${v} 人`, "已转化"]} />
+                {milestoneRounds.map(r => <ReferenceLine key={r} x={r} stroke="#e0a050" strokeDasharray="3 3" strokeWidth={1} />)}
+                <Line type="monotone" dataKey="converted" stroke="#4ade80" strokeWidth={2} dot={false} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="text-[10px] text-muted-foreground mb-2 font-medium">可信度</div>
+            <ResponsiveContainer width="100%" height={80}>
+              <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="round" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} labelFormatter={(v) => `R${v}`} formatter={(v: number) => [`${v}`, "可信度"]} />
+                {milestoneRounds.map(r => <ReferenceLine key={r} x={r} stroke="#e0a050" strokeDasharray="3 3" strokeWidth={1} />)}
+                <Line type="monotone" dataKey="cred" stroke="#0d8b96" strokeWidth={2} dot={false} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="rounded-xl border border-border bg-card/40 p-3">
+            <div className="text-[10px] text-muted-foreground mb-2 font-medium">激进压力</div>
+            <ResponsiveContainer width="100%" height={80}>
+              <LineChart data={trendData} margin={{ top: 4, right: 8, bottom: 0, left: -20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="round" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 11 }} labelFormatter={(v) => `R${v}`} formatter={(v: number) => [`${v}`, "激进压力"]} />
+                {milestoneRounds.map(r => <ReferenceLine key={r} x={r} stroke="#e0a050" strokeDasharray="3 3" strokeWidth={1} />)}
+                <Line type="monotone" dataKey="pressure" stroke="#ef4444" strokeWidth={2} dot={false} connectNulls />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
       {/* CSV export button */}
       <div className="flex justify-end">
         <Button size="sm" variant="outline" className="gap-1.5 bg-card border-border text-xs" onClick={handleExportCsv}>
@@ -256,7 +354,8 @@ function TurnLog({ sessionId, playerName, fallbackTurns }: { sessionId: number |
         const targets = (t.targets as string[]) ?? [];
         const outcome = t.outcome;
         const milestones = (t.milestones as string[] | null) ?? [];
-        const movers = (t.movers as Array<{ id: string; name: string; before: number; after: number }> | null) ?? [];
+        const rawMovers = (t.movers as unknown[] | null) ?? [];
+        const movers = rawMovers.map(normaliseMoverItem).filter((m): m is NonNullable<ReturnType<typeof normaliseMoverItem>> => m !== null);
         const typeLabel = actionTypeLabel(t.actionType as string | undefined);
         const deltaConverted = (t.deltaConverted as number | null) ?? 0;
         const weeksUsed = (t.weeksUsed as number | null) ?? 0;
@@ -319,21 +418,22 @@ function TurnLog({ sessionId, playerName, fallbackTurns }: { sessionId: number |
               </div>
             )}
 
-            {/* Row 4: movers */}
+            {/* Row 4: movers — "人名：旧状态 → 新状态" */}
             {movers.length > 0 && (
-              <div className="pl-10 space-y-0.5">
-                <div className="text-[10px] text-muted-foreground font-medium mb-1">影响人物：</div>
+              <div className="pl-10 space-y-1">
+                <div className="text-[10px] text-muted-foreground font-medium">影响人物：</div>
                 <div className="flex flex-wrap gap-1.5">
-                  {movers.map((m, i) => {
-                    const delta = m.after - m.before;
-                    return (
-                      <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded border ${
-                        delta > 0 ? "border-green-500/30 bg-green-500/10 text-green-400" : "border-border bg-muted/20 text-muted-foreground"
-                      }`}>
-                        {m.name} {delta > 0 ? `+${delta}` : delta < 0 ? String(delta) : ""}
-                      </span>
-                    );
-                  })}
+                  {movers.map((m, i) => (
+                    <span key={i} className={`inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border ${
+                      m.isUpgrade ? "border-green-500/30 bg-green-500/10" : "border-red-500/30 bg-red-500/10"
+                    }`}>
+                      <span className={m.isUpgrade ? "text-green-300 font-medium" : "text-red-300 font-medium"}>{m.name}</span>
+                      <span className="text-muted-foreground">：</span>
+                      <span className={`${STATUS_COLOR[m.beforeLabel] ?? "text-muted-foreground"} px-1 rounded`}>{m.beforeLabel}</span>
+                      <span className="text-muted-foreground">→</span>
+                      <span className={`${STATUS_COLOR[m.afterLabel] ?? "text-foreground"} px-1 rounded`}>{m.afterLabel}</span>
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
@@ -873,7 +973,22 @@ export default function GameTestPage() {
           weeksUsed: turn.weeksUsed,
           turnScore: turn.turnScore,
           milestones: turn.milestones,
-          movers: turn.movers,
+          movers: (turn.movers ?? []).map((m: unknown) => {
+            if (typeof m === "string") {
+              const parsed = normaliseMoverItem(m);
+              if (parsed) {
+                const statusLabels = ["未动", "意识觉醒", "初步理解", "主动参与", "已转化"];
+                return {
+                  id: parsed.name,
+                  name: parsed.name,
+                  before: statusLabels.indexOf(parsed.beforeLabel),
+                  after: statusLabels.indexOf(parsed.afterLabel),
+                };
+              }
+              return { id: m as string, name: m as string, before: 0, after: 0 };
+            }
+            return m as { id: string; name: string; before: number; after: number };
+          }),
         });
         setLastSavedAt(new Date());
         addLog(`✅ GAME_TURN R${turn.round} saved`, true);

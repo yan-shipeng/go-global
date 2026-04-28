@@ -588,3 +588,15 @@
 - [x] Update GAME_ENGINE_URL in GameTestPage.tsx to game-engine_89a91c69.html
 - [x] Sync GameTestPage.tsx LeaderboardPanel to match GamePage.tsx (global stats + compare feature + strategy bias)
 - [x] TSC 0 errors, 8/8 tests pass
+## Phase 104: Rewrite TurnLog to replicate in-game turn log
+- [x] Add recharts import to GamePage.tsx
+- [x] Add STATUS_LABELS constant and parseMoverString() function to GamePage.tsx
+- [x] Fix TurnData.movers type to accept string[] (actual engine format)
+- [x] Fix normaliseTurn() to parse string movers into {name, beforeLabel, afterLabel, isUpgrade} objects
+- [x] Fix movers rendering in TurnLog: show "人名：旧状态 → 新状态" with colored badges
+- [x] Add 3 recharts LineCharts at top of TurnLog: 已转化人数 (green), 可信度 (teal), 激进压力 (red)
+- [x] Build trendData from turns array (credibilityAfter, pressureAfter, deltaConverted cumulative)
+- [x] Add milestone vertical reference lines on charts (yellow dashed)
+- [x] Fix CSV export movers column to handle string format
+- [x] Sync all TurnLog changes to GameTestPage.tsx
+- [x] TypeScript 0 errors, 8/8 tests pass
