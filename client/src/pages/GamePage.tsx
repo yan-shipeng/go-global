@@ -34,7 +34,7 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_98b5e349.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine_5b998c78.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-session-id";
 
 interface HiddenTiesStats {
