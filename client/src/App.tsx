@@ -27,6 +27,13 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
+      {!isGameRoute && (
+        <footer className="py-3 text-center">
+          <p className="text-[11px] text-muted-foreground/50 tracking-wide select-none">
+            Copyright &copy; Prof. Shipeng Yan
+          </p>
+        </footer>
+      )}
     </div>
   );
 }
