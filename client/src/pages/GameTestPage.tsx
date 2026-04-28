@@ -1067,6 +1067,9 @@ export default function GameTestPage() {
     const sid = sessionIdRef.current;
     if (event.data.type === "GAME_TURN" && sid !== null) {
       const turn = event.data.turn as TurnData;
+      // Show turn overlay immediately — before DB write so there’s zero perceived delay
+      setTurnOverlay(turn);
+      // DB write is fire-and-forget; runs in background while overlay is visible
       try {
         await saveTurnRef.current({
           sessionId: sid,
@@ -1109,8 +1112,6 @@ export default function GameTestPage() {
         const msg = err instanceof Error ? err.message : String(err);
         addLog(`❌ saveTurn R${turn.round} FAILED: ${msg}`, false);
       }
-      // Show turn overlay with action summary
-      setTurnOverlay(turn);
     }
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
