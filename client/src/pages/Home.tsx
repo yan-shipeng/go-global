@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link, useLocation } from "wouter";
@@ -13,6 +13,17 @@ export default function Home() {
   const [step, setStep] = useState<HomeStep>("landing");
   const [nameInput, setNameInput] = useState(playerName ?? "");
   const [, navigate] = useLocation();
+
+  // ── Prefetch game engine bundle when user lands on home page ───────────────
+  useEffect(() => {
+    // Trigger the /game route chunk to be fetched in background
+    // so the iframe srcdoc is already in the JS bundle when user navigates
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = "/game";
+    document.head.appendChild(link);
+    return () => { try { document.head.removeChild(link); } catch { /* ignore */ } };
+  }, []);
 
   // ── Step: Name Entry ──────────────────────────────────────────────────────
   const handleNameConfirm = (e: React.FormEvent) => {

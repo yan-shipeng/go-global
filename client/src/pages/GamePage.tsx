@@ -606,11 +606,13 @@ function FullResultPage({
   result,
   sessionId,
   playerName,
+  isSaved,
   onRestart,
 }: {
   result: GameResult;
   sessionId: number | null;
   playerName: string;
+  isSaved?: boolean;
   onRestart: () => void;
 }) {
   const totalScore = Number(result.totalScore) || 0;
@@ -650,7 +652,15 @@ function FullResultPage({
             <div className={`text-lg font-bold ${accentClass} leading-tight`}>
               {narrative?.title ?? (isWin ? "游戏结束 · 变革成功" : "游戏结束 · 复盘时刻")}
             </div>
-            <div className="text-xs text-muted-foreground">{playerName}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{playerName}</span>
+              {isSaved && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-green-400 bg-green-500/10 border border-green-500/20 rounded-full px-2 py-0.5 animate-in fade-in duration-500">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  已保存到排行榜
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -865,6 +875,8 @@ export default function GamePage() {
   const [gameReady, setGameReady] = useState<boolean>(false);
   // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
   const [gameEnding, setGameEnding] = useState(false);
+  // Track whether the game result was saved successfully to DB
+  const [gameSaved, setGameSaved] = useState(false);
   // Track last auto-save time for UX indicator
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
@@ -1036,6 +1048,7 @@ export default function GamePage() {
           await utilsRef.current.game.getSession.invalidate({ sessionId: currentSid });
           await utilsRef.current.leaderboard.list.invalidate();
           toast.success(`🎮 游戏结束！综合得分 ${Number(result.totalScore) || 0} 分，记录已保存`);
+          setGameSaved(true);
         } catch (err) {
           console.error("[endSession] failed:", err);
           toast.error("保存游戏记录失败，请截图联系管理员");
@@ -1165,11 +1178,13 @@ export default function GamePage() {
               result={gameResult}
               sessionId={frozenSessionId}
               playerName={playerName}
+              isSaved={gameSaved}
               onRestart={() => {
                 setGameResult(null);
                 setFrozenSessionId(null);
                 setSessionId(null);
                 sessionIdRef.current = null;
+                setGameSaved(false);
                 localStorage.removeItem(GAME_RESULT_KEY);
                 localStorage.removeItem(FROZEN_SESSION_KEY);
                 handleStartGame();
