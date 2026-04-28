@@ -728,6 +728,8 @@ export default function GamePage() {
   const [gameReady, setGameReady] = useState<boolean>(false);
   // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
   const [gameEnding, setGameEnding] = useState(false);
+  // Track last auto-save time for UX indicator
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   // Persist sessionId in both state and localStorage so it survives re-renders
   const [sessionId, setSessionIdState] = useState<number | null>(() => {
@@ -765,6 +767,19 @@ export default function GamePage() {
   useEffect(() => { utilsRef.current = utils; });
 
   const gameReadyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Warn before page unload when game is active
+  useEffect(() => {
+    const isActive = sessionId !== null && !gameResult && !gameEnding;
+    if (!isActive) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "游戏进行中，刷新将无法继续当前进度（回合记录已自动保存）";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [sessionId, gameResult, gameEnding]);
 
   const handleIframeLoad = useCallback(() => {
     if (!iframeRef.current || !playerName) return;
@@ -836,6 +851,7 @@ export default function GamePage() {
           milestones: turn.milestones,
           movers: turn.movers,
         });
+        setLastSavedAt(new Date());
       } catch {
         // Non-blocking
       }
@@ -908,6 +924,15 @@ export default function GamePage() {
               <Badge variant="outline" className="text-xs text-primary border-primary/30">
                 游戏进行中
               </Badge>
+            )}
+            {sessionId !== null && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                {lastSavedAt ? (
+                  <>✓ 已自动保存（回合记录安全）</>
+                ) : (
+                  <>• 每回合自动保存</>
+                )}
+              </span>
             )}
           </div>
           <div className="flex items-center gap-2">

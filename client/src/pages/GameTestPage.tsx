@@ -740,6 +740,8 @@ export default function GameTestPage() {
   const [log, setLog] = useState<LogEntry[]>([]);
   // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
   const [gameEnding, setGameEnding] = useState(false);
+  // Track last auto-save time for UX indicator
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const addLog = useCallback((msg: string, ok: boolean) => {
     const ts = new Date().toLocaleTimeString("zh-CN", { hour12: false });
@@ -785,6 +787,19 @@ export default function GameTestPage() {
   }, [testPlayerName, startSession, setSessionId, addLog]);
 
   const gameReadyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Warn before page unload when game is active
+  useEffect(() => {
+    const isActive = sessionId !== null && !gameResult && !gameEnding;
+    if (!isActive) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "游戏进行中，刷新将无法继续当前进度（回合记录已自动保存）";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [sessionId, gameResult, gameEnding]);
 
   const handleIframeLoad = useCallback(() => {
     if (!iframeRef.current) return;
@@ -860,6 +875,7 @@ export default function GameTestPage() {
           milestones: turn.milestones,
           movers: turn.movers,
         });
+        setLastSavedAt(new Date());
         addLog(`✅ GAME_TURN R${turn.round} saved`, true);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -999,6 +1015,15 @@ export default function GameTestPage() {
           {sessionId != null
             ? <Badge variant="outline" className="text-green-400 border-green-500/30 bg-green-500/10">#{sessionId}</Badge>
             : <Badge variant="outline" className="text-muted-foreground">未创建</Badge>}
+          {sessionId !== null && !gameResult && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1 ml-2">
+              {lastSavedAt ? (
+                <>✓ 已自动保存（回合记录安全）</>
+              ) : (
+                <>• 每回合自动保存</>
+              )}
+            </span>
+          )}
           <span className="text-muted-foreground ml-2">引擎：</span>
           {gameResult != null
             ? <Badge variant="outline" className="text-primary border-primary/30 bg-primary/10">结算中</Badge>
