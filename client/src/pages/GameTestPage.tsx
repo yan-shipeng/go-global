@@ -185,15 +185,24 @@ function actionTypeLabel(type?: string | null) {
 }
 
 // ─── Turn Overlay component ─────────────────────────────────────────────────
+// Action type visual config (shared with GamePage)
+const ACTION_TYPE_CONFIG: Record<string, { label: string; icon: string; color: string; glow: string }> = {
+  demonstrate: { label: "示范行动", icon: "🎯", color: "text-cyan-300",    glow: "rgba(34,211,238,0.18)" },
+  dialogue:    { label: "深度对话", icon: "💬", color: "text-blue-300",    glow: "rgba(96,165,250,0.18)" },
+  empower:     { label: "赋能支持", icon: "⚡",  color: "text-yellow-300",  glow: "rgba(253,224,71,0.15)" },
+  coalition:   { label: "联盟构建", icon: "🤝", color: "text-purple-300",  glow: "rgba(192,132,252,0.18)" },
+  structure:   { label: "制度推进", icon: "🏛", color: "text-emerald-300", glow: "rgba(52,211,153,0.18)" },
+  pressure:    { label: "施压推进", icon: "⚠️", color: "text-red-300",     glow: "rgba(248,113,113,0.18)" },
+  interview:   { label: "访谈了解", icon: "🔍", color: "text-amber-300",   glow: "rgba(251,191,36,0.15)" },
+};
+
 function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => void }) {
-  const converted = turn.deltas?.converted ?? 0;
-  const cred = turn.deltas?.cred ?? 0;
-  const pressure = turn.deltas?.pressure ?? 0;
-  const movers = (turn.movers ?? []).map(normaliseMoverItem).filter(Boolean) as ReturnType<typeof normaliseMoverItem>[];
-  const upgrades = movers.filter(m => m!.isUpgrade);
+  const cfg = ACTION_TYPE_CONFIG[turn.actionType ?? ""] ?? { label: turn.actionType ?? "", icon: "▶", color: "text-primary", glow: "rgba(13,139,150,0.18)" };
+  const targets: string[] = Array.isArray(turn.targets) ? turn.targets : [];
+  const weeksUsed = turn.weeksUsed ?? null;
 
   useEffect(() => {
-    const t = setTimeout(onDismiss, 2500);
+    const t = setTimeout(onDismiss, 1800);
     return () => clearTimeout(t);
   }, [onDismiss]);
 
@@ -203,76 +212,60 @@ function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => voi
     return () => window.removeEventListener("keydown", handler);
   }, [onDismiss]);
 
-  const actionTypeMap: Record<string, string> = {
-    demonstrate: "示范行动", dialogue: "深度对话", empower: "赋能支持",
-    coalition: "联盟构建", structure: "制度推进", pressure: "施压推进", interview: "访谈了解",
-  };
-  const typeLabel = turn.actionType ? (actionTypeMap[turn.actionType] ?? turn.actionType) : null;
-
   return (
     <div
       className="absolute inset-0 z-50 flex items-center justify-center cursor-pointer"
-      style={{ background: "rgba(2,10,18,0.82)", backdropFilter: "blur(6px)" }}
+      style={{ background: "rgba(2,8,15,0.88)", backdropFilter: "blur(8px)" }}
       onClick={onDismiss}
     >
       <div
-        className="relative max-w-sm w-full mx-4 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+        className="absolute w-80 h-80 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${cfg.glow} 0%, transparent 70%)`, animation: "overlayGlow 0.6s ease-out both" }}
+      />
+      <div
+        className="relative w-72 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, rgba(13,139,150,0.12) 0%, rgba(6,17,26,0.95) 60%)",
-          animation: "turnOverlayIn 0.35s cubic-bezier(0.22,1,0.36,1) both",
+          background: "linear-gradient(160deg, rgba(13,30,42,0.98) 0%, rgba(6,17,26,0.99) 100%)",
+          animation: "turnOverlayIn 0.4s cubic-bezier(0.22,1,0.36,1) both",
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, #0d8b96, transparent)" }} />
-        <div className="px-5 pt-4 pb-5 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="text-[10px] font-semibold tracking-widest text-primary/70 uppercase mb-0.5">回合 {turn.round}</div>
-              <div className="text-base font-bold text-foreground leading-tight">{turn.actionLabel}</div>
-              {typeLabel && <div className="text-xs text-muted-foreground mt-0.5">{typeLabel}</div>}
-            </div>
-            {converted > 0 && (
-              <div className="shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-full border-2 border-green-500/40 bg-green-500/10">
-                <span className="text-lg font-black text-green-400 leading-none">+{converted}</span>
-                <span className="text-[9px] text-green-400/70 leading-none mt-0.5">转化</span>
-              </div>
-            )}
-          </div>
-          {turn.story && (
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 border-l-2 border-primary/30 pl-3 italic">{turn.story}</p>
-          )}
-          <div className="flex gap-3">
-            <div className={`flex-1 rounded-lg px-3 py-2 text-center ${cred >= 0 ? "bg-primary/10 border border-primary/20" : "bg-red-500/10 border border-red-500/20"}`}>
-              <div className={`text-lg font-bold leading-none ${cred >= 0 ? "text-primary" : "text-red-400"}`}>{cred >= 0 ? "+" : ""}{cred}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">可信度</div>
-            </div>
-            <div className={`flex-1 rounded-lg px-3 py-2 text-center ${pressure <= 0 ? "bg-green-500/10 border border-green-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
-              <div className={`text-lg font-bold leading-none ${pressure <= 0 ? "text-green-400" : "text-red-400"}`}>{pressure >= 0 ? "+" : ""}{pressure}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">压力</div>
-            </div>
-            {turn.weeksUsed != null && (
-              <div className="flex-1 rounded-lg px-3 py-2 text-center bg-muted/20 border border-border">
-                <div className="text-lg font-bold leading-none text-amber-400">-{turn.weeksUsed}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">资源</div>
-              </div>
-            )}
-          </div>
-          {upgrades.length > 0 && (
-            <div className="space-y-1">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">人物进展</div>
-              <div className="flex flex-wrap gap-1.5">
-                {upgrades.map((m, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-green-500/10 border border-green-500/20 text-green-300 rounded-full px-2 py-0.5">
-                    {m!.name} {m!.beforeLabel} → {m!.afterLabel}
-                  </span>
-                ))}
-              </div>
+        <div className="h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${cfg.glow.replace(/,[^,]+\)$/, ",1)")}, transparent)` }} />
+        <div className="px-6 pt-5 pb-6 flex flex-col items-center text-center gap-4">
+          <div className="text-[10px] font-semibold tracking-[0.2em] text-muted-foreground/60 uppercase">回合 {turn.round}</div>
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl"
+            style={{
+              background: cfg.glow,
+              border: `1px solid ${cfg.glow.replace(/,[^,]+\)$/, ",0.5)")}`,
+              animation: "iconPop 0.45s cubic-bezier(0.34,1.56,0.64,1) 0.1s both",
+            }}
+          >{cfg.icon}</div>
+          <div className={`text-xs font-semibold tracking-wider uppercase ${cfg.color}`}>{cfg.label}</div>
+          <div className="text-xl font-black text-foreground leading-tight px-2">{turn.actionLabel}</div>
+          {targets.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-1.5">
+              {targets.map((t, i) => (
+                <span key={i} className="inline-flex items-center gap-1 text-xs border border-white/10 bg-white/5 text-muted-foreground rounded-full px-2.5 py-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary/70 shrink-0" />{t}
+                </span>
+              ))}
             </div>
           )}
-          <div className="text-center text-[10px] text-muted-foreground/50 pt-1">点击任意处 / 按任意键跳过</div>
+          {weeksUsed !== null && (
+            <div className="flex items-center gap-1.5 text-xs text-amber-400/80">
+              <span className="text-base">⏱</span>
+              消耗 <span className="font-bold text-amber-400">{weeksUsed}</span> 资源
+            </div>
+          )}
+          <div className="text-[10px] text-muted-foreground/35 mt-1">按任意键 / 点击跳过</div>
         </div>
       </div>
-      <style>{`@keyframes turnOverlayIn { from { opacity:0; transform:translateY(24px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
+      <style>{`
+        @keyframes turnOverlayIn { from { opacity:0; transform:translateY(32px) scale(0.93); } to { opacity:1; transform:translateY(0) scale(1); } }
+        @keyframes iconPop { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+        @keyframes overlayGlow { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
+      `}</style>
     </div>
   );
 }
@@ -944,7 +937,10 @@ export default function GameTestPage() {
   const [gameEnding, setGameEnding] = useState(false);
   // Turn overlay: shown after each GAME_TURN with action summary
   const [turnOverlay, setTurnOverlay] = useState<TurnData | null>(null);
-  const dismissTurnOverlay = useCallback(() => setTurnOverlay(null), []);
+  const dismissTurnOverlay = useCallback(() => {
+    setTurnOverlay(null);
+    try { iframeRef.current?.contentWindow?.postMessage({ type: "OVERLAY_DISMISSED" }, "*"); } catch (_) {}
+  }, []);
   // Track last auto-save time for UX indicator
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 

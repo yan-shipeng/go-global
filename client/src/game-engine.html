@@ -4164,6 +4164,27 @@ function runTurn(){
   state.selectedAction = null;
   state.selectedTargets = [];
   postTurnData(state.history[state.history.length-1]);
+  // Phase 106: delay showModal until React overlay dismisses (OVERLAY_DISMISSED).
+  // If not embedded in a parent frame, fall back to immediate showModal.
+  var _isEmbedded = (function(){ try{ return window.parent !== window; }catch(_){ return false; } })();
+  if(_isEmbedded){
+    var _pendingEndNow = checkEnding();
+    if(_pendingEndNow) state._pendingEnd = true;
+    render();
+    var _overlayHandler = function(ev){
+      if(!ev.data || ev.data.type !== 'OVERLAY_DISMISSED') return;
+      window.removeEventListener('message', _overlayHandler);
+      if(clearTimeout) clearTimeout(_overlayFallback);
+      showModal();
+    };
+    var _overlayFallback = setTimeout(function(){
+      window.removeEventListener('message', _overlayHandler);
+      var modal = el('impactModal');
+      if(modal && !modal.classList.contains('show')) showModal();
+    }, 4000);
+    window.addEventListener('message', _overlayHandler);
+    return;
+  }
   // Phase 70: show last-round feedback modal before jumping to ending screen
   if(checkEnding()){
     state._pendingEnd = true;

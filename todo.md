@@ -610,3 +610,8 @@
 - [x] Wire GAME_TURN message handler to show overlay with turn summary data
 - [x] Auto-dismiss after 2.5s; dismiss on any keypress or click
 - [x] Apply same to GameTestPage.tsx
+
+## Phase 106: Turn Overlay Redesign + Ordering Fix
+- [x] Patch game engine: delay showModal until React overlay is dismissed (OVERLAY_DISMISSED postMessage)
+- [x] Redesign TurnOverlay to emphasize action execution (action name, type, targets) — not results
+- [x] Fix ordering: React overlay first, then engine result modal
