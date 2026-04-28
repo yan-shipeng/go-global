@@ -42,7 +42,7 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_5b998c78.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine-patch-intro_09b70f64.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-test-session-id";
 
 interface HiddenTiesStats {
@@ -987,15 +987,29 @@ export default function GameTestPage() {
               onRestart={handleStartGame}
             />
           ) : sessionId !== null ? (
-            <iframe
-              key={iframeKey}
-              ref={iframeRef}
-              src={GAME_ENGINE_URL}
-              className="w-full h-full"
-              onLoad={handleIframeLoad}
-              sandbox="allow-scripts allow-forms allow-popups allow-downloads"
-              title="game-engine-test"
-            />
+            <div className="relative w-full h-full">
+              {/* Loading overlay — always rendered; opacity=0 when ready so it fades out */}
+              <div
+                className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 transition-opacity duration-500"
+                style={{
+                  background: "var(--background)",
+                  opacity: gameReady ? 0 : 1,
+                  pointerEvents: gameReady ? "none" : "auto",
+                }}
+              >
+                <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                <p className="text-sm text-muted-foreground">正在加载游戏…</p>
+              </div>
+              <iframe
+                key={iframeKey}
+                ref={iframeRef}
+                src={GAME_ENGINE_URL}
+                className="w-full h-full"
+                onLoad={handleIframeLoad}
+                sandbox="allow-scripts allow-forms allow-popups allow-downloads"
+                title="game-engine-test"
+              />
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground text-sm">
               <div className="text-3xl">🎮</div>

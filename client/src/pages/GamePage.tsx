@@ -34,7 +34,7 @@ function downloadCsv(rows: unknown[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-const GAME_ENGINE_URL = "/manus-storage/game-engine_5b998c78.html?autoStart=1";
+const GAME_ENGINE_URL = "/manus-storage/game-engine-patch-intro_09b70f64.html?autoStart=1";
 const SESSION_ID_KEY = "china-outbound-session-id";
 
 interface HiddenTiesStats {
@@ -713,7 +713,8 @@ export default function GamePage() {
   const [gameResult, setGameResult] = useState<GameResult | null>(null);
   const [frozenSessionId, setFrozenSessionId] = useState<number | null>(null);
   const [iframeKey, setIframeKey] = useState(0);
-  const [gameReady, setGameReady] = useState<boolean | null>(null);
+  // Start as false so overlay covers iframe from first render — prevents intro flash
+  const [gameReady, setGameReady] = useState<boolean>(false);
   // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
   const [gameEnding, setGameEnding] = useState(false);
 
@@ -966,19 +967,18 @@ export default function GamePage() {
       ) : sessionId !== null ? (
         /* Game iframe */
         <div className="flex-1 relative">
-          {gameReady !== null && (
-            <div
-              className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 transition-opacity duration-500"
-              style={{
-                background: "var(--background)",
-                opacity: gameReady ? 0 : 1,
-                pointerEvents: gameReady ? "none" : "auto",
-              }}
-            >
-              <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-              <p className="text-sm text-muted-foreground">正在加载游戏…</p>
-            </div>
-          )}
+          {/* Loading overlay — always rendered; opacity=0 when ready so it fades out */}
+          <div
+            className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-4 transition-opacity duration-500"
+            style={{
+              background: "var(--background)",
+              opacity: gameReady ? 0 : 1,
+              pointerEvents: gameReady ? "none" : "auto",
+            }}
+          >
+            <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">正在加载游戏…</p>
+          </div>
           <iframe
             key={iframeKey}
             ref={iframeRef}
