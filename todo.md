@@ -604,3 +604,9 @@
 ## Phase 106: Fix result page navigation
 - [x] Persist gameResult + frozenSessionId to localStorage so result page survives navigation to /history
 - [x] Add "← 返回结算页" button in HistoryPage when a recent result exists in localStorage
+
+## Phase 105: Turn Transition Animation Overlay
+- [x] Add TurnOverlay component — cool slide-in card after each GAME_TURN, skippable by any key/click
+- [x] Wire GAME_TURN message handler to show overlay with turn summary data
+- [x] Auto-dismiss after 2.5s; dismiss on any keypress or click
+- [x] Apply same to GameTestPage.tsx

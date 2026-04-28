@@ -184,6 +184,99 @@ function actionTypeLabel(type?: string | null) {
   return type ? (map[type] ?? type) : null;
 }
 
+// ─── Turn Overlay component ─────────────────────────────────────────────────
+function TurnOverlay({ turn, onDismiss }: { turn: TurnData; onDismiss: () => void }) {
+  const converted = turn.deltas?.converted ?? 0;
+  const cred = turn.deltas?.cred ?? 0;
+  const pressure = turn.deltas?.pressure ?? 0;
+  const movers = (turn.movers ?? []).map(normaliseMoverItem).filter(Boolean) as ReturnType<typeof normaliseMoverItem>[];
+  const upgrades = movers.filter(m => m!.isUpgrade);
+
+  useEffect(() => {
+    const t = setTimeout(onDismiss, 2500);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+
+  useEffect(() => {
+    const handler = () => onDismiss();
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onDismiss]);
+
+  const actionTypeMap: Record<string, string> = {
+    demonstrate: "示范行动", dialogue: "深度对话", empower: "赋能支持",
+    coalition: "联盟构建", structure: "制度推进", pressure: "施压推进", interview: "访谈了解",
+  };
+  const typeLabel = turn.actionType ? (actionTypeMap[turn.actionType] ?? turn.actionType) : null;
+
+  return (
+    <div
+      className="absolute inset-0 z-50 flex items-center justify-center cursor-pointer"
+      style={{ background: "rgba(2,10,18,0.82)", backdropFilter: "blur(6px)" }}
+      onClick={onDismiss}
+    >
+      <div
+        className="relative max-w-sm w-full mx-4 rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
+        style={{
+          background: "linear-gradient(145deg, rgba(13,139,150,0.12) 0%, rgba(6,17,26,0.95) 60%)",
+          animation: "turnOverlayIn 0.35s cubic-bezier(0.22,1,0.36,1) both",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="h-0.5 w-full" style={{ background: "linear-gradient(90deg, #0d8b96, transparent)" }} />
+        <div className="px-5 pt-4 pb-5 space-y-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[10px] font-semibold tracking-widest text-primary/70 uppercase mb-0.5">回合 {turn.round}</div>
+              <div className="text-base font-bold text-foreground leading-tight">{turn.actionLabel}</div>
+              {typeLabel && <div className="text-xs text-muted-foreground mt-0.5">{typeLabel}</div>}
+            </div>
+            {converted > 0 && (
+              <div className="shrink-0 flex flex-col items-center justify-center w-12 h-12 rounded-full border-2 border-green-500/40 bg-green-500/10">
+                <span className="text-lg font-black text-green-400 leading-none">+{converted}</span>
+                <span className="text-[9px] text-green-400/70 leading-none mt-0.5">转化</span>
+              </div>
+            )}
+          </div>
+          {turn.story && (
+            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 border-l-2 border-primary/30 pl-3 italic">{turn.story}</p>
+          )}
+          <div className="flex gap-3">
+            <div className={`flex-1 rounded-lg px-3 py-2 text-center ${cred >= 0 ? "bg-primary/10 border border-primary/20" : "bg-red-500/10 border border-red-500/20"}`}>
+              <div className={`text-lg font-bold leading-none ${cred >= 0 ? "text-primary" : "text-red-400"}`}>{cred >= 0 ? "+" : ""}{cred}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">可信度</div>
+            </div>
+            <div className={`flex-1 rounded-lg px-3 py-2 text-center ${pressure <= 0 ? "bg-green-500/10 border border-green-500/20" : "bg-red-500/10 border border-red-500/20"}`}>
+              <div className={`text-lg font-bold leading-none ${pressure <= 0 ? "text-green-400" : "text-red-400"}`}>{pressure >= 0 ? "+" : ""}{pressure}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">压力</div>
+            </div>
+            {turn.weeksUsed != null && (
+              <div className="flex-1 rounded-lg px-3 py-2 text-center bg-muted/20 border border-border">
+                <div className="text-lg font-bold leading-none text-amber-400">-{turn.weeksUsed}</div>
+                <div className="text-[10px] text-muted-foreground mt-0.5">资源</div>
+              </div>
+            )}
+          </div>
+          {upgrades.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">人物进展</div>
+              <div className="flex flex-wrap gap-1.5">
+                {upgrades.map((m, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 text-xs bg-green-500/10 border border-green-500/20 text-green-300 rounded-full px-2 py-0.5">
+                    {m!.name} {m!.beforeLabel} → {m!.afterLabel}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="text-center text-[10px] text-muted-foreground/50 pt-1">点击任意处 / 按任意键跳过</div>
+        </div>
+      </div>
+      <style>{`@keyframes turnOverlayIn { from { opacity:0; transform:translateY(24px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
+    </div>
+  );
+}
+
 // ─── Turn Log component ───────────────────────────────────────────────────────
 // Status labels matching the game engine (STATUS_LABELS in engine)
 const STATUS_LABELS_MAP: Record<string, number> = {
@@ -849,6 +942,9 @@ export default function GameTestPage() {
   const [log, setLog] = useState<LogEntry[]>([]);
   // Transition overlay: shown immediately on GAME_ENDED to hide iframe flash
   const [gameEnding, setGameEnding] = useState(false);
+  // Turn overlay: shown after each GAME_TURN with action summary
+  const [turnOverlay, setTurnOverlay] = useState<TurnData | null>(null);
+  const dismissTurnOverlay = useCallback(() => setTurnOverlay(null), []);
   // Track last auto-save time for UX indicator
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
@@ -1005,6 +1101,8 @@ export default function GameTestPage() {
         const msg = err instanceof Error ? err.message : String(err);
         addLog(`❌ saveTurn R${turn.round} FAILED: ${msg}`, false);
       }
+      // Show turn overlay with action summary
+      setTurnOverlay(turn);
     }
     if (event.data.type === "GAME_ENDED") {
       const result = event.data.result as GameResult;
@@ -1202,6 +1300,10 @@ export default function GameTestPage() {
                 sandbox="allow-scripts allow-forms allow-popups allow-downloads allow-same-origin"
                 title="game-engine-test"
               />
+              {/* Turn result overlay */}
+              {turnOverlay && (
+                <TurnOverlay turn={turnOverlay} onDismiss={dismissTurnOverlay} />
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground text-sm">
