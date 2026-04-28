@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trophy, RotateCcw, UserRound, ChevronRight, Loader2, BookOpen, Users, List, FileDown, Download, Home } from "lucide-react";
+import { Trophy, RotateCcw, UserRound, Loader2, BookOpen, Users, List, FileDown, Download, Home } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
@@ -671,11 +671,6 @@ function FullResultPage({
             <RotateCcw className="w-3.5 h-3.5" />
             再玩一局
           </Button>
-          <Link href="/history">
-            <Button size="sm" variant="outline" className="gap-1 bg-card">
-              我的记录 <ChevronRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
           <Link href="/">
             <Button size="sm" variant="outline" className="gap-1.5 bg-card">
               <Home className="w-3.5 h-3.5" />
@@ -1175,6 +1170,8 @@ export default function GamePage() {
                 setFrozenSessionId(null);
                 setSessionId(null);
                 sessionIdRef.current = null;
+                localStorage.removeItem(GAME_RESULT_KEY);
+                localStorage.removeItem(FROZEN_SESSION_KEY);
                 handleStartGame();
               }}
             />
