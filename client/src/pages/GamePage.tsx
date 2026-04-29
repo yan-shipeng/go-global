@@ -4,6 +4,7 @@
  * one unified full-screen page with 结局复盘 + 本局总览 + 排行榜 + 回合日志.
  */
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import confetti from "canvas-confetti";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -119,6 +120,27 @@ interface TurnData {
   turnScore?: number;
   milestones?: string[];
   convertedAfter?: number;
+}
+
+// ─── Confetti burst for each newly converted character ─────────────────────
+function fireConversionConfetti(count: number) {
+  if (count <= 0) return;
+  const colors = ["#4ade80", "#22d3ee", "#facc15", "#f472b6", "#a78bfa"];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { x: 0.3 + Math.random() * 0.4, y: 0.55 },
+        colors,
+        startVelocity: 45,
+        gravity: 1.2,
+        ticks: 200,
+        scalar: 0.9,
+        zIndex: 9999,
+      });
+    }, i * 320);
+  }
 }
 
 // ─── Strategy bias helper ────────────────────────────────────────────────────
@@ -1187,8 +1209,12 @@ export default function GamePage() {
     const sid = sessionIdRef.current;
     if (event.data.type === "GAME_TURN" && sid !== null) {
       const turn = event.data.turn as TurnData;
-      // Show turn overlay immediately — before DB write so there’s zero perceived delay
+      // Show turn overlay immediately — before DB write so there's zero perceived delay
       setTurnOverlay(turn);
+      // Fire confetti for each newly converted character (staggered)
+      if (turn.deltas.converted > 0) {
+        fireConversionConfetti(turn.deltas.converted);
+      }
       // DB write is fire-and-forget; runs in background while overlay is visible
       try {
         await saveTurnRef.current({

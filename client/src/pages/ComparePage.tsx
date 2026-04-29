@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, GitCompare } from "lucide-react";
+import { ArrowLeft, GitCompare, Home } from "lucide-react";
 import { Link } from "wouter";
 
 function ScoreBadge({ score }: { score: number | null }) {
@@ -48,7 +48,13 @@ export default function ComparePage() {
         <Link href="/leaderboard">
           <Button variant="ghost" size="sm" className="gap-1.5 shrink-0">
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">排行榜</span>
+            <span className="hidden sm:inline">返回排行榜</span>
+          </Button>
+        </Link>
+        <Link href="/">
+          <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+            <Home className="w-4 h-4" />
+            <span className="hidden sm:inline">主页</span>
           </Button>
         </Link>
         <div>
