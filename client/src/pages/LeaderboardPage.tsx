@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, TrendingUp, Users, Zap, GitCompare } from "lucide-react";
+import { Trophy, TrendingUp, Users, Zap, GitCompare, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { usePlayerName } from "@/hooks/usePlayerName";
 
@@ -48,15 +48,23 @@ export default function LeaderboardPage() {
           </h1>
           <p className="text-muted-foreground mt-1 text-sm">所有玩家的综合得分排名</p>
         </div>
-        {selectedIds.length === 2 && (
-          <Link href={`/compare/${selectedIds[0]}/${selectedIds[1]}`}>
-            <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90 shrink-0">
-              <GitCompare className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">对比选中的两局</span>
-              <span className="sm:hidden">对比</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href="/">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">返回主页</span>
             </Button>
           </Link>
-        )}
+          {selectedIds.length === 2 && (
+            <Link href={`/compare/${selectedIds[0]}/${selectedIds[1]}`}>
+              <Button size="sm" className="gap-1.5 bg-primary hover:bg-primary/90">
+                <GitCompare className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">对比选中的两局</span>
+                <span className="sm:hidden">对比</span>
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Stats cards */}
