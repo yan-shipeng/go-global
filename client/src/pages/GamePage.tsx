@@ -200,7 +200,84 @@ function actionTypeLabel(type?: string | null) {
   return type ? (map[type] ?? type) : null;
 }
 
-// ─── Turn Overlay component ─────────────────────────────────────────────────
+// ─── Conversion Popup component ──────────────────────────────────────────────────
+interface ConversionData {
+  count: number;
+  names: string[];
+}
+
+function ConversionPopup({ data, onDismiss }: { data: ConversionData; onDismiss: () => void }) {
+  const [visible, setVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    // Fade in
+    requestAnimationFrame(() => setVisible(true));
+    // Auto-dismiss after 2.8s
+    const t = setTimeout(onDismiss, 2800);
+    return () => clearTimeout(t);
+  }, [onDismiss]);
+
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => { e.preventDefault(); onDismiss(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onDismiss]);
+
+  return (
+    <div
+      onClick={onDismiss}
+      className="absolute inset-0 z-50 flex items-center justify-center cursor-pointer"
+      style={{
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(4px)",
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.25s ease",
+      }}
+    >
+      <div
+        style={{
+          transform: visible ? "scale(1) translateY(0)" : "scale(0.85) translateY(20px)",
+          transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1)",
+          background: "linear-gradient(135deg, rgba(16,40,28,0.97) 0%, rgba(10,30,20,0.99) 100%)",
+          border: "1px solid rgba(74,222,128,0.4)",
+          boxShadow: "0 0 60px rgba(74,222,128,0.25), 0 20px 60px rgba(0,0,0,0.6)",
+        }}
+        className="rounded-2xl px-10 py-8 max-w-sm w-full mx-4 text-center"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Glow ring */}
+        <div className="relative flex items-center justify-center mb-5">
+          <div
+            style={{ background: "rgba(74,222,128,0.15)", boxShadow: "0 0 40px rgba(74,222,128,0.4)" }}
+            className="w-20 h-20 rounded-full flex items-center justify-center text-4xl animate-pulse"
+          >
+            ✨
+          </div>
+        </div>
+        <div className="text-green-400 font-bold text-lg mb-1 tracking-wide">
+          {data.count === 1 ? "成功转化" : `转化 ${data.count} 人`}
+        </div>
+        {data.names.length > 0 && (
+          <div className="flex flex-wrap gap-2 justify-center mt-3 mb-4">
+            {data.names.map(name => (
+              <span
+                key={name}
+                className="px-3 py-1 rounded-full text-sm font-semibold text-green-300"
+                style={{ background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.35)" }}
+              >
+                ✓ {name}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="text-xs text-muted-foreground/60 mt-3">点击任意处或按键继续</div>
+      </div>
+    </div>
+  );
+}
+
+
+// ─── Turn Overlay component ────────────────────────────────────────────────────
 // Action type visual config — keys match engine Chinese type values
 const ACTION_TYPE_CONFIG: Record<string, { icon: string; hex: string; bg: string }> = {
   "示范": { icon: "🎯", hex: "#22d3ee", bg: "from-cyan-950/80 to-slate-950/90" },
@@ -1099,13 +1176,44 @@ export default function GamePage() {
   const [gameSaved, setGameSaved] = useState(false);
   // Turn overlay: shown after each GAME_TURN with action summary
   const [turnOverlay, setTurnOverlay] = useState<TurnData | null>(null);
-  const dismissTurnOverlay = useCallback(() => {
-    setTurnOverlay(null);
-    // Signal engine to show its result modal now
+  // Conversion popup: shown after action overlay when converted > 0
+  const [conversionPopup, setConversionPopup] = useState<ConversionData | null>(null);
+
+  const sendOverlayDismissed = useCallback(() => {
     try {
       iframeRef.current?.contentWindow?.postMessage({ type: "OVERLAY_DISMISSED" }, "*");
     } catch (_) { /* cross-origin safe */ }
   }, []);
+
+  const dismissConversionPopup = useCallback(() => {
+    setConversionPopup(null);
+    // Now signal engine to show its result modal
+    sendOverlayDismissed();
+  }, [sendOverlayDismissed]);
+
+  const dismissTurnOverlay = useCallback(() => {
+    const pending = turnOverlay;
+    setTurnOverlay(null);
+    if (pending && pending.deltas.converted > 0) {
+      // Extract names of newly converted characters from movers
+      const names: string[] = [];
+      if (pending.movers) {
+        for (const m of pending.movers) {
+          if (typeof m === "object" && m !== null && "after" in m && "before" in m) {
+            const mo = m as { id: string; name: string; before: number; after: number };
+            if (mo.after === 4 && mo.before < 4) names.push(mo.name);
+          }
+        }
+      }
+      // Fire confetti now (one burst per converted person)
+      fireConversionConfetti(pending.deltas.converted);
+      // Show conversion popup — it will call sendOverlayDismissed when closed
+      setConversionPopup({ count: pending.deltas.converted, names });
+    } else {
+      // No conversion — signal engine directly
+      sendOverlayDismissed();
+    }
+  }, [turnOverlay, sendOverlayDismissed]);
   // Track last auto-save time for UX indicator
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
@@ -1211,10 +1319,7 @@ export default function GamePage() {
       const turn = event.data.turn as TurnData;
       // Show turn overlay immediately — before DB write so there's zero perceived delay
       setTurnOverlay(turn);
-      // Fire confetti for each newly converted character (staggered)
-      if (turn.deltas.converted > 0) {
-        fireConversionConfetti(turn.deltas.converted);
-      }
+      // (confetti fires later in dismissTurnOverlay, after action overlay closes)
       // DB write is fire-and-forget; runs in background while overlay is visible
       try {
         await saveTurnRef.current({
@@ -1455,6 +1560,10 @@ export default function GamePage() {
           {/* Turn result overlay */}
           {turnOverlay && (
             <TurnOverlay turn={turnOverlay} onDismiss={dismissTurnOverlay} />
+          )}
+          {/* Conversion popup: appears after action overlay, before engine result modal */}
+          {conversionPopup && !turnOverlay && (
+            <ConversionPopup data={conversionPopup} onDismiss={dismissConversionPopup} />
           )}
         </div>
       ) : (
